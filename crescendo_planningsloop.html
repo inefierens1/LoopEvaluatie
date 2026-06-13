@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crescendo CVO — Kwaliteitsloop</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f7f4; color: #2c2c2a; padding: 2rem 1.5rem; min-height: 100vh; }
+  header { margin-bottom: 1.5rem; }
+  header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; color: #1a1a18; }
+  header p  { font-size: 12px; color: #888780; margin-top: 3px; }
+
+  .tab-bar { display:flex; gap:4px; margin-bottom:1.5rem; border-bottom:1px solid #d3d1c7; }
+  .tab-btn { padding:7px 16px; border-radius:6px 6px 0 0; border:1px solid transparent; border-bottom:none; font-size:12px; font-weight:500; cursor:pointer; background:transparent; color:#888780; font-family:inherit; transition:all .15s; margin-bottom:-1px; }
+  .tab-btn.active { background:#fff; color:#1a1a18; border-color:#d3d1c7; border-bottom-color:#fff; }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; }
+
+  .profiel-bar { display:flex; gap:6px; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .profiel-btn { padding:5px 12px; border-radius:6px; border:1px solid #d3d1c7; font-size:12px; cursor:pointer; background:#fff; color:#888780; transition:all .15s; font-family:inherit; }
+  .profiel-btn.ob.active   { background:#E1F5EE; color:#0F6E56; border-color:#5DCAA5; font-weight:500; }
+  .profiel-btn.bsdo.active { background:#E6F1FB; color:#185FA5; border-color:#85B7EB; font-weight:500; }
+  .profiel-btn.nt2.active  { background:#EEEDFE; color:#534AB7; border-color:#AFA9EC; font-weight:500; }
+
+  .legend { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
+  .leg { display:flex; align-items:center; gap:5px; font-size:11px; color:#5f5e5a; }
+  .leg-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
+
+  .tl-scroll { overflow-x:auto; }
+  .tl-inner  { min-width:700px; }
+  .month-row { display:grid; grid-template-columns:repeat(10,1fr); gap:3px; margin-bottom:4px; }
+  .mh { font-size:10px; color:#888780; text-align:center; padding:3px 0; font-weight:500; letter-spacing:.03em; text-transform:uppercase; }
+  .ag { display:grid; grid-template-columns:repeat(10,1fr); grid-template-rows:auto auto; gap:3px; }
+
+  .ab { border-radius:5px; padding:5px 6px; font-size:10px; line-height:1.35; font-weight:500; cursor:pointer; border:1px solid transparent; transition:all .15s; display:flex; align-items:center; justify-content:center; text-align:center; min-height:46px; }
+  .ab:hover { filter:brightness(1.05); transform:translateY(-1px); box-shadow:0 2px 6px rgba(0,0,0,.08); }
+  .c-teal   { background:#E1F5EE; color:#0F6E56; border-color:#5DCAA5; }
+  .c-blue   { background:#E6F1FB; color:#185FA5; border-color:#85B7EB; }
+  .c-amber  { background:#FAEEDA; color:#854F0B; border-color:#EF9F27; }
+  .c-purple { background:#EEEDFE; color:#534AB7; border-color:#AFA9EC; }
+  .c-coral  { background:#FAECE7; color:#993C1D; border-color:#F0997B; }
+  .c-green  { background:#EAF3DE; color:#3B6D11; border-color:#97C459; }
+
+  .jan-stack { grid-column:5; grid-row:1; display:flex; flex-direction:column; gap:3px; }
+  .jan-stack .ab { min-height:0; flex:1; }
+
+  .det { display:none; background:#fff; border-radius:10px; border:1px solid #d3d1c7; padding:1rem 1.25rem; margin-top:.75rem; position:relative; }
+  .det.show { display:block; }
+  .det-title { font-size:14px; font-weight:600; margin-bottom:7px; color:#1a1a18; }
+  .det-meta  { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:9px; }
+  .badge { font-size:11px; padding:2px 9px; border-radius:99px; font-weight:500; }
+  .b-info    { background:#E6F1FB; color:#185FA5; }
+  .b-neutral { background:#f1efe8; color:#5f5e5a; }
+  .b-success { background:#EAF3DE; color:#3B6D11; }
+  .b-warn    { background:#FAEEDA; color:#854F0B; }
+  .det-body  { font-size:12.5px; color:#5f5e5a; line-height:1.65; }
+  .close-btn { position:absolute; top:.75rem; right:.75rem; font-size:11px; cursor:pointer; color:#888780; padding:2px 7px; border-radius:5px; border:1px solid #d3d1c7; background:#f8f7f4; font-family:inherit; }
+
+  /* LOOP VISUAL */
+  .loop-visual-wrap { background:#fff; border-radius:10px; border:1px solid #d3d1c7; padding:1.5rem; overflow-x:auto; }
+  .loop-visual-wrap svg { display:block; max-width:100%; height:auto; }
+
+  /* RING TOOLTIP PANEL — onder de SVG, verschijnt na klik op ring */
+  .ring-panel { display:none; background:#fff; border-radius:10px; border:1px solid #d3d1c7; padding:1.25rem 1.5rem; margin-top:1rem; position:relative; }
+  .ring-panel.show { display:block; }
+  .ring-panel h3 { font-size:15px; font-weight:600; margin-bottom:.5rem; }
+  .ring-panel .rp-sub { font-size:11px; color:#888780; margin-bottom:1rem; font-style:italic; }
+  .rp-cols { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+  .rp-col h4 { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:#888780; margin-bottom:.5rem; padding-bottom:.25rem; border-bottom:1px solid #d3d1c7; }
+  .rp-col ul { list-style:none; }
+  .rp-col ul li { font-size:12.5px; color:#2c2c2a; padding:3px 0; border-bottom:.5px solid #f1efe8; display:flex; gap:6px; align-items:baseline; line-height:1.5; }
+  .rp-col ul li::before { content:'—'; color:#b4b2a9; flex-shrink:0; font-size:11px; }
+
+  /* CIPO TAB */
+  .cipo-intro { font-size:13px; color:#5f5e5a; line-height:1.7; margin-bottom:1.5rem; max-width:660px; }
+  .cipo-section { margin-bottom:1.75rem; }
+  .cipo-section-header { display:flex; align-items:center; gap:10px; margin-bottom:.75rem; }
+  .cipo-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .cipo-section-header h3 { font-size:14px; font-weight:600; color:#1a1a18; }
+  .cipo-section-header span { font-size:11px; color:#888780; font-style:italic; }
+  .cipo-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .cipo-card { background:#fff; border:1px solid #d3d1c7; border-radius:8px; padding:.875rem 1rem; }
+  .cipo-card h4 { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#888780; margin-bottom:.5rem; }
+  .cipo-card ul { list-style:none; }
+  .cipo-card ul li { font-size:12px; color:#2c2c2a; padding:2px 0; line-height:1.55; display:flex; gap:6px; }
+  .cipo-card ul li::before { content:'·'; color:#b4b2a9; flex-shrink:0; }
+  .cipo-divider { border:none; border-top:1px solid #d3d1c7; margin:1.5rem 0; }
+
+  footer { margin-top:1.5rem; font-size:11px; color:#b4b2a9; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Crescendo CVO — Kwaliteitsloop</h1>
+  <p>Driejaarlijkse kwaliteitscyclus per cursistenprofiel &nbsp;·&nbsp; klik op een blok voor details</p>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('planningsloop',this)">Planningsloop</button>
+  <button class="tab-btn"        onclick="switchTab('loopvisual',this)">Vernieuwde loop (visueel)</button>
+  <button class="tab-btn"        onclick="switchTab('cipo',this)">Wat meten we?</button>
+</div>
+
+<!-- ══════════ TAB 1: PLANNINGSLOOP ══════════ -->
+<div class="tab-pane active" id="pane-planningsloop">
+  <div class="profiel-bar">
+    <button class="profiel-btn ob active" onclick="setProfiel(this)">Persoonlijke ontwikkeling — jaar 1 (2025–26)</button>
+    <button class="profiel-btn bsdo"      onclick="setProfiel(this)">Beroepsopleiding &amp; DSBO — jaar 2 (2026–27)</button>
+    <button class="profiel-btn nt2"       onclick="setProfiel(this)">NT2 — jaar 3 (2027–28)</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:#1D9E75"></div>Briefing &amp; planning</div>
+    <div class="leg"><div class="leg-dot" style="background:#378ADD"></div>Lesobservaties</div>
+    <div class="leg"><div class="leg-dot" style="background:#854F0B"></div>Bevraging &amp; focusgroep</div>
+    <div class="leg"><div class="leg-dot" style="background:#534AB7"></div>Analyse materiaal</div>
+    <div class="leg"><div class="leg-dot" style="background:#993C1D"></div>Teamdialoog</div>
+    <div class="leg"><div class="leg-dot" style="background:#3B6D11"></div>Rapportering &amp; borging</div>
+  </div>
+  <div class="tl-scroll"><div class="tl-inner">
+    <div class="month-row">
+      <div class="mh">Sep</div><div class="mh">Okt</div><div class="mh">Nov</div>
+      <div class="mh">Dec</div><div class="mh">Jan</div><div class="mh">Feb</div>
+      <div class="mh">Mrt</div><div class="mh">Apr</div><div class="mh">Mei</div><div class="mh">Jun</div>
+    </div>
+    <div class="ag">
+      <div class="ab c-teal"  style="grid-column:1;grid-row:1;" onclick="showDet('briefing')">Briefing adjuncten &amp; coördinatoren</div>
+      <div class="ab c-teal"  style="grid-column:2;grid-row:1;" onclick="showDet('plan')">Plan van aanpak</div>
+      <div class="ab c-blue"  style="grid-column:3;grid-row:1;" onclick="showDet('obs1')">Lesobservaties ronde&nbsp;1</div>
+      <div class="ab c-amber" style="grid-column:4;grid-row:1;" onclick="showDet('bev')">Cursistenbevragingen &amp; focusgroep</div>
+      <div class="jan-stack">
+        <div class="ab c-purple" onclick="showDet('analyse')">Analyse materiaal</div>
+        <div class="ab c-coral"  onclick="showDet('dialoog')">Teamdialoog matrix</div>
+      </div>
+      <div style="grid-column:6;grid-row:1;"></div>
+      <div class="ab c-blue"  style="grid-column:7;grid-row:1;" onclick="showDet('obs2')">Lesobservaties ronde&nbsp;2</div>
+      <div class="ab c-amber" style="grid-column:8/10;grid-row:1;" onclick="showDet('werkveld')">Focusgesprekken werkveld</div>
+      <div class="ab c-green" style="grid-column:10;grid-row:1;" onclick="showDet('synthese')">Synthese &amp; rapportering</div>
+      <div class="ab c-green" style="grid-column:10;grid-row:2;" onclick="showDet('terugkoppeling')">Terugkoppeling vakgroepen</div>
+    </div>
+  </div></div>
+  <div class="det" id="det">
+    <button class="close-btn" onclick="closeDet()">✕ sluiten</button>
+    <div class="det-title" id="det-t"></div>
+    <div class="det-meta"  id="det-m"></div>
+    <div class="det-body"  id="det-b"></div>
+  </div>
+</div>
+
+<!-- ══════════ TAB 2: LOOP VISUAL ══════════ -->
+<div class="tab-pane" id="pane-loopvisual">
+<div class="loop-visual-wrap">
+  <p style="font-size:11px;color:#888780;margin-bottom:.75rem;">Klik op een ring (C, I, P of O) voor uitleg over wat die laag betekent voor klas en opleiding.</p>
+<svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" role="img" style="min-width:660px;">
+  <title>Vernieuwde kwaliteitsloop Crescendo CVO</title>
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- ══ KLIKBARE RINGEN (van buiten naar binnen) ══ -->
+  <!-- Context ring — klikbaar -->
+  <circle cx="450" cy="350" r="300" fill="#f0efe9" stroke="#c8c6be" stroke-width="1"
+          style="cursor:pointer" onclick="showRing('context')" title="Context"/>
+  <!-- Input ring — klikbaar -->
+  <circle cx="450" cy="350" r="234" fill="#faf9f7" stroke="#d3d1c7" stroke-width="0.75"
+          style="cursor:pointer" onclick="showRing('input')" title="Input"/>
+  <!-- Hover-highlight: wordt getoond via JS -->
+  <circle id="ring-highlight" cx="450" cy="350" r="300" fill="rgba(55,138,221,0.06)"
+          stroke="#378ADD" stroke-width="2" style="display:none; pointer-events:none"/>
+  <!-- Proces ring — klikbaar -->
+  <circle cx="450" cy="350" r="168" fill="#f0efe9" stroke="#d3d1c7" stroke-width="0.75"
+          style="cursor:pointer" onclick="showRing('proces')" title="Proces"/>
+  <!-- Output ring — klikbaar -->
+  <circle cx="450" cy="350" r="102" fill="#faf9f7" stroke="#d3d1c7" stroke-width="0.75"
+          style="cursor:pointer" onclick="showRing('output')" title="Output"/>
+
+  <!-- CIPO ring-labels (klikbaar) -->
+  <text x="450" y="61"  text-anchor="middle" font-size="9.5" font-weight="700" fill="#b4b2a9"
+        font-family="-apple-system,sans-serif" letter-spacing="0.1em"
+        style="cursor:pointer" onclick="showRing('context')">C = CONTEXT ↓</text>
+  <text x="450" y="127" text-anchor="middle" font-size="9" font-weight="600" fill="#c8c6be"
+        font-family="-apple-system,sans-serif" letter-spacing="0.07em"
+        style="cursor:pointer" onclick="showRing('input')">I = INPUT ↓</text>
+  <text x="450" y="191" text-anchor="middle" font-size="8.5" font-weight="600" fill="#c8c6be"
+        font-family="-apple-system,sans-serif" letter-spacing="0.05em"
+        style="cursor:pointer" onclick="showRing('proces')">P = PROCES ↓</text>
+  <text x="450" y="256" text-anchor="middle" font-size="8" font-weight="500" fill="#c8c6be"
+        font-family="-apple-system,sans-serif" letter-spacing="0.04em"
+        style="cursor:pointer" onclick="showRing('output')">O = OUTPUT ↓</text>
+
+  <!-- ══ KERN: 6 BOUWSTENEN ══ -->
+  <circle cx="450" cy="350" r="92" fill="#1a1a18"/>
+  <text x="450" y="308" text-anchor="middle" font-size="7.5" font-weight="700" fill="#fff"    font-family="-apple-system,sans-serif" letter-spacing="0.06em">KWALITEITSVOL</text>
+  <text x="450" y="321" text-anchor="middle" font-size="7.5" font-weight="700" fill="#9FE1CB" font-family="-apple-system,sans-serif" letter-spacing="0.06em">ZORGZAAM</text>
+  <text x="450" y="334" text-anchor="middle" font-size="7.5" font-weight="700" fill="#B5D4F4" font-family="-apple-system,sans-serif" letter-spacing="0.06em">BETROKKEN</text>
+  <text x="450" y="347" text-anchor="middle" font-size="7.5" font-weight="700" fill="#CECBF6" font-family="-apple-system,sans-serif" letter-spacing="0.06em">SAMEN</text>
+  <text x="450" y="360" text-anchor="middle" font-size="7.5" font-weight="700" fill="#FAC775" font-family="-apple-system,sans-serif" letter-spacing="0.06em">INNOVATIEF</text>
+  <text x="450" y="373" text-anchor="middle" font-size="7.5" font-weight="700" fill="#F5C4B3" font-family="-apple-system,sans-serif" letter-spacing="0.06em">LEVENSECHT</text>
+  <text x="450" y="293" text-anchor="middle" font-size="7" fill="#666" font-family="-apple-system,sans-serif">klas  ↔  opleiding</text>
+
+  <!-- ══ PIJLEN IN DE P-RING (r=135) ══ -->
+  <path d="M 363 247 A 135 135 0 0 1 537 247" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arr)"/>
+  <path d="M 553 263 A 135 135 0 0 1 553 437" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arr)"/>
+  <path d="M 537 453 A 135 135 0 0 1 363 453" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arr)"/>
+  <path d="M 347 437 A 135 135 0 0 1 347 263" fill="none" stroke="#888780" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- JAAR-LABELS in P-ring -->
+  <text x="355" y="258" text-anchor="middle" font-size="9" font-weight="700" fill="#0F6E56" font-family="-apple-system,sans-serif">jaar 1</text>
+  <text x="545" y="258" text-anchor="middle" font-size="9" font-weight="700" fill="#185FA5" font-family="-apple-system,sans-serif">jaar 2</text>
+  <text x="545" y="449" text-anchor="middle" font-size="9" font-weight="700" fill="#534AB7" font-family="-apple-system,sans-serif">jaar 3</text>
+  <text x="355" y="449" text-anchor="middle" font-size="9" font-weight="700" fill="#854F0B" font-family="-apple-system,sans-serif">jaar 4</text>
+
+  <!-- ══ JAAR 1 — LINKSBOVEN ══ -->
+  <rect x="10" y="52" width="204" height="20" rx="4" fill="#1a1a18"/>
+  <text x="112" y="65" text-anchor="middle" font-size="8.5" font-weight="700" fill="#9FE1CB" font-family="-apple-system,sans-serif" letter-spacing="0.03em">JAAR 1 — diepgaande meting</text>
+  <rect x="10" y="76"  width="204" height="20" rx="4" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.75"/><text x="112" y="90"  text-anchor="middle" font-size="8.5" font-weight="500" fill="#0F6E56" font-family="-apple-system,sans-serif">Briefing + plan van aanpak</text>
+  <rect x="10" y="100" width="204" height="20" rx="4" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.75"/><text x="112" y="114" text-anchor="middle" font-size="8.5" font-weight="500" fill="#185FA5" font-family="-apple-system,sans-serif">Lesobservaties ronde 1 &amp; 2 (P)</text>
+  <rect x="10" y="124" width="204" height="20" rx="4" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.75"/><text x="112" y="138" text-anchor="middle" font-size="8.5" font-weight="500" fill="#854F0B" font-family="-apple-system,sans-serif">Verdiepende cursistenbevraging (P)</text>
+  <rect x="10" y="148" width="204" height="20" rx="4" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.75"/><text x="112" y="162" text-anchor="middle" font-size="8.5" font-weight="500" fill="#854F0B" font-family="-apple-system,sans-serif">Focusgroep cursisten</text>
+  <rect x="10" y="172" width="204" height="20" rx="4" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.75"/><text x="112" y="186" text-anchor="middle" font-size="8.5" font-weight="500" fill="#534AB7" font-family="-apple-system,sans-serif">Opvolging lesmateriaal (P)</text>
+  <rect x="10" y="196" width="204" height="20" rx="4" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.75"/><text x="112" y="210" text-anchor="middle" font-size="8.5" font-weight="500" fill="#534AB7" font-family="-apple-system,sans-serif">Opvolging evaluatiemateriaal (P)</text>
+  <rect x="10" y="220" width="204" height="20" rx="4" fill="#FAECE7" stroke="#F0997B" stroke-width="0.75"/><text x="112" y="234" text-anchor="middle" font-size="8.5" font-weight="500" fill="#993C1D" font-family="-apple-system,sans-serif">Teamdialoog — onderwijsmatrix (P)</text>
+  <rect x="10" y="244" width="204" height="20" rx="4" fill="#FAECE7" stroke="#F0997B" stroke-width="0.75"/><text x="112" y="258" text-anchor="middle" font-size="8.5" font-weight="500" fill="#993C1D" font-family="-apple-system,sans-serif">Reflectiegesprek lesgever (P + O)</text>
+  <rect x="10" y="268" width="204" height="20" rx="4" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.75"/><text x="112" y="282" text-anchor="middle" font-size="8.5" font-weight="500" fill="#854F0B" font-family="-apple-system,sans-serif">Focusgesprekken werkveld (C)</text>
+  <rect x="10" y="292" width="204" height="20" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.75"/><text x="112" y="306" text-anchor="middle" font-size="8.5" font-weight="500" fill="#3B6D11" font-family="-apple-system,sans-serif">Objectieve data — SR / uitval / NPS (O)</text>
+  <rect x="10" y="316" width="204" height="20" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.75"/><text x="112" y="330" text-anchor="middle" font-size="8.5" font-weight="500" fill="#3B6D11" font-family="-apple-system,sans-serif">Synthese, rapportering &amp; terugkoppeling</text>
+  <line x1="214" y1="200" x2="285" y2="248" stroke="#d3d1c7" stroke-width="0.75" stroke-dasharray="3 2"/>
+
+  <!-- ══ JAAR 2 — RECHTSBOVEN ══ -->
+  <rect x="686" y="52" width="204" height="20" rx="4" fill="#185FA5"/><text x="788" y="65" text-anchor="middle" font-size="8.5" font-weight="700" fill="#B5D4F4" font-family="-apple-system,sans-serif" letter-spacing="0.03em">JAAR 2 — lichte monitoring</text>
+  <rect x="686" y="76"  width="204" height="20" rx="4" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.75"/><text x="788" y="90"  text-anchor="middle" font-size="8.5" font-weight="500" fill="#854F0B" font-family="-apple-system,sans-serif">Korte cursistenbevraging (signalen)</text>
+  <rect x="686" y="100" width="204" height="20" rx="4" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.75"/><text x="788" y="114" text-anchor="middle" font-size="8.5" font-weight="500" fill="#534AB7" font-family="-apple-system,sans-serif">Opvolging lesmateriaal (P)</text>
+  <rect x="686" y="124" width="204" height="20" rx="4" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.75"/><text x="788" y="138" text-anchor="middle" font-size="8.5" font-weight="500" fill="#534AB7" font-family="-apple-system,sans-serif">Opvolging evaluatiemateriaal (P)</text>
+  <rect x="686" y="148" width="204" height="20" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.75"/><text x="788" y="162" text-anchor="middle" font-size="8.5" font-weight="500" fill="#3B6D11" font-family="-apple-system,sans-serif">Objectieve data — SR / uitval / NPS (O)</text>
+  <rect x="686" y="172" width="204" height="20" rx="4" fill="#1a1a18" stroke="#1a1a18"/><text x="788" y="186" text-anchor="middle" font-size="8.5" font-weight="600" fill="#FAC775" font-family="-apple-system,sans-serif">JAP-opvolging</text>
+  <rect x="686" y="196" width="204" height="20" rx="4" fill="#FAECE7" stroke="#F0997B" stroke-width="0.75"/><text x="788" y="210" text-anchor="middle" font-size="8.5" font-weight="500" fill="#993C1D" font-family="-apple-system,sans-serif">Borgingsdialoog team kwaliteit</text>
+  <line x1="686" y1="200" x2="615" y2="248" stroke="#d3d1c7" stroke-width="0.75" stroke-dasharray="3 2"/>
+
+  <!-- ══ JAAR 3 — RECHTSONDER ══ -->
+  <rect x="686" y="490" width="204" height="20" rx="4" fill="#534AB7"/><text x="788" y="503" text-anchor="middle" font-size="8.5" font-weight="700" fill="#CECBF6" font-family="-apple-system,sans-serif" letter-spacing="0.03em">JAAR 3 — lichte monitoring</text>
+  <rect x="686" y="514" width="204" height="20" rx="4" fill="#FAEEDA" stroke="#EF9F27" stroke-width="0.75"/><text x="788" y="528" text-anchor="middle" font-size="8.5" font-weight="500" fill="#854F0B" font-family="-apple-system,sans-serif">Korte cursistenbevraging (signalen)</text>
+  <rect x="686" y="538" width="204" height="20" rx="4" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.75"/><text x="788" y="552" text-anchor="middle" font-size="8.5" font-weight="500" fill="#534AB7" font-family="-apple-system,sans-serif">Opvolging lesmateriaal (P)</text>
+  <rect x="686" y="562" width="204" height="20" rx="4" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.75"/><text x="788" y="576" text-anchor="middle" font-size="8.5" font-weight="500" fill="#534AB7" font-family="-apple-system,sans-serif">Opvolging evaluatiemateriaal (P)</text>
+  <rect x="686" y="586" width="204" height="20" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.75"/><text x="788" y="600" text-anchor="middle" font-size="8.5" font-weight="500" fill="#3B6D11" font-family="-apple-system,sans-serif">Objectieve data — SR / uitval / NPS (O)</text>
+  <rect x="686" y="610" width="204" height="20" rx="4" fill="#1a1a18" stroke="#1a1a18"/><text x="788" y="624" text-anchor="middle" font-size="8.5" font-weight="600" fill="#FAC775" font-family="-apple-system,sans-serif">JAP-opvolging</text>
+  <rect x="686" y="634" width="204" height="20" rx="4" fill="#FAECE7" stroke="#F0997B" stroke-width="0.75"/><text x="788" y="648" text-anchor="middle" font-size="8.5" font-weight="500" fill="#993C1D" font-family="-apple-system,sans-serif">Borgingsdialoog team kwaliteit</text>
+  <line x1="686" y1="530" x2="615" y2="468" stroke="#d3d1c7" stroke-width="0.75" stroke-dasharray="3 2"/>
+
+  <!-- ══ JAAR 4 — LINKSONDER ══ -->
+  <rect x="10" y="490" width="204" height="20" rx="4" fill="#854F0B"/><text x="112" y="503" text-anchor="middle" font-size="8.5" font-weight="700" fill="#FAC775" font-family="-apple-system,sans-serif" letter-spacing="0.03em">JAAR 4 — borging &amp; rapportering</text>
+  <rect x="10" y="514" width="204" height="20" rx="4" fill="#FAECE7" stroke="#F0997B" stroke-width="0.75"/><text x="112" y="528" text-anchor="middle" font-size="8.5" font-weight="500" fill="#993C1D" font-family="-apple-system,sans-serif">Borgingsdialoog</text>
+  <rect x="10" y="538" width="204" height="20" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.75"/><text x="112" y="552" text-anchor="middle" font-size="8.5" font-weight="500" fill="#3B6D11" font-family="-apple-system,sans-serif">Rapportering meso – micro</text>
+  <rect x="10" y="562" width="204" height="20" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.75"/><text x="112" y="576" text-anchor="middle" font-size="8.5" font-weight="500" fill="#3B6D11" font-family="-apple-system,sans-serif">Verslag zelfevaluatie</text>
+  <rect x="10" y="586" width="204" height="20" rx="4" fill="#EAF3DE" stroke="#97C459" stroke-width="0.75"/><text x="112" y="600" text-anchor="middle" font-size="8.5" font-weight="500" fill="#3B6D11" font-family="-apple-system,sans-serif">Inschrijving / slaagcijfers (O)</text>
+  <line x1="214" y1="530" x2="285" y2="468" stroke="#d3d1c7" stroke-width="0.75" stroke-dasharray="3 2"/>
+
+  <!-- REGIE-LABEL -->
+  <rect x="326" y="18" width="248" height="22" rx="5" fill="#1a1a18"/>
+  <text x="450" y="33" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff" font-family="-apple-system,sans-serif" letter-spacing="0.07em">REGIE ONDERWIJSKWALITEIT</text>
+
+  <!-- CIPO LEGENDA -->
+  <rect x="10" y="630" width="190" height="72" rx="5" fill="#f4f3f0" stroke="#d3d1c7" stroke-width="0.75"/>
+  <text x="22" y="644" font-size="8" font-weight="600" fill="#5f5e5a" font-family="-apple-system,sans-serif">CIPO-model</text>
+  <text x="22" y="657" font-size="8" fill="#888780" font-family="-apple-system,sans-serif">C = context (buitenste ring)</text>
+  <text x="22" y="670" font-size="8" fill="#888780" font-family="-apple-system,sans-serif">I = input</text>
+  <text x="22" y="683" font-size="8" fill="#888780" font-family="-apple-system,sans-serif">P = proces (klas ↔ opleiding)</text>
+  <text x="22" y="696" font-size="8" fill="#888780" font-family="-apple-system,sans-serif">O = output</text>
+</svg>
+</div>
+
+<!-- RING INFO PANEL — verschijnt onder de SVG na klik -->
+<div class="ring-panel" id="ring-panel">
+  <button class="close-btn" onclick="closeRing()">✕ sluiten</button>
+  <h3 id="rp-title"></h3>
+  <p class="rp-sub" id="rp-sub"></p>
+  <div class="rp-cols">
+    <div class="rp-col">
+      <h4>In de klaspraktijk</h4>
+      <ul id="rp-klas"></ul>
+    </div>
+    <div class="rp-col">
+      <h4>In de opleidingspraktijk</h4>
+      <ul id="rp-opl"></ul>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════ TAB 3: WAT METEN WE ══════════ -->
+<div class="tab-pane" id="pane-cipo">
+
+  <p class="cipo-intro">De 6 bouwstenen zijn het hart van onze kwaliteitsopvolging. Ze bepalen <em>wat</em> we meten en <em>waarover</em> we het gesprek voeren. Per bouwsteen kijken we op twee niveaus: wat zien we in de klaspraktijk, en wat merken we op opleidingsniveau? Zo krijgen we telkens zicht op sterktes én groeikansen.</p>
+
+  <hr class="cipo-divider">
+
+  <!-- KWALITEITSVOL -->
+  <div class="cipo-section">
+    <div class="cipo-section-header">
+      <div class="cipo-dot" style="background:#1a1a18;"></div>
+      <h3>Kwaliteitsvol</h3>
+      <span>Cursisten leren doelgericht, gemotiveerd en met eigenaarschap</span>
+    </div>
+    <div class="cipo-grid">
+      <div class="cipo-card">
+        <h4>In de klaspraktijk</h4>
+        <ul>
+          <li>Leerdoelen zijn helder en begrijpbaar voor cursisten</li>
+          <li>Activerende werkvormen en voldoende oefenkansen</li>
+          <li>Feedback is gericht op groei, niet enkel op score</li>
+          <li>Evaluaties sluiten aan bij wat geoefend werd</li>
+          <li>Cursisten groeien naar meer autonomie en zelfsturing</li>
+        </ul>
+      </div>
+      <div class="cipo-card">
+        <h4>In de opleidingspraktijk</h4>
+        <ul>
+          <li>Samenhang tussen modules, leerdoelen en evaluatie</li>
+          <li>Gedeeld evaluatiebeleid en transparante criteria</li>
+          <li>Gedeelde pedagogische taal binnen het team</li>
+          <li>Afstemming tussen lesgevers over verwachtingen</li>
+          <li>Opleidingsopbouw ondersteunt zelfregulerend leren</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cipo-divider">
+
+  <!-- ZORGZAAM -->
+  <div class="cipo-section">
+    <div class="cipo-section-header">
+      <div class="cipo-dot" style="background:#1D9E75;"></div>
+      <h3>Zorgzaam</h3>
+      <span>Elke cursist voelt zich veilig, gezien en ondersteund</span>
+    </div>
+    <div class="cipo-grid">
+      <div class="cipo-card">
+        <h4>In de klaspraktijk</h4>
+        <ul>
+          <li>Veilig leerklimaat: fouten maken mag</li>
+          <li>Respectvolle sfeer en duidelijke grenzen</li>
+          <li>Lesgever herkent leerdrempels tijdig</li>
+          <li>Differentiatie zonder te verlagen in verwachtingen</li>
+          <li>Cursisten weten waar ze terechtkunnen voor steun</li>
+        </ul>
+      </div>
+      <div class="cipo-card">
+        <h4>In de opleidingspraktijk</h4>
+        <ul>
+          <li>Duidelijke zorgafspraken en signaleringssystemen</li>
+          <li>Afstemming tussen lesgever, OC, PB en zorgteam</li>
+          <li>Werkdruk en evaluatieplanning bewaakt op opleidingsniveau</li>
+          <li>Kwetsbare cursisten worden proactief opgevolgd</li>
+          <li>Gelijke onderwijskansen structureel geborgd</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cipo-divider">
+
+  <!-- LEVENSECHT -->
+  <div class="cipo-section">
+    <div class="cipo-section-header">
+      <div class="cipo-dot" style="background:#D85A30;"></div>
+      <h3>Levensecht</h3>
+      <span>Leren vertrekt vanuit herkenbare, realistische contexten</span>
+    </div>
+    <div class="cipo-grid">
+      <div class="cipo-card">
+        <h4>In de klaspraktijk</h4>
+        <ul>
+          <li>Lesinhouden gekoppeld aan werk, leven of samenleving</li>
+          <li>Cursisten oefenen door toepassing, niet enkel theorie</li>
+          <li>Lesgever benoemt expliciet waarom dit leren zinvol is</li>
+          <li>Activerende werkvormen: casus, simulatie, praktijktaak</li>
+          <li>Evaluaties tonen wat cursisten kunnen toepassen</li>
+        </ul>
+      </div>
+      <div class="cipo-card">
+        <h4>In de opleidingspraktijk</h4>
+        <ul>
+          <li>Opleiding heeft heldere finaliteit (werk, leven, vervolg)</li>
+          <li>Authenticiteit zichtbaar in evaluatievormen</li>
+          <li>Afstemming met werkveld via focusgesprekken</li>
+          <li>Samenhang in leertraject: van begrijpen naar toepassen</li>
+          <li>Modules bouwen logisch op naar eindcompetenties</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cipo-divider">
+
+  <!-- BETROKKEN -->
+  <div class="cipo-section">
+    <div class="cipo-section-header">
+      <div class="cipo-dot" style="background:#378ADD;"></div>
+      <h3>Betrokken</h3>
+      <span>Cursisten nemen actief deel en blijven aan boord</span>
+    </div>
+    <div class="cipo-grid">
+      <div class="cipo-card">
+        <h4>In de klaspraktijk</h4>
+        <ul>
+          <li>Cursisten nemen actief deel aan leer- en oefenmomenten</li>
+          <li>Lesgever zet bewust in op relatie en interactie</li>
+          <li>Cursisten durven vragen stellen en initiatief nemen</li>
+          <li>Eigenaarschap over het eigen leerproces groeit</li>
+          <li>Cursisten volhouden ook bij moeilijkere leerstof</li>
+        </ul>
+      </div>
+      <div class="cipo-card">
+        <h4>In de opleidingspraktijk</h4>
+        <ul>
+          <li>Duidelijke verwachtingen rond aanwezigheid en inzet</li>
+          <li>Betrokkenheid actief opgevolgd — niet pas bij problemen</li>
+          <li>Cursisten weten bij wie ze terechtkunnen</li>
+          <li>Signalen van afhaken worden tijdig besproken in het team</li>
+          <li>Consistente aanpak doorheen modules</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cipo-divider">
+
+  <!-- SAMEN -->
+  <div class="cipo-section">
+    <div class="cipo-section-header">
+      <div class="cipo-dot" style="background:#7F77DD;"></div>
+      <h3>Samen</h3>
+      <span>Cursisten leren mét en van elkaar in een veilig groepsklimaat</span>
+    </div>
+    <div class="cipo-grid">
+      <div class="cipo-card">
+        <h4>In de klaspraktijk</h4>
+        <ul>
+          <li>Doelgerichte samenwerking met duidelijke taakverdeling</li>
+          <li>Iedereen komt aan bod — ook stillere cursisten</li>
+          <li>Respectvolle communicatie en afspraken zichtbaar</li>
+          <li>Samenwerken heeft een leerdoel, geen losse werkvorm</li>
+          <li>Groepsdynamiek wordt begeleid, niet overgelaten aan toeval</li>
+        </ul>
+      </div>
+      <div class="cipo-card">
+        <h4>In de opleidingspraktijk</h4>
+        <ul>
+          <li>Gedeelde afspraken over samen leren doorheen modules</li>
+          <li>Consistente verwachtingen over samenwerking</li>
+          <li>Inclusief leerklimaat geborgd op opleidingsniveau</li>
+          <li>Groepsproblemen of uitsluiting worden teamgericht opgepakt</li>
+          <li>Lesgevers stemmen aanpak rond samenwerken af</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cipo-divider">
+
+  <!-- INNOVATIEF -->
+  <div class="cipo-section">
+    <div class="cipo-section-header">
+      <div class="cipo-dot" style="background:#BA7517;"></div>
+      <h3>Innovatief</h3>
+      <span>Vernieuwen om leren effectiever, toegankelijker en toekomstgericht te maken</span>
+    </div>
+    <div class="cipo-grid">
+      <div class="cipo-card">
+        <h4>In de klaspraktijk</h4>
+        <ul>
+          <li>Nieuwe werkvormen ingezet vanuit leerdoel, niet vanuit tool</li>
+          <li>Digitale middelen (SharePoint, Teams) ondersteunen actief leren</li>
+          <li>Cursisten worden begeleid in digitaal leren</li>
+          <li>Digitale inclusie: iedereen kan mee, ook wie minder digitaal vaardig is</li>
+          <li>Lesgever evalueert effect van vernieuwing op het leren</li>
+        </ul>
+      </div>
+      <div class="cipo-card">
+        <h4>In de opleidingspraktijk</h4>
+        <ul>
+          <li>Gedeelde visie op innovatie binnen het opleidingsteam</li>
+          <li>Digitale en flexibele keuzes zijn coherent over modules heen</li>
+          <li>Lesgevers worden ondersteund bij innovatie (tijd, materiaal)</li>
+          <li>Innovatie versterkt aantoonbaar leerkwaliteit en toegankelijkheid</li>
+          <li>Professionalisering rond innovatie is structureel voorzien</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <hr class="cipo-divider">
+
+  <!-- ORDENINGSKADER: korte CIPO-toelichting -->
+  <div class="cipo-section">
+    <div class="cipo-section-header">
+      <div class="cipo-dot" style="background:#d3d1c7;"></div>
+      <h3>Hoe we dit structureren</h3>
+      <span>Vier niveaus als ordeningsprincipe achter de bouwstenen</span>
+    </div>
+    <p style="font-size:12.5px;color:#5f5e5a;line-height:1.65;margin-bottom:.75rem;">Om de opvolging van de 6 bouwstenen overzichtelijk te houden, gebruiken we vier niveaus als kapstok. Dit is geen model dat collega's hoeven te kennen — het is een ordeningsprincipe dat ons helpt om te bepalen <em>op welk niveau</em> we iets meten en <em>wat daarvoor nodig is</em>.</p>
+    <div class="cipo-grid">
+      <div class="cipo-card">
+        <h4>Randvoorwaarden</h4>
+        <ul>
+          <li><strong>Context</strong> — wat we niet zelf bepalen: instroomprofiel cursisten, arbeidsmarkt, regelgeving, inschrijvingstrends</li>
+          <li><strong>Input</strong> — wat we zelf inbrengen: lesgevers, materiaal, platformen (SharePoint, Teams), curriculum, zorgstructuur</li>
+        </ul>
+      </div>
+      <div class="cipo-card">
+        <h4>Opvolging en resultaten</h4>
+        <ul>
+          <li><strong>Proces</strong> — wat er effectief gebeurt in klas en opleiding: dit is de kern van de loop en de sterkste hefboom voor verbetering</li>
+          <li><strong>Output</strong> — de meetbare resultaten: studierendement, uitval, certificering, doorstroom, beleving (NPS)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Crescendo CVO &nbsp;·&nbsp; Kwaliteitsloop &nbsp;·&nbsp; versie juni 2026</footer>
+
+<script>
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── RING TOOLTIP DATA ── */
+const RINGS = {
+  context: {
+    titel: 'C — Context',
+    sub: 'Buitenste ring · "In welke omstandigheden werken we?" · Factoren die Crescendo niet zelf bepaalt, maar die het onderwijs wel beïnvloeden.',
+    klas: ['Thuistaal en taalniveau van cursisten','Vooropleiding en instroomprofiel','Combinatie werk–leren–gezin','Digitale vaardigheid van de groep','Motivatietype (intrinsiek vs. extern verplicht)'],
+    opl:  ['Regionaal opleidingsaanbod en concurrentie','Arbeidsmarktcontext per opleiding','Inspectieverwachtingen en regelgeving','Inschrijvingstrends (groei, daling, profiel)','Sectorontwikkelingen (bv. digitalisering beroep)']
+  },
+  input: {
+    titel: 'I — Input',
+    sub: 'Tweede ring · "Met wat werken we?" · Middelen en randvoorwaarden die Crescendo inbrengt — te beïnvloeden via beleid en professionalisering.',
+    klas: ['Competenties en ervaring van de lesgever','Beschikbaar lesmateriaal en leeromgeving','Digitale tools en platformen (SharePoint, Teams)','Klasgrootte en roostering','Professionalisering (leerpaden, intervisie)'],
+    opl:  ['Aanstellingen en teamsamenstelling','Curriculum, leerplannen en moduleplannen','Zorgstructuur en ondersteunende teams (PB, TB)','Infrastructuur en lokalen','Beleidskaders en opleidingsfiches']
+  },
+  proces: {
+    titel: 'P — Proces',
+    sub: 'Derde ring · "Wat gebeurt er effectief?" · De kern van de loop — twee lagen: wat de lesgever doet (klas) en hoe de opleiding is georganiseerd.',
+    klas: ['Duidelijkheid van leerdoelen voor cursisten','Activerende didactiek en oefenkansen','Feedbackkwaliteit en evaluatiepraktijk','Veilig leerklimaat en respectvolle sfeer','Levensechte contexten en toepassing','Betrokkenheid en verbondenheid in de groep'],
+    opl:  ['Samenhang tussen modules en leerdoelen','Evaluatiebeleid en transparante criteria','Zorgafspraken en signaleringssystemen','Teamafstemming en gedeelde pedagogische taal','Opvolging betrokkenheid en uitval','Innovatiebeleid en digitale organisatie']
+  },
+  output: {
+    titel: 'O — Output',
+    sub: 'Binnenste ring · "Wat zijn de resultaten?" · Signalen die een gesprek starten — geen oordeel, maar aanleiding om dieper te kijken.',
+    klas: ['Studierendement (mediaan SR)','Certificering %','Uitval % (geen cert. + geen herinschrijving)','Doorstroom % (herinschrijving)','Kansenkloof (Δ SR kansarm vs. overige)'],
+    opl:  ['NPS — aanbevelingsscore cursisten','Cursistenbevragingsscores per bouwsteen','Focusgroep — ervaringen in eigen woorden','Reflectiegesprekken lesgever en team']
+  }
+};
+
+function showRing(key) {
+  const d = RINGS[key];
+  document.getElementById('rp-title').textContent = d.titel;
+  document.getElementById('rp-sub').textContent   = d.sub;
+  document.getElementById('rp-klas').innerHTML = d.klas.map(i=>`<li>${i}</li>`).join('');
+  document.getElementById('rp-opl').innerHTML  = d.opl.map(i=>`<li>${i}</li>`).join('');
+  document.getElementById('ring-panel').classList.add('show');
+  document.getElementById('ring-panel').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function closeRing() { document.getElementById('ring-panel').classList.remove('show'); }
+
+/* ── PLANNINGSLOOP DETAIL ── */
+const BASE = 'https://inefierens1.github.io/LoopEvaluatie/';
+
+const DATA={
+  briefing:{titel:'Briefing adjuncten & coördinatoren',wanneer:'September',wie:'Team kwaliteit + adjunct + OC',methode:'Overleg',beschrijving:'Kick-off van de kwaliteitsloop: toelichting plan, rolverdeling, verwachtingen en kalender. Koppeling aan CIPO-raamwerk en 6 bouwstenen.',bstn:['Kwaliteitsvol','Samen'],instrumenten:[]},
+  plan:{titel:'Plan van aanpak',wanneer:'Oktober',wie:'Team kwaliteit',methode:'Planning',beschrijving:'Werkafspraken per opleiding: wie doet wat, wanneer en hoe. Koppeling aan onderwijsmatrix en CIPO-indicatoren.',bstn:['Kwaliteitsvol','Samen'],instrumenten:[]},
+  obs1:{titel:'Lesobservaties ronde 1',wanneer:'November (2 weken)',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Gestructureerde lesobservaties op basis van observatieformulier (6 bouwstenen). Focus op processen in de klas. Nagesprek met lesgever.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],
+    instrumenten:[
+      {naam:'Kijkwijzer Evaluatiemateriaal — Korte scan',bestand:'kijkwijzer_evaluatie.html',ronde:'klas',icon:'📋'},
+    ]},
+  bev:{titel:'Cursistenbevragingen & focusgroep',wanneer:'December',wie:'Team kwaliteit',methode:'Kwant. + Kwal.',beschrijving:'Verdiepende bevraging (MS Forms → SharePoint) + kwalitatief focusgesprek. Items gekoppeld aan CIPO-indicatoren per bouwsteen. 4-puntsschaal, geen middenoptie.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],instrumenten:[]},
+  analyse:{titel:'Opvolging les- & evaluatiemateriaal',wanneer:'Januari',wie:'Team kwaliteit',methode:'Documentanalyse',beschrijving:'Opvolging lesmateriaal en evaluatiemateriaal. Exacte aanpak nog te bepalen. Steekproef van moduleplannen en opdrachten via kijkwijzers.',bstn:['Kwaliteitsvol','Levensecht'],
+    instrumenten:[
+      {naam:'Kijkwijzer Evaluatiemateriaal — Uitgebreide scan',bestand:'kijkwijzer_evaluatie.html',ronde:'klas',icon:'📋'},
+    ]},
+  dialoog:{titel:'Teamdialoog — onderwijsmatrix',wanneer:'Januari–begin semester 2',wie:'Team kwaliteit',methode:'Dialoog',beschrijving:'Gestructureerd teamgesprek op basis van resultaten golf 1. Onderwijsmatrix + 6 bouwstenen als kapstok. Groeikansen formuleren.',bstn:['Kwaliteitsvol','Samen','Betrokken'],
+    instrumenten:[
+      {naam:'Kijkwijzer Evaluatiemateriaal — Opleidingspraktijk',bestand:'kijkwijzer_evaluatie.html',ronde:'opleiding',icon:'📋'},
+    ]},
+  obs2:{titel:'Lesobservaties ronde 2',wanneer:'Maart (2 weken)',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Tweede observatieronde. Focus op opvolging werkpunten uit ronde 1 en teamdialoog. Vergelijkende analyse mogelijk.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],
+    instrumenten:[
+      {naam:'Kijkwijzer Evaluatiemateriaal — Korte scan',bestand:'kijkwijzer_evaluatie.html',ronde:'klas',icon:'📋'},
+    ]},
+  werkveld:{titel:'Focusgesprekken werkveld',wanneer:'April–Mei',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Gesprekken met werkgevers, stagebegeleiders of externe partners. Input voor levensechtheid en authenticiteit van opleidingen.',bstn:['Levensecht','Innovatief'],instrumenten:[]},
+  synthese:{titel:'Synthese & rapportering',wanneer:'Juni',wie:'Team kwaliteit + adjunct + OC',methode:'Rapportering',beschrijving:'Alle resultaten samenbrengen: kwantitatieve data + kwalitatieve bevindingen. Koppeling aan CIPO-indicatoren en dashboard.',bstn:['Kwaliteitsvol','Samen'],instrumenten:[]},
+  terugkoppeling:{titel:'Terugkoppeling vakgroepen',wanneer:'Juni',wie:'Team kwaliteit',methode:'Terugkoppeling',beschrijving:'Resultaten en groeikansen teruggekoppeld aan betrokken lesgevers en vakgroepen. Welke leerpaden of acties voor volgend schooljaar?',bstn:['Samen','Betrokken','Innovatief'],instrumenten:[]}
+};
+function showDet(k){
+  const d=DATA[k];
+  document.getElementById('det-t').textContent=d.titel;
+  const b=d.bstn.map(x=>`<span class="badge b-warn">${x}</span>`).join(' ');
+  document.getElementById('det-m').innerHTML=`<span class="badge b-info">${d.wanneer}</span><span class="badge b-neutral">${d.wie}</span><span class="badge b-success">${d.methode}</span>`;
+
+  // Instrumenten-knoppen
+  let instrHTML = '';
+  if(d.instrumenten && d.instrumenten.length){
+    instrHTML = `<div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid #d3d1c7;">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888780;margin-bottom:.4rem;">Instrument openen</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${d.instrumenten.map(i=>`
+          <a href="${BASE}${i.bestand}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#1a1a18;color:#fff;border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;">
+            ${i.icon} ${i.naam} ↗
+          </a>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('det-b').innerHTML=`<p style="margin-bottom:8px;">${d.beschrijving}</p><div style="display:flex;gap:6px;flex-wrap:wrap;">${b}</div>${instrHTML}`;
+  document.getElementById('det').classList.add('show');
+}
+function closeDet(){document.getElementById('det').classList.remove('show');}
+function setProfiel(btn){document.querySelectorAll('.profiel-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');closeDet();}
+</script>
+</body>
+</html>
