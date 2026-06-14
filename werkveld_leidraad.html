@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focusgesprek Werkveld — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#F7F6F2; --surface:#fff; --border:#E2DFD7;
+  --text:#2C2C2A; --muted:#6B6A65; --radius:8px;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+.app-header { background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1 { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.app-header p  { font-size:11px; color:var(--muted); margin-top:1px; }
+
+.stap-bar { background:#fff; border-bottom:1px solid var(--border); padding:.5rem 1.5rem; display:flex; gap:0; align-items:center; }
+.stap-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); padding:.375rem .75rem; border-radius:99px; transition:all .15s; }
+.stap-item.active { background:#1a1a18; color:#fff; font-weight:600; }
+.stap-item.done   { color:#4A8A70; }
+.stap-nr { width:18px; height:18px; border-radius:50%; background:currentColor; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; opacity:.7; }
+.stap-item.active .stap-nr { background:#fff; color:#1a1a18; opacity:1; }
+.stap-sep { color:var(--border); padding:0 4px; font-size:14px; }
+
+.main { padding:1rem 1.5rem 5rem; max-width:860px; }
+.stap-panel { display:none; } .stap-panel.active { display:block; }
+
+.setup-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+.setup-card h2 { font-size:14px; font-weight:600; margin-bottom:.75rem; }
+.ctx-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+.ctx-field { display:flex; flex-direction:column; gap:3px; }
+.ctx-field label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field input, .ctx-field select, .ctx-field textarea { border:1px solid var(--border); border-radius:5px; padding:5px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); }
+.ctx-field textarea { resize:vertical; min-height:52px; }
+.ctx-field.full { grid-column:1/-1; }
+
+.bs-select-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:.5rem; }
+.bs-select-item { display:flex; align-items:center; gap:8px; padding:.625rem .875rem; border-radius:8px; border:1.5px solid var(--border); cursor:pointer; transition:all .15s; background:#fff; }
+.bs-select-item:hover { border-color:#aaa; }
+.bs-select-item.gekozen { border-color:var(--bs-c); background:var(--bs-bg); }
+.bs-select-item input[type=checkbox] { display:none; }
+.bs-naam { font-size:12px; font-weight:600; color:var(--muted); }
+.bs-select-item.gekozen .bs-naam { color:var(--bs-dk); }
+
+/* PARTNER TYPES */
+.partner-select { display:flex; gap:6px; flex-wrap:wrap; margin-top:.5rem; }
+.partner-chip { padding:4px 12px; border-radius:99px; border:1.5px solid var(--border); font-size:11px; font-weight:500; cursor:pointer; font-family:inherit; background:#fff; color:var(--muted); transition:all .15s; }
+.partner-chip.active { background:#E07272; color:#fff; border-color:#E07272; }
+
+/* GESPREK */
+.thema-blok { background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.thema-header { padding:.75rem 1rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.thema-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.thema-header h3 { font-size:13px; font-weight:600; }
+.thema-header p  { font-size:11px; color:var(--muted); margin-top:1px; font-style:italic; }
+
+.vraag-blok { padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.vraag-blok:last-of-type { border-bottom:none; }
+.vraag-tekst  { font-size:13px; font-weight:500; margin-bottom:.25rem; line-height:1.45; }
+.vraag-ind    { font-size:10px; color:var(--muted); font-style:italic; margin-bottom:.375rem; }
+.doorvraag    { font-size:11px; color:#5f5e5a; margin-bottom:.5rem; line-height:1.55; }
+.doorvraag strong { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+.bs-tag-rij   { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:.375rem; }
+.bs-tag       { font-size:9.5px; padding:1px 6px; border-radius:99px; font-weight:600; border:1px solid transparent; }
+.notatie-label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:3px; text-transform:uppercase; letter-spacing:.04em; }
+.notatie-area  { width:100%; min-height:60px; border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); }
+.notatie-area:focus { outline:none; border-color:#aaa; background:#fff; }
+
+/* Bouwsteen kleuren voor tags */
+.bs-kwal  { background:#EBF3F2; color:#5A8880; border-color:#8FB5AE; }
+.bs-zorg  { background:#E6EFF7; color:#3D6A91; border-color:#6B90B5; }
+.bs-leven { background:#FAEAEA; color:#B84A4A; border-color:#E07272; }
+.bs-betrok{ background:#F5F3D8; color:#8A8330; border-color:#CFC87A; }
+.bs-samen { background:#EAF0DE; color:#5A7238; border-color:#8FA563; }
+.bs-innov { background:#F3E8E3; color:#7A4A35; border-color:#B07560; }
+
+.slot-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
+.slot-card h3 { font-size:13px; font-weight:600; margin-bottom:.625rem; }
+.slot-vraag { margin-bottom:.75rem; }
+.slot-vraag p { font-size:13px; font-weight:500; margin-bottom:.3rem; line-height:1.4; }
+.slot-sub { font-size:11px; color:var(--muted); margin-bottom:.375rem; }
+
+/* SYNTHESE */
+.syn-blok { background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.syn-header { display:flex; align-items:center; gap:10px; padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.syn-header h3 { font-size:13px; font-weight:600; }
+.signaal-keuze { display:flex; gap:6px; padding:.75rem 1rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.signaal-keuze > label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.4rem; width:100%; text-transform:uppercase; letter-spacing:.04em; }
+.sig-btn { padding:4px 12px; border-radius:99px; border:1.5px solid var(--border); font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; background:#fff; color:var(--muted); transition:all .15s; }
+.sig-btn.sel-sterk    { background:#EAF3DE; color:#3B6D11; border-color:#8FA563; }
+.sig-btn.sel-neutraal { background:#F5F3D8; color:#8A8330; border-color:#CFC87A; }
+.sig-btn.sel-aandacht { background:#FAEAEA; color:#B84A4A; border-color:#E07272; }
+.syn-veld { padding:.625rem 1rem; border-bottom:1px solid var(--border); }
+.syn-veld:last-child { border-bottom:none; }
+.syn-veld label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.3rem; text-transform:uppercase; letter-spacing:.04em; }
+.syn-veld textarea, .syn-veld input { width:100%; border:1px solid var(--border); border-radius:5px; padding:5px 7px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); }
+.syn-veld textarea { min-height:48px; }
+.syn-apart { background:#f8f7f4; }
+
+.actions-bar { position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; z-index:10; }
+.btn { padding:6px 15px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
+.btn-primary { background:#1a1a18; color:#fff; border-color:#1a1a18; }
+.btn-secondary { background:var(--bg); color:var(--text); }
+.save-status { font-size:11px; color:var(--muted); font-style:italic; }
+
+@media(max-width:520px){ .bs-select-grid{grid-template-columns:1fr 1fr;} .ctx-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Focusgesprek Werkveld &amp; Doorstroompartners</h1>
+    <p>Crescendo CVO · NT2 · Beroepsopleidingen · Diploma Secundair · Kwaliteitsloop 2026–2030</p>
+  </div>
+</div>
+
+<div class="stap-bar">
+  <div class="stap-item active" id="stap-ind-1"><div class="stap-nr">1</div> Setup</div>
+  <span class="stap-sep">›</span>
+  <div class="stap-item" id="stap-ind-2"><div class="stap-nr">2</div> Gesprek</div>
+  <span class="stap-sep">›</span>
+  <div class="stap-item" id="stap-ind-3"><div class="stap-nr">3</div> Synthese</div>
+</div>
+
+<div class="main">
+
+<!-- STAP 1 -->
+<div class="stap-panel active" id="stap-1">
+
+  <div class="setup-card">
+    <h2>Contextgegevens</h2>
+    <div class="ctx-grid">
+      <div class="ctx-field"><label>Opleiding / traject</label><input type="text" id="ctx-opleiding" placeholder="bv. NT2 Richtgraad 1.1"></div>
+      <div class="ctx-field"><label>Schooljaar / periode</label><input type="text" id="ctx-periode" placeholder="bv. 2026–2027"></div>
+      <div class="ctx-field"><label>Begeleider gesprek</label><input type="text" id="ctx-begeleider" placeholder="naam"></div>
+      <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum"></div>
+      <div class="ctx-field full"><label>Gesprekspartner(s)</label>
+        <input type="text" id="ctx-partner" placeholder="bv. VDAB-consulent Mechelen, trajectbegeleider Ankerpunt, werkgever DC Logistics"></div>
+      <div class="ctx-field full"><label>Aanleiding / doel van dit gesprek</label>
+        <textarea id="ctx-doel" placeholder="bv. Afstemming over doorstroom NT2 RG1 naar werk — wat zien jullie bij cursisten die instromen?" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Type gesprekspartner</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:.625rem;line-height:1.6;">Duid aan met wie je spreekt — dit bepaalt de focus van de vragen.</p>
+    <div class="partner-select" id="partner-select">
+      <button class="partner-chip active" onclick="togglePartner('vdab',this)">🏢 VDAB / arbeidsbemiddelaar</button>
+      <button class="partner-chip" onclick="togglePartner('werkgever',this)">🏭 Werkgever</button>
+      <button class="partner-chip" onclick="togglePartner('tb',this)">🧭 Trajectbegeleider</button>
+      <button class="partner-chip" onclick="togglePartner('vervolg',this)">🎓 Vervolgonderwijs / hoger NT2</button>
+      <button class="partner-chip" onclick="togglePartner('social',this)">🤲 Sociale / welzijnsorganisatie</button>
+      <button class="partner-chip" onclick="togglePartner('alumni',this)">👤 Alumni (oud-cursisten)</button>
+    </div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Cursistenprofiel</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:.625rem;line-height:1.6;">Voor welk cursistenprofiel voer je dit gesprek? Dit bepaalt de invalshoek van de vragen.</p>
+    <div class="partner-select" id="profiel-select">
+      <button class="partner-chip active" id="prof-nt2"   onclick="setProfiel('nt2',this)">🗣️ NT2</button>
+      <button class="partner-chip"        id="prof-bero"  onclick="setProfiel('bero',this)">🏭 Beroepsopleiding / DSBO</button>
+      <button class="partner-chip"        id="prof-dso"   onclick="setProfiel('dso',this)">🎓 Diploma Secundair (DSO)</button>
+    </div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Focus van het gesprek — bouwstenen</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">Selecteer de bouwstenen die je wil bevragen vanuit het werkveldperspectief.</p>
+    <div class="bs-select-grid" id="bs-select-grid"></div>
+  </div>
+
+</div>
+
+<!-- STAP 2 -->
+<div class="stap-panel" id="stap-2">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:.375rem;">Gespreksopbouw (45–60 min)</h2>
+    <p style="font-size:12px;color:var(--muted);line-height:1.65;">Start met een korte introductie (5 min): wie ben je, wat doe je, wat is de context van cursisten die bij jullie terechtkomen. Stel vragen vanuit oprechte nieuwsgierigheid — niet defensief. Noteer concrete voorbeelden en uitspraken. Sluit af met de prioriteringsvraag.</p>
+  </div>
+
+  <!-- STARTBLOK — altijd zichtbaar -->
+  <div class="thema-blok">
+    <div class="thema-header">
+      <div class="thema-icon" style="background:#f4f3f0;">🧭</div>
+      <div>
+        <h3>Startblok — context en perspectief</h3>
+        <p>Altijd starten — ongeacht gekozen bouwstenen</p>
+      </div>
+    </div>
+    <div class="vraag-blok">
+      <div class="vraag-tekst">In welke context komen onze cursisten bij jullie terecht?</div>
+      <div class="doorvraag"><strong>Doorvraag:</strong> Op welk moment zien jullie hen? Welke NT2-profielen of niveaus stromen door? Wat zijn de eerste signalen die jullie zien bij instroom?</div>
+      <span class="notatie-label">Notaties</span>
+      <textarea class="notatie-area" id="not-start1" placeholder="Noteer context en eerste signalen..." rows="2"></textarea>
+    </div>
+    <div class="vraag-blok">
+      <div class="vraag-tekst">Wat betekent "voldoende NT2" voor jullie in de praktijk?</div>
+      <div class="doorvraag"><strong>Doorvraag:</strong> Welk taalniveau is nodig bij jullie — en klopt dat met wat we meegeven? Zijn er situaties waarbij cursisten taalkundig vastlopen die jullie verrassen?</div>
+      <span class="notatie-label">Notaties</span>
+      <textarea class="notatie-area" id="not-start2" placeholder="Noteer verwachtingen en ervaringen..." rows="2"></textarea>
+    </div>
+  </div>
+
+  <div id="profiel-gesprek-label" style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:.75rem;padding:.5rem .875rem;background:#fff;border:1px solid var(--border);border-radius:var(--radius);"></div>
+  <div id="gesprek-content"></div>
+
+  <div class="slot-card">
+    <h3>Slotblok — prioritering</h3>
+    <div class="slot-vraag">
+      <p>Wat doen wij al goed — en moeten we zeker behouden?</p>
+      <div class="slot-sub">Concrete sterktes vanuit het werkveldperspectief.</div>
+      <textarea class="notatie-area" id="slot-goed" placeholder="Noteer positieve signalen..." rows="2"></textarea>
+    </div>
+    <div class="slot-vraag">
+      <p>Als u één ding kon veranderen aan onze NT2-opleiding: wat zou dat zijn?</p>
+      <div class="slot-sub">Dit geeft prioriteit aan verbeterpunten vanuit extern perspectief.</div>
+      <textarea class="notatie-area" id="slot-prio" placeholder="Noteer het meest genoemde verbeterpunt..." rows="2"></textarea>
+    </div>
+    <div class="slot-vraag">
+      <p>Waar kunnen opleiding en jullie organisatie sterker samenwerken?</p>
+      <div class="slot-sub">Mogelijke samenwerkingsvormen: stages, gastlessen, casussen, terugkoppeling.</div>
+      <textarea class="notatie-area" id="slot-samenwerking" placeholder="Noteer kansen en voorstellen..." rows="2"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- STAP 3 -->
+<div class="stap-panel" id="stap-3">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:.375rem;">Synthese na het gesprek</h2>
+    <p style="font-size:12px;color:var(--muted);line-height:1.65;">Vul de synthese in onmiddellijk na het gesprek. Per gekozen bouwsteen geef je een signaallabel vanuit het werkveldperspectief, voeg je 2–3 kernuitspraken toe en formuleer je één conclusie. Dit wordt opgeslagen als extern perspectief naast de interne instrumenten.</p>
+  </div>
+  <div id="synthese-content"></div>
+
+  <div class="syn-blok">
+    <div class="syn-header"><h3>Algemene conclusie gesprek</h3></div>
+    <div class="syn-veld">
+      <label>Wat was het sterkste signaal vanuit dit werkveldperspectief?</label>
+      <textarea id="syn-signaal" placeholder="Formuleer het dominante inzicht in 1–2 zinnen..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Welke kloof ziet het werkveld tussen opleiding en praktijk?</label>
+      <textarea id="syn-kloof" placeholder="Concreet en niet-defensief — wat missen zij bij onze cursisten?" rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Welke actie of opvolging volgt hieruit?</label>
+      <textarea id="syn-actie" placeholder="bv. bespreken in teamdialoog, aanpassen in opleiding, verdere samenwerking verkennen..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Mogelijke samenwerking of vervolgafspraak</label>
+      <input type="text" id="syn-samenwerking" placeholder="bv. gastles plannen, stage-afspraak, terugkoppeling na 6 maanden...">
+    </div>
+    <div class="syn-veld">
+      <label>Koppeling aan bouwstenen of leerpaden</label>
+      <input type="text" id="syn-leerpad" placeholder="bv. Levensecht leren, Zorgzaam onderwijs, NT2 taalbeleid...">
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="actions-bar">
+  <span class="save-status" id="save-status">Stap 1 van 3</span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="btn btn-secondary" id="btn-terug"   onclick="navigeer(-1)" style="display:none;">← Terug</button>
+    <button class="btn btn-secondary" onclick="downloadDoc()">⬇ Download</button>
+    <button class="btn btn-primary"   id="btn-verder"  onclick="navigeer(1)">Gesprek starten →</button>
+    <button class="btn btn-primary"   id="btn-opslaan" onclick="saveDoc()" style="display:none;">Opslaan</button>
+  </div>
+</div>
+
+<script>
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880', tcls:'bs-kwal'  },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91', tcls:'bs-zorg'  },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A', tcls:'bs-leven' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330', tcls:'bs-betrok'},
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238', tcls:'bs-samen' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35', tcls:'bs-innov' },
+];
+
+function hexSVG(kleur,sz=22){
+  const c=sz/2,r=sz*.41,pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  const p=pts.join(' ');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><polygon points="${p}" fill="${kleur}" opacity=".2"/><polygon points="${p}" fill="${kleur}" transform="scale(.77) translate(${sz*.115},${sz*.115})"/></svg>`;
+}
+
+/* VRAGEN — vanuit werkveld/doorstroomperspectief NT2 */
+const VRAGEN = {
+  kwal: {
+    icon:'📋', titel:'Kwaliteitsvol leren',
+    intro:'Herkennen jullie bij onze cursisten dat ze doelgericht hebben geleerd?',
+    bstags:['kwal'],
+    vragen:[
+      { id:'wk1', vraag:'Wat kunnen cursisten van ons bij jullie meteen toepassen — en wat niet?',
+        ind:'Procesindicator: transfer van leerresultaten naar doorstroom',
+        doorvraag:'Zijn er concrete voorbeelden van vaardigheden of kennis die goed aansluiten? En van dingen die ze nóg moeten leren bij jullie?' },
+      { id:'wk2', vraag:'Hoe gaan onze cursisten om met feedback en bijsturing?',
+        ind:'Procesindicator: feedbackvaardigheid en leervermogen',
+        doorvraag:'Kunnen ze omgaan met correctie? Vragen ze zelf om verduidelijking? Passen ze hun gedrag aan als iets niet werkt?' },
+    ]
+  },
+  zorg: {
+    icon:'🤲', titel:'Zorgzaam — haalbaarheid en weerbaarheid',
+    intro:'Hoe weerbaar en zelfredzaam zijn onze cursisten bij jullie?',
+    bstags:['zorg'],
+    vragen:[
+      { id:'wz1', vraag:'Hoe gaan onze cursisten om met werkdruk, verwachtingen en moeilijke situaties?',
+        ind:'Procesindicator: mentale weerbaarheid en draagkracht',
+        doorvraag:'Zijn er patronen in hoe ze vastlopen? Zijn ze voldoende voorbereid op het tempo of de verwachtingen bij jullie? Wat zou hen beter hebben voorbereid?' },
+      { id:'wz2', vraag:'Weten onze cursisten waar ze terechtkunnen als iets moeilijk gaat?',
+        ind:'Procesindicator: zelfadvocacy en zelfredzaamheid',
+        doorvraag:'Durven ze hulp vragen? Kennen ze de beschikbare ondersteuning? Zijn er drempels die jullie regelmatig zien?' },
+    ]
+  },
+  leven: {
+    icon:'🌍', titel:'Levensecht — aansluiting bij realiteit',
+    intro:'Sluit wat onze cursisten geleerd hebben aan bij de realiteit bij jullie?',
+    bstags:['leven'],
+    vragen:[
+      { id:'wl1',
+        vraag:'In welke mate herkennen jullie de realiteit van jullie context in wat onze cursisten geleerd hebben?',
+        ind:'Procesindicator: levensechtheid en werkveldaansluiting',
+        doorvraag_nt2:'Zijn er situaties waarbij cursisten zeggen "dit hadden we nooit geoefend"? Sluit het taalniveau aan bij wat jullie vragen? Waar zit de grootste kloof?',
+        doorvraag_bero:'Herkennen jullie de beroepsvaardigheden die wij aanleren in de praktijk? Zijn er technieken, procedures of attitudes die ontbreken? Wat vergt bijscholing op de werkvloer?',
+        doorvraag_dso:'Zijn cursisten voldoende voorbereid op de inhoud van een vervolgtraject of de arbeidsmarkt? Wat missen ze — kennis, vaardigheden of algemene vorming?',
+        get doorvraag(){ return this['doorvraag_'+huidigProfiel]||this.doorvraag_nt2; } },
+      { id:'wl2',
+        vraag:'Wat moeten onze cursisten bij jullie nog extra leren of afleren?',
+        ind:'Procesindicator: transferkloof — wat de opleiding niet bereikt',
+        doorvraag_nt2:'Gaat het eerder over taal, sociale codes, werkhouding of iets anders? Zijn er patronen die jullie structureel zien?',
+        doorvraag_bero:'Gaat het over technische vaardigheden, beroepshouding, veiligheid, communicatie? Zijn er opleidingsaspecten die structureel tekortschieten?',
+        doorvraag_dso:'Gaat het over studievaardigheden, zelfsturing, basiskennis of iets anders? Zijn er dingen die cursisten moeten "afleren" omdat ze het verkeerd hebben aangeleerd?',
+        get doorvraag(){ return this['doorvraag_'+huidigProfiel]||this.doorvraag_nt2; } },
+      { id:'wl3',
+        vraag:'Zijn er opdrachten of situaties uit de opleiding die jullie wél terugzien bij cursisten?',
+        ind:'Procesindicator: positieve transfer — wat werkt',
+        doorvraag_nt2:'Wat doen onze cursisten beter dan je zou verwachten? Welke NT2-aanpak helpt hen écht?',
+        doorvraag_bero:'Welke vaardigheden of attitudes vallen positief op? Zijn er specifieke aanpakken die wij inzetten die jullie zien terugkomen?',
+        doorvraag_dso:'Wat kunnen cursisten goed — en wat zegt dat over onze opleiding? Zijn er competenties die hen onderscheiden van andere instromers?',
+        get doorvraag(){ return this['doorvraag_'+huidigProfiel]||this.doorvraag_nt2; } },
+    ]
+  },
+  betrok: {
+    icon:'💡', titel:'Betrokken — motivatie en eigenaarschap',
+    intro:'Hoe betrokken en gemotiveerd zijn onze cursisten bij jullie?',
+    bstags:['betrok'],
+    vragen:[
+      { id:'wb1', vraag:'Hoe ervaren jullie de werkhouding en betrokkenheid van onze cursisten?',
+        ind:'Procesindicator: engagement en professionele houding',
+        doorvraag:'Nemen ze initiatief? Zijn ze aanwezig en betrokken? Zijn er patronen in wie het goed doet en wie vastloopt?' },
+      { id:'wb2', vraag:'Hebben onze cursisten een helder beeld van hun eigen doelen en wat ze willen bereiken?',
+        ind:'Procesindicator: eigenaarschap over leer- en loopbaantraject',
+        doorvraag:'Kunnen ze vertellen wat ze willen? Begrijpen ze hun eigen traject? Of zijn ze eerder afwachtend?' },
+    ]
+  },
+  samen: {
+    icon:'🤝', titel:'Samen — communicatie en samenwerking',
+    intro:'Hoe functioneren onze cursisten in sociale en professionele contexten?',
+    bstags:['samen'],
+    vragen:[
+      { id:'ws1', vraag:'Hoe functioneren onze cursisten in teamcontexten of groepsituaties bij jullie?',
+        ind:'Procesindicator: sociale vaardigheden en samenwerking',
+        doorvraag:'Kunnen ze samenwerken met mensen die ze niet kennen? Hoe gaan ze om met hiërarchie, collega\'s of klanten? Waar zien jullie knelpunten?' },
+      { id:'ws2', vraag:'Hoe communiceren onze cursisten in het Nederlands in jullie context?',
+        ind:'Procesindicator: functionele taalvaardigheid in context',
+        doorvraag_nt2:'Zijn er situaties waarbij communicatie stokt? Gaat het over begrip, productie, formeel versus informeel?',
+        doorvraag_bero:'Hoe communiceren ze met collega\'s, klanten of leidinggevenden? Zijn er problemen met technische taal, instructies opvolgen of mondeling rapporteren?',
+        doorvraag_dso:'Kunnen ze zich mondeling en schriftelijk voldoende uitdrukken voor een vervolgopleiding of de arbeidsmarkt?',
+        get doorvraag(){ return this['doorvraag_'+huidigProfiel]||this.doorvraag_nt2; } },
+    ]
+  },
+  innov: {
+    icon:'💻', titel:'Innovatief — digitale zelfredzaamheid',
+    intro:'Hoe digitaal vaardig en zelfredzaam zijn onze cursisten bij jullie?',
+    bstags:['innov'],
+    vragen:[
+      { id:'wi1', vraag:'Hoe gaan onze cursisten om met digitale tools en systemen bij jullie?',
+        ind:'Procesindicator: digitale vaardigheden in doorstroomcontext',
+        doorvraag:'Zijn er tools, platformen of systemen waarmee ze moeite hebben? Zijn ze voldoende voorbereid op wat jullie digitaal verwachten? Wat zou beter kunnen?' },
+      { id:'wi2', vraag:'Zijn er digitale vaardigheden die jullie structureel missen bij onze cursisten?',
+        ind:'Procesindicator: kloof digitale voorbereiding ↔ verwachting',
+        doorvraag:'E-mail, formulieren, online portalen, videobellen — waar loopt het het vaakst mis? Gaat het over technische vaardigheid of over digitale geletterdheid?' },
+    ]
+  },
+};
+
+let huidigStap = 1;
+let gekozenBS  = [];
+let huidigProfiel = 'nt2';
+let actievePartners = ['vdab'];
+let notaties   = {};
+let signalen   = {};
+let citaten    = {};
+let conclusies = {};
+
+function init(){
+  document.getElementById('ctx-datum').value = new Date().toISOString().split('T')[0];
+  buildBsSelectGrid();
+  // Standaard alle bouwstenen selecteren
+  BS.forEach(b=>{ gekozenBS.push(b.id); document.getElementById('bsitem-'+b.id)?.classList.add('gekozen'); });
+}
+
+function buildBsSelectGrid(){
+  document.getElementById('bs-select-grid').innerHTML = BS.map(b=>`
+    <label class="bs-select-item${gekozenBS.includes(b.id)?' gekozen':''}" style="--bs-c:${b.c};--bs-bg:${b.bg};--bs-dk:${b.dk};" id="bsitem-${b.id}">
+      <input type="checkbox" value="${b.id}" ${gekozenBS.includes(b.id)?'checked':''} onchange="toggleBS('${b.id}',this)">
+      ${hexSVG(b.c,22)}
+      <span class="bs-naam">${b.naam}</span>
+    </label>`).join('');
+}
+
+function toggleBS(id,el){
+  if(el.checked){ gekozenBS.push(id); document.getElementById('bsitem-'+id).classList.add('gekozen'); }
+  else { gekozenBS=gekozenBS.filter(x=>x!==id); document.getElementById('bsitem-'+id).classList.remove('gekozen'); }
+}
+
+function setProfiel(id, btn){
+  huidigProfiel = id;
+  document.querySelectorAll('#profiel-select .partner-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Update context placeholder
+  const opl = document.getElementById('ctx-opleiding');
+  if(id==='nt2')  opl.placeholder = 'bv. NT2 Richtgraad 1.1';
+  if(id==='bero') opl.placeholder = 'bv. Fietshersteller, Zorgkundige';
+  if(id==='dso')  opl.placeholder = 'bv. Diploma Secundair Bedrijfsbeheer';
+  // Update partner hints
+  const partner = document.getElementById('ctx-partner');
+  if(id==='nt2')  partner.placeholder = 'bv. VDAB-consulent, trajectbegeleider Ankerpunt, werkgever';
+  if(id==='bero') partner.placeholder = 'bv. werkgever, stagebegeleider, sectororganisatie';
+  if(id==='dso')  partner.placeholder = 'bv. werkgever, vervolginstelling, alumni';
+  // Update gesprek content label
+  updateProfielLabel();
+}
+
+function updateProfielLabel(){
+  const el = document.getElementById('profiel-gesprek-label');
+  if(!el) return;
+  const labels = {
+    'nt2':  '🗣️ NT2 — doorstroom naar werk, vervolgopleiding of maatschappelijke participatie',
+    'bero': '🏭 Beroepsopleiding — aansluiting bij werkveld en sector',
+    'dso':  '🎓 Diploma Secundair — doorstroom naar vervolgonderwijs of arbeidsmarkt',
+  };
+  el.textContent = labels[huidigProfiel]||'';
+}
+
+function togglePartner(id,btn){
+  if(actievePartners.includes(id)){ actievePartners=actievePartners.filter(x=>x!==id); btn.classList.remove('active'); }
+  else { actievePartners.push(id); btn.classList.add('active'); }
+}
+
+function navigeer(richting){
+  if(richting===1&&huidigStap===1){ if(!gekozenBS.length){alert('Kies minstens één bouwsteen.');return;} buildGesprek(); }
+  if(richting===1&&huidigStap===2) buildSynthese();
+  huidigStap=Math.max(1,Math.min(3,huidigStap+richting));
+  updateUI();
+}
+
+function updateUI(){
+  document.querySelectorAll('.stap-panel').forEach((p,i)=>p.classList.toggle('active',i+1===huidigStap));
+  document.querySelectorAll('.stap-item').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i+1===huidigStap) el.classList.add('active');
+    if(i+1<huidigStap)   el.classList.add('done');
+  });
+  document.getElementById('btn-terug').style.display  = huidigStap>1?'':'none';
+  document.getElementById('btn-verder').style.display = huidigStap<3?'':'none';
+  document.getElementById('btn-opslaan').style.display= huidigStap===3?'':'none';
+  document.getElementById('btn-verder').textContent   = huidigStap===1?'Gesprek starten →':'Naar synthese →';
+  document.getElementById('save-status').textContent  = `Stap ${huidigStap} van 3`;
+  window.scrollTo(0,0);
+}
+
+function buildGesprek(){
+  updateProfielLabel();
+  let html='';
+  gekozenBS.forEach(bsId=>{
+    const b=BS.find(x=>x.id===bsId);
+    const vd=VRAGEN[bsId];
+    const bsTags=vd.bstags.map(t=>`<span class="bs-tag bs-${t}">${BS.find(x=>x.id===t)?.naam||t}</span>`).join('');
+    html+=`<div class="thema-blok">
+      <div class="thema-header" style="background:${b.bg};border-bottom-color:${b.c}40;">
+        <div class="thema-icon" style="background:${b.c}22;">${vd.icon}</div>
+        <div>
+          <h3 style="color:${b.dk}">${vd.titel}</h3>
+          <p>${vd.intro}</p>
+        </div>
+      </div>`;
+    vd.vragen.forEach(v=>{
+      html+=`<div class="vraag-blok">
+        <div class="bs-tag-rij">${bsTags}</div>
+        <div class="vraag-tekst">${v.vraag}</div>
+        <div class="vraag-ind">${v.ind}</div>
+        <div class="doorvraag"><strong>Doorvraag:</strong> ${v.doorvraag}</div>
+        <span class="notatie-label">Notaties — citaten en concrete voorbeelden</span>
+        <textarea class="notatie-area" id="not-${v.id}" placeholder="Noteer uitspraken zo concreet mogelijk..." rows="3" onchange="notaties['${v.id}']=this.value">${notaties[v.id]||''}</textarea>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  document.getElementById('gesprek-content').innerHTML=html;
+}
+
+function buildSynthese(){
+  gekozenBS.forEach(bsId=>{
+    const vd=VRAGEN[bsId];
+    vd.vragen.forEach(v=>{const el=document.getElementById('not-'+v.id);if(el)notaties[v.id]=el.value;});
+  });
+  let html='';
+  gekozenBS.forEach(bsId=>{
+    const b=BS.find(x=>x.id===bsId);
+    const sig=signalen[bsId]||'';
+    html+=`<div class="syn-blok">
+      <div class="syn-header" style="background:${b.bg};border-bottom-color:${b.c}40;">
+        ${hexSVG(b.c,30)}<h3 style="color:${b.dk}">${b.naam} — werkveldperspectief</h3>
+      </div>
+      <div class="signaal-keuze">
+        <label>Signaal vanuit het werkveld voor ${b.naam}</label>
+        <button class="sig-btn${sig==='sterk'?' sel-sterk':''}" onclick="setSig('${bsId}','sterk',this)">✅ Sterke aansluiting</button>
+        <button class="sig-btn${sig==='neutraal'?' sel-neutraal':''}" onclick="setSig('${bsId}','neutraal',this)">➡️ Voldoende</button>
+        <button class="sig-btn${sig==='aandacht'?' sel-aandacht':''}" onclick="setSig('${bsId}','aandacht',this)">⚠️ Kloof zichtbaar</button>
+      </div>
+      <div class="syn-veld syn-apart">
+        <label>Kernuitspraken werkveld (2–3 concrete quotes)</label>
+        <textarea id="cit-${bsId}" placeholder="Kopieer de meest treffende uitspraken..." rows="3" onchange="citaten['${bsId}']=this.value">${citaten[bsId]||''}</textarea>
+      </div>
+      <div class="syn-veld">
+        <label>Conclusie in één zin</label>
+        <textarea id="con-${bsId}" placeholder="Wat vertelt dit gesprek ons over ${b.naam} vanuit het werkveld?" rows="2" onchange="conclusies['${bsId}']=this.value">${conclusies[bsId]||''}</textarea>
+      </div>
+    </div>`;
+  });
+  document.getElementById('synthese-content').innerHTML=html;
+}
+
+function setSig(bsId,sig,btn){
+  signalen[bsId]=sig;
+  btn.closest('.signaal-keuze').querySelectorAll('.sig-btn').forEach(b=>b.classList.remove('sel-sterk','sel-neutraal','sel-aandacht'));
+  btn.classList.add('sel-'+sig);
+}
+
+function downloadDoc(){
+  if(huidigStap>=2){ gekozenBS.forEach(bsId=>{VRAGEN[bsId].vragen.forEach(v=>{const el=document.getElementById('not-'+v.id);if(el)notaties[v.id]=el.value;});}); }
+  if(huidigStap>=3){ gekozenBS.forEach(bsId=>{const cc=document.getElementById('cit-'+bsId);const cn=document.getElementById('con-'+bsId);if(cc)citaten[bsId]=cc.value;if(cn)conclusies[bsId]=cn.value;}); }
+
+  const opl=document.getElementById('ctx-opleiding').value;
+  const SIGICO={'sterk':'✅ Sterke aansluiting','neutraal':'➡️ Voldoende','aandacht':'⚠️ Kloof zichtbaar'};
+  const SIGKL={'sterk':'#EAF3DE,#3B6D11','neutraal':'#F5F3D8,#8A8330','aandacht':'#FAEAEA,#B84A4A'};
+
+  const s1=document.getElementById('not-start1')?.value||'';
+  const s2=document.getElementById('not-start2')?.value||'';
+
+  let body=`<div class="start-blok"><strong>Startblok — context en perspectief</strong><div class="start-v"><div class="start-q">In welke context komen onze cursisten bij jullie terecht?</div><div class="start-a">${s1||'—'}</div></div><div class="start-v"><div class="start-q">Wat betekent "voldoende NT2" voor jullie?</div><div class="start-a">${s2||'—'}</div></div></div>`;
+
+  gekozenBS.forEach(bsId=>{
+    const b=BS.find(x=>x.id===bsId);
+    const vd=VRAGEN[bsId];
+    body+=`<div class="bs-blok"><div class="bs-titel" style="background:${b.bg};border-left:4px solid ${b.c}"><strong style="color:${b.dk}">${b.naam}</strong><span style="margin-left:8px;font-size:11px;color:${b.dk}">${vd.titel}</span></div>`;
+    vd.vragen.forEach(v=>{body+=`<div class="v-blok"><div class="v-tekst">${v.vraag}</div><div class="v-ind">${v.ind}</div><div class="v-doorvraag"><strong>Doorvraag:</strong> ${v.doorvraag}</div><div class="not-label">Notaties</div><div class="not-val">${notaties[v.id]||'—'}</div></div>`;});
+    const sig=signalen[bsId];
+    const [sigBg,sigC]=(SIGKL[sig]||'#f1efe8,#888780').split(',');
+    body+=`<div class="syn-sec"><div class="syn-sig" style="background:${sigBg};color:${sigC};">${SIGICO[sig]||'— Niet ingevuld'}</div><div class="syn-cit-label">Kernuitspraken</div><div class="syn-cit">${citaten[bsId]||'—'}</div><div class="syn-con-label">Conclusie</div><div class="syn-con">${conclusies[bsId]||'—'}</div></div></div>`;
+  });
+
+  const sg=document.getElementById('slot-goed')?.value||'';
+  const sp=document.getElementById('slot-prio')?.value||'';
+  const ss=document.getElementById('slot-samenwerking')?.value||'';
+  body+=`<div class="slot-sec"><strong>Slotblok — prioritering</strong><div class="slot-v"><div class="slot-q">Wat doen wij al goed?</div><div class="slot-a">${sg||'—'}</div></div><div class="slot-v"><div class="slot-q">Eén veranderpunt:</div><div class="slot-a">${sp||'—'}</div></div><div class="slot-v"><div class="slot-q">Samenwerking:</div><div class="slot-a">${ss||'—'}</div></div></div>`;
+
+  const ssig=document.getElementById('syn-signaal')?.value||'';
+  const skloof=document.getElementById('syn-kloof')?.value||'';
+  const sact=document.getElementById('syn-actie')?.value||'';
+  const ssam=document.getElementById('syn-samenwerking')?.value||'';
+  const slp=document.getElementById('syn-leerpad')?.value||'';
+  body+=`<div class="asyn-sec"><strong>Algemene conclusie gesprek</strong><div class="asyn-r"><span class="asyn-l">Sterkste signaal:</span><span>${ssig||'—'}</span></div><div class="asyn-r"><span class="asyn-l">Kloof opleiding ↔ werkveld:</span><span>${skloof||'—'}</span></div><div class="asyn-r"><span class="asyn-l">Actie / opvolging:</span><span>${sact||'—'}</span></div><div class="asyn-r"><span class="asyn-l">Samenwerking:</span><span>${ssam||'—'}</span></div><div class="asyn-r"><span class="asyn-l">Leerpad:</span><span>${slp||'—'}</span></div></div>`;
+
+  const css=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;font-size:11px;color:#1a1a18;padding:2rem;max-width:900px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;}.sub{font-size:11px;color:#5f5e5a;margin-top:.2rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.start-blok{background:#f4f3f0;border:1px solid #E2DFD7;border-radius:6px;padding:.875rem 1rem;margin-bottom:1.25rem;}.start-blok strong{font-size:12px;display:block;margin-bottom:.5rem;}.start-v{margin-bottom:.5rem;}.start-q{font-size:11.5px;font-weight:500;margin-bottom:.2rem;}.start-a{font-size:11px;white-space:pre-wrap;}.bs-blok{margin-bottom:1.25rem;}.bs-titel{padding:.5rem .875rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.v-blok{border:1px solid #E2DFD7;border-radius:6px;margin-bottom:.375rem;overflow:hidden;}.v-tekst{font-size:11.5px;font-weight:500;padding:.5rem .75rem .2rem;line-height:1.4;}.v-ind{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .2rem;}.v-doorvraag{font-size:10.5px;color:#5f5e5a;padding:0 .75rem .375rem;}.not-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;padding:.375rem .75rem .1rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.not-val{font-size:11px;padding:.25rem .75rem .5rem;background:#f8f7f4;white-space:pre-wrap;min-height:20px;}.syn-sec{background:#f4f3f0;border:1px solid #E2DFD7;border-radius:6px;padding:.75rem 1rem;margin-top:.375rem;}.syn-sig{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;margin-bottom:.5rem;}.syn-cit-label,.syn-con-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;margin-top:.375rem;display:block;}.syn-cit{font-size:11px;font-style:italic;white-space:pre-wrap;}.syn-con{font-size:12px;font-weight:500;}.slot-sec{margin-top:1.5rem;padding:.875rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.slot-sec strong{font-size:12px;display:block;margin-bottom:.5rem;}.slot-v{margin-bottom:.5rem;}.slot-q{font-size:11.5px;font-weight:500;margin-bottom:.2rem;}.slot-a{font-size:11px;white-space:pre-wrap;}.asyn-sec{margin-top:1.5rem;padding:.875rem 1rem;background:#1a1a18;color:#fff;border-radius:6px;}.asyn-sec strong{font-size:12px;display:block;margin-bottom:.5rem;color:#fff;}.asyn-r{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.asyn-l{font-weight:600;min-width:180px;color:#b4b2a9;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok{break-inside:avoid;}}`;
+
+  const ctx=`<div class="ctx-info"><span>Opleiding/traject: <strong>${opl||'—'}</strong></span><span>Periode: <strong>${document.getElementById('ctx-periode').value||'—'}</strong></span><span>Begeleider: <strong>${document.getElementById('ctx-begeleider').value||'—'}</strong></span><span>Datum: <strong>${document.getElementById('ctx-datum').value||'—'}</strong></span><span>Partner: <strong>${document.getElementById('ctx-partner').value||'—'}</strong></span></div>`;
+
+  const doc=`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Focusgesprek Werkveld — ${opl||'Crescendo CVO'}</title><style>${css}</style></head><body><div class="doc-header"><h1>Focusgesprek Werkveld &amp; Doorstroompartners</h1><div class="sub">Crescendo CVO · NT2 · Kwaliteitsloop 2026–2030</div>${ctx}<div style="margin-top:.5rem;font-size:11px;color:#5f5e5a;">Doel: ${document.getElementById('ctx-doel').value||'—'}</div></div><div class="principe"><strong>Gesprekshouding:</strong> Dit gesprek heeft geen defensief karakter. We zoeken oprecht naar hoe wij onze NT2-opleiding beter kunnen afstemmen op de realiteit bij jullie. Jullie perspectief is waardevolle data.</div>${body}<div class="doc-footer"><span>Crescendo CVO · Focusgesprek Werkveld · NT2</span><span>${new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})}</span></div></body></html>`;
+
+  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='werkveld-'+huidigProfiel+'-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.html';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function saveDoc(){
+  gekozenBS.forEach(bsId=>{
+    const cc=document.getElementById('cit-'+bsId);
+    const cn=document.getElementById('con-'+bsId);
+    if(cc)citaten[bsId]=cc.value; if(cn)conclusies[bsId]=cn.value;
+  });
+  const payload={
+    instrument:'focusgesprek-werkveld',
+    cursistenprofiel: huidigProfiel,
+    opleiding:   document.getElementById('ctx-opleiding').value,
+    periode:     document.getElementById('ctx-periode').value,
+    begeleider:  document.getElementById('ctx-begeleider').value,
+    datum:       document.getElementById('ctx-datum').value,
+    partner:     document.getElementById('ctx-partner').value,
+    partnerType: actievePartners,
+    doel:        document.getElementById('ctx-doel').value,
+    gekozenBS, notaties, signalen, citaten, conclusies,
+    slotvragen:{ goed:document.getElementById('slot-goed')?.value||'', prioriteit:document.getElementById('slot-prio')?.value||'', samenwerking:document.getElementById('slot-samenwerking')?.value||'' },
+    syn_signaal:     document.getElementById('syn-signaal')?.value||'',
+    syn_kloof:       document.getElementById('syn-kloof')?.value||'',
+    syn_actie:       document.getElementById('syn-actie')?.value||'',
+    syn_samenwerking:document.getElementById('syn-samenwerking')?.value||'',
+    syn_leerpad:     document.getElementById('syn-leerpad')?.value||'',
+    timestamp:new Date().toISOString(),
+  };
+  console.log('SharePoint payload:',JSON.stringify(payload,null,2));
+  if(navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  document.getElementById('save-status').textContent='Opgeslagen om '+new Date().toLocaleTimeString('nl-BE')+' — klaar voor SharePoint';
+  const btn=document.getElementById('btn-opslaan');
+  btn.textContent='✓ Opgeslagen'; setTimeout(()=>{btn.textContent='Opslaan';},2000);
+}
+
+init();
+</script>
+</body>
+</html>
