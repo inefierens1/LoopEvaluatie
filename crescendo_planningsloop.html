@@ -99,9 +99,9 @@
 
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('planningsloop',this)">Planningsloop</button>
-  <button class="tab-btn"        onclick="switchTab('loopvisual',this)">Vernieuwde loop (visueel)</button>
-  <button class="tab-btn"        onclick="switchTab('cipo',this)">Wat meten we?</button>
   <button class="tab-btn"        onclick="switchTab('instrumenten',this)">Instrumenten</button>
+  <button class="tab-btn"        onclick="switchTab('cipo',this)">Wat meten we?</button>
+  <button class="tab-btn"        onclick="switchTab('loopvisual',this)">Vernieuwde loop (visueel)</button>
 </div>
 
 <!-- ══════════ TAB 1: PLANNINGSLOOP ══════════ -->
@@ -676,17 +676,33 @@
       <div class="instr-card-arrow">Openen ↗</div>
     </a>
 
-    <div class="instr-card instr-card-disabled">
+    <a class="instr-card" href="werkveld_leidraad.html" target="_blank">
       <div class="instr-card-top">
         <div class="instr-card-icon" style="background:#F3E8E3;">🏭</div>
-        <div><h3>Focusgesprek werkveld</h3></div>
+        <div><h3>Focusgesprek werkveld &amp; doorstroompartners</h3></div>
       </div>
-      <p>Leidraad voor gesprekken met werkgevers en stagebegeleiders · Levensechtheid</p>
+      <p>NT2 · Beroepsopleiding · DSO · Cursistenprofiel selecteerbaar · Bouwstenen selecteerbaar · Notaties + synthese</p>
       <div class="instr-card-tags">
-        <span class="itag itag-leven">Levensecht</span><span class="itag itag-innov">Innovatief</span>
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-leven">Levensecht</span><span class="itag itag-betrok">Betrokken</span>
+        <span class="itag itag-samen">Samen</span><span class="itag itag-innov">Innovatief</span>
       </div>
-      <div class="instr-card-arrow">🔒 Binnenkort beschikbaar</div>
-    </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+    <a class="instr-card" href="concullega_leidraad.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#EAF0DE;">🏫</div>
+        <div><h3>Focusgroep concullega CVO's</h3></div>
+      </div>
+      <p>Collegiale uitwisseling over kwaliteitsontwikkeling · Benchmarking · Bouwstenen selecteerbaar · Notaties + synthese</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-leven">Levensecht</span><span class="itag itag-betrok">Betrokken</span>
+        <span class="itag itag-samen">Samen</span><span class="itag itag-innov">Innovatief</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
 
   </div>
 
@@ -792,9 +808,10 @@ const DATA={
     instrumenten:[
       {naam:'Lesobservatieformulier',bestand:'observatieformulier.html',icon:'🏫',beschikbaar:true},
     ]},
-  werkveld:{titel:'Focusgesprekken werkveld',wanneer:'April–Mei',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Gesprekken met werkgevers, stagebegeleiders of externe partners. Input voor levensechtheid en authenticiteit van opleidingen.',bstn:['Levensecht','Innovatief'],
+  werkveld:{titel:'Focusgesprekken werkveld & concullega CVO\'s',wanneer:'April–Mei',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Gesprekken met externe partners: werkgevers, stagebegeleiders, doorstroompartners (NT2/Beroep/DSO) én collegiale uitwisseling met concullega CVO\'s.',bstn:['Levensecht','Innovatief','Samen'],
     instrumenten:[
-      {naam:'Focusgesprek werkveld — leidraad',bestand:null,icon:'🏭',beschikbaar:false},
+      {naam:'Focusgesprek werkveld — leidraad',bestand:'werkveld_leidraad.html',icon:'🏭',beschikbaar:true},
+      {naam:'Focusgroep concullega CVO\'s — leidraad',bestand:'concullega_leidraad.html',icon:'🏫',beschikbaar:true},
     ]},
   synthese:{titel:'Synthese & rapportering',wanneer:'Juni',wie:'Team kwaliteit + adjunct + OC',methode:'Rapportering',beschrijving:'Alle resultaten samenbrengen: kwantitatieve data + kwalitatieve bevindingen. Koppeling aan CIPO-indicatoren en dashboard.',bstn:['Kwaliteitsvol','Samen'],instrumenten:[]},
   terugkoppeling:{titel:'Terugkoppeling vakgroepen',wanneer:'Juni',wie:'Team kwaliteit',methode:'Terugkoppeling',beschrijving:'Resultaten en groeikansen teruggekoppeld aan betrokken lesgevers en vakgroepen. Welke leerpaden of acties voor volgend schooljaar?',bstn:['Samen','Betrokken','Innovatief'],instrumenten:[]}
