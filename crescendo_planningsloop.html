@@ -579,22 +579,32 @@ const DATA={
   plan:{titel:'Plan van aanpak',wanneer:'Oktober',wie:'Team kwaliteit',methode:'Planning',beschrijving:'Werkafspraken per opleiding: wie doet wat, wanneer en hoe. Koppeling aan onderwijsmatrix en CIPO-indicatoren.',bstn:['Kwaliteitsvol','Samen'],instrumenten:[]},
   obs1:{titel:'Lesobservaties ronde 1',wanneer:'November (2 weken)',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Gestructureerde lesobservaties op basis van observatieformulier (6 bouwstenen). Focus op processen in de klas. Nagesprek met lesgever.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],
     instrumenten:[
-      {naam:'Kijkwijzer Evaluatiemateriaal — Korte scan',bestand:'kijkwijzer_evaluatie.html',ronde:'klas',icon:'📋'},
+      {naam:'Lesobservatieformulier',bestand:null,icon:'🏫',beschikbaar:false},
     ]},
-  bev:{titel:'Cursistenbevragingen & focusgroep',wanneer:'December',wie:'Team kwaliteit',methode:'Kwant. + Kwal.',beschrijving:'Verdiepende bevraging (MS Forms → SharePoint) + kwalitatief focusgesprek. Items gekoppeld aan CIPO-indicatoren per bouwsteen. 4-puntsschaal, geen middenoptie.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],instrumenten:[]},
-  analyse:{titel:'Opvolging les- & evaluatiemateriaal',wanneer:'Januari',wie:'Team kwaliteit',methode:'Documentanalyse',beschrijving:'Opvolging lesmateriaal en evaluatiemateriaal. Exacte aanpak nog te bepalen. Steekproef van moduleplannen en opdrachten via kijkwijzers.',bstn:['Kwaliteitsvol','Levensecht'],
+  bev:{titel:'Cursistenbevragingen & focusgroep',wanneer:'December',wie:'Team kwaliteit',methode:'Kwant. + Kwal.',beschrijving:'Verdiepende bevraging (MS Forms → SharePoint) + kwalitatief focusgesprek. Items gekoppeld aan CIPO-indicatoren per bouwsteen. 4-puntsschaal, geen middenoptie.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],
     instrumenten:[
-      {naam:'Kijkwijzer Evaluatiemateriaal — Uitgebreide scan',bestand:'kijkwijzer_evaluatie.html',ronde:'klas',icon:'📋'},
+      {naam:'Cursistenbevraging (digitaal)',bestand:null,icon:'💬',beschikbaar:false},
+      {naam:'Focusgroep cursisten — leidraad',bestand:null,icon:'🗣️',beschikbaar:false},
+    ]},
+  analyse:{titel:'Opvolging les- & evaluatiemateriaal',wanneer:'Januari',wie:'Team kwaliteit',methode:'Documentanalyse',beschrijving:'Opvolging lesmateriaal en evaluatiemateriaal. Steekproef van moduleplannen en opdrachten via kijkwijzers.',bstn:['Kwaliteitsvol','Levensecht'],
+    instrumenten:[
+      {naam:'Scan Evaluatiemateriaal — Korte scan',bestand:'kijkwijzer_evaluatie.html',icon:'📋',beschikbaar:true},
+      {naam:'Scan Evaluatiemateriaal — Uitgebreide scan',bestand:'kijkwijzer_evaluatie.html',icon:'📋',beschikbaar:true},
+      {naam:'Scan Leermateriaal — Korte scan',bestand:'kijkwijzer_leermateriaal.html',icon:'📄',beschikbaar:true},
+      {naam:'Scan Leermateriaal — Uitgebreide scan',bestand:'kijkwijzer_leermateriaal.html',icon:'📄',beschikbaar:true},
     ]},
   dialoog:{titel:'Teamdialoog — onderwijsmatrix',wanneer:'Januari–begin semester 2',wie:'Team kwaliteit',methode:'Dialoog',beschrijving:'Gestructureerd teamgesprek op basis van resultaten golf 1. Onderwijsmatrix + 6 bouwstenen als kapstok. Groeikansen formuleren.',bstn:['Kwaliteitsvol','Samen','Betrokken'],
     instrumenten:[
-      {naam:'Kijkwijzer Evaluatiemateriaal — Opleidingspraktijk',bestand:'kijkwijzer_evaluatie.html',ronde:'opleiding',icon:'📋'},
+      {naam:'Teamdialoog onderwijsmatrix — leidraad',bestand:null,icon:'🤝',beschikbaar:false},
     ]},
   obs2:{titel:'Lesobservaties ronde 2',wanneer:'Maart (2 weken)',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Tweede observatieronde. Focus op opvolging werkpunten uit ronde 1 en teamdialoog. Vergelijkende analyse mogelijk.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],
     instrumenten:[
-      {naam:'Kijkwijzer Evaluatiemateriaal — Korte scan',bestand:'kijkwijzer_evaluatie.html',ronde:'klas',icon:'📋'},
+      {naam:'Lesobservatieformulier',bestand:null,icon:'🏫',beschikbaar:false},
     ]},
-  werkveld:{titel:'Focusgesprekken werkveld',wanneer:'April–Mei',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Gesprekken met werkgevers, stagebegeleiders of externe partners. Input voor levensechtheid en authenticiteit van opleidingen.',bstn:['Levensecht','Innovatief'],instrumenten:[]},
+  werkveld:{titel:'Focusgesprekken werkveld',wanneer:'April–Mei',wie:'Team kwaliteit',methode:'Kwalitatief',beschrijving:'Gesprekken met werkgevers, stagebegeleiders of externe partners. Input voor levensechtheid en authenticiteit van opleidingen.',bstn:['Levensecht','Innovatief'],
+    instrumenten:[
+      {naam:'Focusgesprek werkveld — leidraad',bestand:null,icon:'🏭',beschikbaar:false},
+    ]},
   synthese:{titel:'Synthese & rapportering',wanneer:'Juni',wie:'Team kwaliteit + adjunct + OC',methode:'Rapportering',beschrijving:'Alle resultaten samenbrengen: kwantitatieve data + kwalitatieve bevindingen. Koppeling aan CIPO-indicatoren en dashboard.',bstn:['Kwaliteitsvol','Samen'],instrumenten:[]},
   terugkoppeling:{titel:'Terugkoppeling vakgroepen',wanneer:'Juni',wie:'Team kwaliteit',methode:'Terugkoppeling',beschrijving:'Resultaten en groeikansen teruggekoppeld aan betrokken lesgevers en vakgroepen. Welke leerpaden of acties voor volgend schooljaar?',bstn:['Samen','Betrokken','Innovatief'],instrumenten:[]}
 };
@@ -610,10 +620,14 @@ function showDet(k){
     instrHTML = `<div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid #d3d1c7;">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888780;margin-bottom:.4rem;">Instrument openen</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        ${d.instrumenten.map(i=>`
-          <a href="${BASE}${i.bestand}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#1a1a18;color:#fff;border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;">
-            ${i.icon} ${i.naam} ↗
-          </a>`).join('')}
+        ${d.instrumenten.map(i=> i.beschikbaar===false
+          ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#f1efe8;color:#b4b2a9;border-radius:6px;font-size:11px;font-weight:500;border:1px solid #d3d1c7;cursor:default;">
+              ${i.icon} ${i.naam} — binnenkort beschikbaar
+             </span>`
+          : `<a href="${BASE}${i.bestand}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#1a1a18;color:#fff;border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;">
+              ${i.icon} ${i.naam} ↗
+             </a>`
+        ).join('')}
       </div>
     </div>`;
   }
