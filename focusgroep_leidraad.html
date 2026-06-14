@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Focusgroep Cursisten — Leidraad — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#F7F6F2; --surface:#fff; --border:#E2DFD7;
+  --text:#2C2C2A; --muted:#6B6A65; --radius:8px;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* HEADER */
+.app-header { background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1 { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.app-header p  { font-size:11px; color:var(--muted); margin-top:1px; }
+
+/* STAP INDICATOR */
+.stap-bar { background:#fff; border-bottom:1px solid var(--border); padding:.5rem 1.5rem; display:flex; gap:0; }
+.stap-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); padding:.375rem .75rem; border-radius:99px; transition:all .15s; }
+.stap-item.active { background:#1a1a18; color:#fff; font-weight:600; }
+.stap-item.done   { color:#4A8A70; }
+.stap-nr { width:18px; height:18px; border-radius:50%; background:currentColor; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; opacity:.7; }
+.stap-item.active .stap-nr { background:#fff; color:#1a1a18; opacity:1; }
+.stap-sep { color:var(--border); padding:0 4px; font-size:14px; line-height:32px; }
+
+/* MAIN */
+.main { padding:1rem 1.5rem 5rem; max-width:820px; }
+
+/* STAP PANELS */
+.stap-panel { display:none; } .stap-panel.active { display:block; }
+
+/* SETUP */
+.setup-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+.setup-card h2 { font-size:14px; font-weight:600; margin-bottom:.75rem; }
+
+.ctx-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+.ctx-field { display:flex; flex-direction:column; gap:3px; }
+.ctx-field label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field input, .ctx-field select, .ctx-field textarea {
+  border:1px solid var(--border); border-radius:5px; padding:5px 8px;
+  font-size:12px; font-family:inherit; background:var(--bg); color:var(--text);
+}
+.ctx-field textarea { resize:vertical; min-height:52px; }
+.ctx-field.full { grid-column:1/-1; }
+
+/* BOUWSTEEN SELECTIE */
+.bs-select-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:.5rem; }
+.bs-select-item { display:flex; align-items:center; gap:8px; padding:.625rem .875rem; border-radius:8px; border:1.5px solid var(--border); cursor:pointer; transition:all .15s; background:#fff; }
+.bs-select-item:hover { border-color:#aaa; }
+.bs-select-item.gekozen { border-color:var(--bs-c); background:var(--bs-bg); }
+.bs-select-item input[type=checkbox] { display:none; }
+.bs-naam { font-size:12px; font-weight:600; color:var(--muted); }
+.bs-select-item.gekozen .bs-naam { color:var(--bs-dk); }
+
+/* NIVEAU SELECTIE */
+.niveau-select { display:flex; gap:8px; margin-top:.5rem; flex-wrap:wrap; }
+.niv-btn { padding:5px 14px; border-radius:6px; border:1.5px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; background:#fff; color:var(--muted); transition:all .15s; }
+.niv-btn.active-klas { background:#E8F4FF; color:#1A5F9A; border-color:#85B7EB; }
+.niv-btn.active-opl  { background:#EDF6EC; color:#2D6B27; border-color:#8FA563; }
+.niv-btn.active-beide { background:#F5F3D8; color:#8A8330; border-color:#CFC87A; }
+
+/* GESPREK */
+.bs-blok { background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.bs-blok-header { display:flex; align-items:center; gap:10px; padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.bs-blok-header h3 { font-size:13px; font-weight:600; }
+.bs-blok-header p  { font-size:11px; color:var(--muted); margin-top:1px; font-style:italic; }
+
+.niveau-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:600; margin-bottom:.5rem; }
+.badge-klas  { background:#E8F4FF; color:#1A5F9A; border:1px solid #B8D8F5; }
+.badge-opl   { background:#EDF6EC; color:#2D6B27; border:1px solid #B5D9B2; }
+
+.vraag-blok { padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.vraag-blok:last-of-type { border-bottom:none; }
+.vraag-tekst { font-size:13px; font-weight:500; margin-bottom:.25rem; line-height:1.45; }
+.vraag-ind   { font-size:10px; color:var(--muted); font-style:italic; margin-bottom:.375rem; }
+.doorvraag   { font-size:11px; color:#5f5e5a; margin-bottom:.5rem; }
+.doorvraag strong { font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:.03em; }
+.notatie-area { width:100%; min-height:64px; border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); }
+.notatie-area:focus { outline:none; border-color:#aaa; background:#fff; }
+.notatie-label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:3px; text-transform:uppercase; letter-spacing:.04em; }
+
+/* SYNTHESE */
+.syn-blok { background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.syn-header { display:flex; align-items:center; gap:10px; padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.syn-header h3 { font-size:13px; font-weight:600; }
+
+.signaal-keuze { display:flex; gap:6px; padding:.75rem 1rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.signaal-keuze label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.4rem; width:100%; text-transform:uppercase; letter-spacing:.04em; }
+.sig-btn { padding:4px 12px; border-radius:99px; border:1.5px solid var(--border); font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; background:#fff; color:var(--muted); transition:all .15s; }
+.sig-btn.sel-sterk    { background:#EAF3DE; color:#3B6D11; border-color:#8FA563; }
+.sig-btn.sel-neutraal { background:#F5F3D8; color:#8A8330; border-color:#CFC87A; }
+.sig-btn.sel-aandacht { background:#FAEAEA; color:#B84A4A; border-color:#E07272; }
+
+.syn-veld { padding:.625rem 1rem; border-bottom:1px solid var(--border); }
+.syn-veld:last-child { border-bottom:none; }
+.syn-veld label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.3rem; text-transform:uppercase; letter-spacing:.04em; }
+.syn-veld textarea { width:100%; min-height:48px; border:1px solid var(--border); border-radius:5px; padding:5px 7px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); }
+
+.syn-apart { background:#f8f7f4; }
+
+/* SLOTVRAGEN */
+.slot-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
+.slot-card h3 { font-size:13px; font-weight:600; margin-bottom:.625rem; }
+.slot-vraag { margin-bottom:.75rem; }
+.slot-vraag p { font-size:13px; font-weight:500; margin-bottom:.3rem; line-height:1.4; }
+.slot-vraag .sub { font-size:11px; color:var(--muted); margin-bottom:.375rem; }
+
+/* ACTIONS */
+.actions-bar { position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; z-index:10; }
+.btn { padding:6px 15px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
+.btn-primary { background:#1a1a18; color:#fff; border-color:#1a1a18; }
+.btn-secondary { background:var(--bg); color:var(--text); }
+.save-status { font-size:11px; color:var(--muted); font-style:italic; }
+
+/* WAARSCHUWING max bouwstenen */
+.warn { font-size:11px; color:#B84A4A; margin-top:.375rem; display:none; }
+.warn.show { display:block; }
+
+@media(max-width:520px){
+  .bs-select-grid { grid-template-columns:1fr 1fr; }
+  .ctx-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Focusgroep Cursisten — Leidraad</h1>
+    <p>Crescendo CVO · Bouwsteenteam Kwaliteitsvol · Kwaliteitsloop 2026–2030</p>
+  </div>
+</div>
+
+<!-- STAP INDICATOR -->
+<div class="stap-bar">
+  <div class="stap-item active" id="stap-ind-1"><div class="stap-nr">1</div> Setup</div>
+  <span class="stap-sep">›</span>
+  <div class="stap-item" id="stap-ind-2"><div class="stap-nr">2</div> Gesprek</div>
+  <span class="stap-sep">›</span>
+  <div class="stap-item" id="stap-ind-3"><div class="stap-nr">3</div> Synthese</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════ STAP 1: SETUP ══════════ -->
+<div class="stap-panel active" id="stap-1">
+
+  <div class="setup-card">
+    <h2>Contextgegevens</h2>
+    <div class="ctx-grid">
+      <div class="ctx-field"><label>Opleiding</label><input type="text" id="ctx-opleiding" placeholder="bv. Fietshersteller"></div>
+      <div class="ctx-field"><label>Schooljaar / periode</label><input type="text" id="ctx-periode" placeholder="bv. 2026–2027, semester 1"></div>
+      <div class="ctx-field"><label>Begeleider gesprek</label><input type="text" id="ctx-begeleider" placeholder="naam begeleider"></div>
+      <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum"></div>
+      <div class="ctx-field"><label>Aantal deelnemers</label><input type="number" id="ctx-aantal" placeholder="bv. 8" min="1" max="20" style="max-width:100px;"></div>
+      <div class="ctx-field"><label>Profiel</label>
+        <select id="ctx-profiel">
+          <option value="">— kies —</option>
+          <option>Persoonlijke ontwikkeling</option>
+          <option>Beroepsopleiding / DSBO</option>
+          <option>NT2</option>
+        </select>
+      </div>
+      <div class="ctx-field full"><label>Aanleiding / doel van dit gesprek</label>
+        <textarea id="ctx-doel" placeholder="bv. Naar aanleiding van lesobservaties semester 1 — focus op betrokkenheid en levensechtheid" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Kies de bouwstenen voor dit gesprek</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">Selecteer de bouwstenen die relevant zijn voor dit gesprek — van 1 tot alle 6. Kies op basis van wat je al weet (observaties, bevragingsresultaten) of op basis van de aanleiding.</p>
+    <div class="bs-select-grid" id="bs-select-grid"></div>
+    <div class="warn" id="warn-max">Alle 6 bouwstenen geselecteerd.</div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Niveau van het gesprek</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:.625rem;line-height:1.6;">Gaat het gesprek over ervaringen in de les, over de opleiding als geheel, of over beide?</p>
+    <div class="niveau-select">
+      <button class="niv-btn" id="niv-klas"  onclick="setNiveau('klas',this)">🏫 Klaspraktijk</button>
+      <button class="niv-btn" id="niv-opl"   onclick="setNiveau('opl',this)">📋 Opleidingspraktijk</button>
+      <button class="niv-btn active-beide" id="niv-beide" onclick="setNiveau('beide',this)">🔄 Beide</button>
+    </div>
+  </div>
+
+</div><!-- /stap-1 -->
+
+<!-- ══════════ STAP 2: GESPREK ══════════ -->
+<div class="stap-panel" id="stap-2">
+  <div id="gesprek-intro" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:.375rem;">Gespreksopbouw (60–90 min)</h2>
+    <p style="font-size:12px;color:var(--muted);line-height:1.65;">Start met een korte introductie (5 min): leg het doel van het gesprek uit, geef aan dat er geen juiste of foute antwoorden zijn, en dat de input helpt om de opleiding beter te maken. Noteer citaten zo letterlijk mogelijk — die zijn later de kern van de synthese.</p>
+  </div>
+  <div id="gesprek-content"></div>
+
+  <!-- SLOTVRAGEN — altijd zichtbaar -->
+  <div class="slot-card">
+    <h3>Slotvragen — prioritering</h3>
+    <div class="slot-vraag">
+      <p>Wat doen we volgens jullie al goed en moeten we zeker behouden?</p>
+      <div class="sub">Laat cursisten dit benoemen — ook als het positief is.</div>
+      <textarea class="notatie-area" id="slot-goed" placeholder="Noteer citaten en reacties..." rows="2"></textarea>
+    </div>
+    <div class="slot-vraag">
+      <p>Als je één ding kon veranderen in de opleiding: wat zou dat zijn?</p>
+      <div class="sub">Dit geeft prioriteit aan verbeterpunten.</div>
+      <textarea class="notatie-area" id="slot-verandering" placeholder="Noteer citaten en reacties..." rows="2"></textarea>
+    </div>
+    <div class="slot-vraag">
+      <p>Hoe waarschijnlijk is het dat je deze opleiding aanbeveelt? En waarom?</p>
+      <div class="sub">Kwalitatieve toelichting bij de NPS-score.</div>
+      <textarea class="notatie-area" id="slot-nps" placeholder="Noteer motivaties en nuances..." rows="2"></textarea>
+    </div>
+  </div>
+</div><!-- /stap-2 -->
+
+<!-- ══════════ STAP 3: SYNTHESE ══════════ -->
+<div class="stap-panel" id="stap-3">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:.375rem;">Synthese na het gesprek</h2>
+    <p style="font-size:12px;color:var(--muted);line-height:1.65;">Vul de synthese in onmiddellijk na het gesprek. Per gekozen bouwsteen geef je een signaallabel, je noteert 2–3 kerncitaten die het verhaal illustreren en je formuleert één conclusie. Dit wordt opgeslagen als kwalitatieve data naast de bevraging.</p>
+  </div>
+  <div id="synthese-content"></div>
+
+  <!-- ALGEMENE SYNTHESE -->
+  <div class="syn-blok">
+    <div class="syn-header"><h3>Algemene conclusie gesprek</h3></div>
+    <div class="syn-veld">
+      <label>Wat was het sterkste signaal uit dit gesprek?</label>
+      <textarea id="syn-sterk" placeholder="Formuleer het dominante inzicht in 1–2 zinnen..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Welk aandachtspunt vraagt opvolging?</label>
+      <textarea id="syn-aandacht" placeholder="Concreet en niet-oordelend..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Welke actie of opvolging volgt hieruit?</label>
+      <textarea id="syn-actie" placeholder="bv. bespreken in teamdialoog, koppelen aan leerpad, bijsturen in opleiding..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Aansluiting bij leerpaden (optioneel)</label>
+      <input type="text" id="syn-leerpad" placeholder="bv. Kwaliteitsvol leren, Feedback & evaluatie, Zorgzaam onderwijs..." style="width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:12px;font-family:inherit;background:var(--bg);">
+    </div>
+  </div>
+</div><!-- /stap-3 -->
+
+</div><!-- /main -->
+
+<!-- ACTIONS -->
+<div class="actions-bar">
+  <span class="save-status" id="save-status">Stap 1 van 3</span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="btn btn-secondary" id="btn-terug"  onclick="navigeer(-1)" style="display:none;">← Terug</button>
+    <button class="btn btn-secondary" onclick="downloadDoc()">⬇ Download</button>
+    <button class="btn btn-primary"   id="btn-verder" onclick="navigeer(1)">Gesprek starten →</button>
+    <button class="btn btn-primary"   id="btn-opslaan" onclick="saveDoc()" style="display:none;">Opslaan</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   BOUWSTENEN
+══════════════════════════════════════════════════ */
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+
+function hexSVG(kleur,sz=22){
+  const c=sz/2,r=sz*.41,pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  const p=pts.join(' ');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><polygon points="${p}" fill="${kleur}" opacity=".2"/><polygon points="${p}" fill="${kleur}" transform="scale(.77) translate(${sz*.115},${sz*.115})"/></svg>`;
+}
+
+/* ══════════════════════════════════════════════════
+   VRAGEN PER BOUWSTEEN
+   Per bouwsteen: klasVragen + oplVragen + doorvragen
+══════════════════════════════════════════════════ */
+const VRAGEN = {
+  kwal: {
+    intro: 'Hoe helder en activerend is het leren voor jullie?',
+    klas: [
+      { id:'kk1', vraag:'Weet je aan het begin van een les wat je die dag gaat leren?',
+        ind:'Procesindicator: zichtbaarheid leerdoelen',
+        doorvraag:'Kun je een voorbeeld geven van een les waarbij dat wel of niet duidelijk was? Wat hielp je om te begrijpen wat je moest leren?' },
+      { id:'kk2', vraag:'Hoe ervaar je de feedback die je krijgt in de lessen?',
+        ind:'Procesindicator: feedbackkwaliteit en leergerichtheid',
+        doorvraag:'Helpt die feedback je om iets te verbeteren, of voelt het meer als een beoordeling? Kun je een voorbeeld geven van feedback die je écht geholpen heeft?' },
+      { id:'kk3', vraag:'Heb je het gevoel dat je voldoende kansen krijgt om te oefenen vóór je geëvalueerd wordt?',
+        ind:'Procesindicator: constructieve afstemming oefenen ↔ evalueren',
+        doorvraag:'Zijn er lessen waarbij je verrast was door wat er gevraagd werd op een toets? Wat zou geholpen hebben om je beter voor te bereiden?' },
+    ],
+    opl: [
+      { id:'ko1', vraag:'Is het voor jullie duidelijk wat er van jullie verwacht wordt doorheen de hele opleiding?',
+        ind:'Procesindicator: samenhang en transparantie opleiding',
+        doorvraag:'Zijn er modules waarbij de verwachtingen onduidelijk waren of tegenstrijdig met andere modules? Wat zou het duidelijker maken?' },
+      { id:'ko2', vraag:'Voelen de modules als een logisch geheel — of eerder als losse onderdelen?',
+        ind:'Procesindicator: coherente leerlijn opleiding',
+        doorvraag:'Welke modules hingen voor jullie goed samen? Waar voelde het als een sprong?' },
+    ],
+  },
+  zorg: {
+    intro: 'Voelen jullie zich veilig, ondersteund en gezien in deze opleiding?',
+    klas: [
+      { id:'zk1', vraag:'Durf je vragen te stellen of fouten te maken in de lessen?',
+        ind:'Procesindicator: psychologische veiligheid',
+        doorvraag:'Zijn er lessen of situaties waarbij dat gemakkelijker of moeilijker was? Wat maakte het verschil? Wat deed de lesgever waardoor je je meer op je gemak voelde?' },
+      { id:'zk2', vraag:'Word je als cursist in de lessen gezien — ook als het moeilijk gaat?',
+        ind:'Procesindicator: zorgzaam differentiëren en signalering',
+        doorvraag:'Heb je het gevoel dat lesgevers merken wanneer iets te moeilijk is voor jou? Wat doen ze dan? Wat zou je helpen als je vastloopt?' },
+    ],
+    opl: [
+      { id:'zo1', vraag:'Weet je waar je terechtkan als leren moeilijk wordt in deze opleiding?',
+        ind:'Procesindicator: zichtbaarheid ondersteuningsaanbod',
+        doorvraag:'Heb je ooit hulp gezocht? Was dat makkelijk of drempelverlagend? Wat zou het gemakkelijker maken?' },
+      { id:'zo2', vraag:'Voelt de werklast in deze opleiding haalbaar voor jullie?',
+        ind:'Procesindicator: haalbaarheid en welzijnsbewaking',
+        doorvraag:'Zijn er periodes of modules waarbij het te zwaar was? Werd dat opgemerkt? Wat zou geholpen hebben?' },
+    ],
+  },
+  leven: {
+    intro: 'Is wat jullie leren relevant — voor je leven, je werk of je toekomst?',
+    klas: [
+      { id:'lk1', vraag:'Begrijpen jullie waarvoor je de dingen leert die in de lessen aan bod komen?',
+        ind:'Procesindicator: betekenisgeving en relevantie',
+        doorvraag:'Kun je een les noemen waarbij de link met de praktijk heel duidelijk was? En een waarbij je dacht "waarom moet ik dit kennen"? Wat maakte het verschil?' },
+      { id:'lk2', vraag:'Krijg je in de lessen de kans om leerstof echt toe te passen — niet alleen te onthouden?',
+        ind:'Procesindicator: leren door doen, toepassing vs. reproductie',
+        doorvraag:'Welke werkvormen of opdrachten helpen jou het meest om iets echt te leren? Zijn er opdrachten die voor jou geen zin leken te hebben?' },
+    ],
+    opl: [
+      { id:'lo1', vraag:'Bereidt deze opleiding jullie voor op wat jullie daarna willen doen?',
+        ind:'Procesindicator: transfer naar vervolg, werk of leven',
+        doorvraag:'Zijn er dingen die jullie leren waarvan je denkt "dit ga ik echt gebruiken"? En dingen waarvan je denkt "dit zal ik nooit nodig hebben"?' },
+      { id:'lo2', vraag:'Sluit wat jullie leren aan bij de echte wereld van jullie beroep of leven?',
+        ind:'Procesindicator: levensechtheid opleiding, werkveldaansluiting',
+        doorvraag:'Zijn er momenten geweest waarbij je dacht "zo werkt het niet in de praktijk"? Of juist "dit klopt precies met wat ik zie buiten de school"?' },
+    ],
+  },
+  betrok: {
+    intro: 'Voelen jullie zich betrokken en gemotiveerd in deze opleiding?',
+    klas: [
+      { id:'bk1', vraag:'Voel je je uitgenodigd om actief mee te doen in de lessen?',
+        ind:'Procesindicator: betrokkenheid en actieve deelname',
+        doorvraag:'Zijn er lessen waarbij je meer of minder meedoet? Wat zorgt ervoor dat je actief participeert of net niet? Voelt iedereen die ruimte?' },
+      { id:'bk2', vraag:'Wat houdt je gemotiveerd om naar de lessen te komen?',
+        ind:'Procesindicator: leerengagement en verbondenheid',
+        doorvraag:'En wat maakt het soms moeilijker om gemotiveerd te blijven? Zijn er lessen of periodes waarbij je dacht "ik zie er niet echt naar uit"?' },
+    ],
+    opl: [
+      { id:'bo1', vraag:'Voel je je deel van deze opleiding — erbij horend?',
+        ind:'Procesindicator: verbondenheid met de opleiding',
+        doorvraag:'Zijn er momenten geweest waarbij je je echt verbonden voelde met de groep of de opleiding? En momenten waarbij je je eerder buitenstaander voelde?' },
+      { id:'bo2', vraag:'Merk je wanneer cursisten dreigen af te haken — en wordt dat ook opgemerkt door de begeleiders?',
+        ind:'Procesindicator: signalering afhaken en opvolging',
+        doorvraag:'Heb je ooit iemand zien afhaken? Werd dat opgemerkt en aangepakt? Wat zou je geholpen hebben als je zelf minder betrokken was?' },
+    ],
+  },
+  samen: {
+    intro: 'Leer je met en van andere cursisten in deze opleiding?',
+    klas: [
+      { id:'sk1', vraag:'Leer je in de lessen ook van en met andere cursisten?',
+        ind:'Procesindicator: samen leren, diepte via dialoog',
+        doorvraag:'Zijn er werkvormen waarbij je echt iets leerde van een medecursist? En zijn er groepsopdrachten waarbij het eerder frustratie opleverde dan leren?' },
+      { id:'sk2', vraag:'Is samenwerken in de lessen iets wat helpt, of eerder iets wat moeilijk loopt?',
+        ind:'Procesindicator: kwaliteit en inclusiviteit samenwerking',
+        doorvraag:'Wat maakt samenwerken voor jou zinvol? Wat maakt het moeilijk? Heeft iedereen een rol in groepswerk — ook wie stiller is?' },
+    ],
+    opl: [
+      { id:'so1', vraag:'Zijn de afspraken over samenwerken duidelijk en consistent doorheen de opleiding?',
+        ind:'Procesindicator: coherente aanpak samenwerking opleiding',
+        doorvraag:'Zijn er grote verschillen in hoe samenwerken georganiseerd wordt tussen modules of lesgevers? Wat werkt het beste?' },
+      { id:'so2', vraag:'Voel je je veilig in groepswerk — kan iedereen bijdragen?',
+        ind:'Procesindicator: sociale veiligheid bij samenwerken',
+        doorvraag:'Zijn er groepssituaties waarbij bepaalde cursisten niet aan bod kwamen? Wat heeft daarin geholpen of juist niet?' },
+    ],
+  },
+  innov: {
+    intro: 'Helpen digitale middelen jullie om beter te leren in deze opleiding?',
+    klas: [
+      { id:'ik1', vraag:'Helpen de digitale middelen die in de lessen worden gebruikt jullie om beter te leren?',
+        ind:'Procesindicator: technologie als leerhefboom',
+        doorvraag:'Welke tools of aanpakken vind je echt nuttig? Zijn er tools die eerder verwarring of frustratie geven? Wat zou beter kunnen?' },
+      { id:'ik2', vraag:'Kunnen jullie allemaal even goed mee met de digitale aanpak in de lessen?',
+        ind:'Procesindicator: digitale inclusie',
+        doorvraag:'Zijn er cursisten die moeilijker kunnen volgen door technologie? Wordt dat opgemerkt en aangepakt? Wat zou geholpen hebben?' },
+    ],
+    opl: [
+      { id:'io1', vraag:'Worden digitale tools op een gelijkaardige manier gebruikt doorheen de opleiding — of moet je telkens opnieuw zoeken?',
+        ind:'Procesindicator: afstemming en consistentie digitale tools',
+        doorvraag:'Zijn er grote verschillen in digitale aanpak tussen modules? Wat werkt het beste? Wat vergt te veel energie?' },
+      { id:'io2', vraag:'Voelt digitale vernieuwing in de opleiding als iets wat het leren helpt — of eerder als extra last?',
+        ind:'Procesindicator: werkbaarheid innovatie',
+        doorvraag:'Zijn er vernieuwingen die jullie echt waardeerden? En vernieuwingen die eerder afleidend waren? Wat zou het beter maken?' },
+    ],
+  },
+};
+
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+let huidigStap = 1;
+let gekozenBS  = [];
+let niveau     = 'beide';
+let notaties   = {};
+let signalen   = {};
+let citaten    = {};
+let conclusies = {};
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+function init(){
+  document.getElementById('ctx-datum').value = new Date().toISOString().split('T')[0];
+  buildBsSelectGrid();
+}
+
+function buildBsSelectGrid(){
+  document.getElementById('bs-select-grid').innerHTML = BS.map(b=>`
+    <label class="bs-select-item" style="--bs-c:${b.c};--bs-bg:${b.bg};--bs-dk:${b.dk};" id="bsitem-${b.id}">
+      <input type="checkbox" value="${b.id}" onchange="toggleBS('${b.id}',this)">
+      ${hexSVG(b.c,22)}
+      <span class="bs-naam">${b.naam}</span>
+    </label>`).join('');
+}
+
+function toggleBS(id, el){
+  if(el.checked){
+    if(gekozenBS.length>=6){
+      el.checked=false;
+      document.getElementById('warn-max').classList.add('show');
+      return;
+    }
+    gekozenBS.push(id);
+    document.getElementById('bsitem-'+id).classList.add('gekozen');
+  } else {
+    gekozenBS = gekozenBS.filter(x=>x!==id);
+    document.getElementById('bsitem-'+id).classList.remove('gekozen');
+  }
+  document.getElementById('warn-max').classList.remove('show');
+}
+
+function setNiveau(niv, btn){
+  niveau=niv;
+  document.querySelectorAll('.niv-btn').forEach(b=>b.classList.remove('active-klas','active-opl','active-beide'));
+  btn.classList.add('active-'+niv);
+}
+
+/* ══════════════════════════════════════════════════
+   NAVIGATIE
+══════════════════════════════════════════════════ */
+function navigeer(richting){
+  if(richting===1 && huidigStap===1){
+    if(gekozenBS.length===0){ alert('Kies minstens één bouwsteen voor het gesprek.'); return; }
+    buildGesprek();
+  }
+  if(richting===1 && huidigStap===2){
+    buildSynthese();
+  }
+  huidigStap = Math.max(1, Math.min(3, huidigStap+richting));
+  updateUI();
+}
+
+function updateUI(){
+  document.querySelectorAll('.stap-panel').forEach((p,i)=>p.classList.toggle('active',i+1===huidigStap));
+  document.querySelectorAll('.stap-item').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i+1===huidigStap) el.classList.add('active');
+    if(i+1<huidigStap)   el.classList.add('done');
+  });
+  document.getElementById('btn-terug').style.display  = huidigStap>1 ? '' : 'none';
+  document.getElementById('btn-verder').style.display = huidigStap<3 ? '' : 'none';
+  document.getElementById('btn-opslaan').style.display= huidigStap===3? '' : 'none';
+  document.getElementById('btn-verder').textContent   = huidigStap===1 ? 'Gesprek starten →' : 'Naar synthese →';
+  document.getElementById('save-status').textContent  = `Stap ${huidigStap} van 3`;
+  window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════════════════════════
+   STAP 2: GESPREK
+══════════════════════════════════════════════════ */
+function buildGesprek(){
+  let html='';
+  gekozenBS.forEach(bsId=>{
+    const b   = BS.find(x=>x.id===bsId);
+    const vd  = VRAGEN[bsId];
+    const toonKlas = niveau==='klas'  || niveau==='beide';
+    const toonOpl  = niveau==='opl'   || niveau==='beide';
+
+    html+=`<div class="bs-blok">
+      <div class="bs-blok-header" style="background:${b.bg};border-bottom-color:${b.c}40;">
+        ${hexSVG(b.c,36)}
+        <div><h3 style="color:${b.dk}">${b.naam}</h3><p>${vd.intro}</p></div>
+      </div>`;
+
+    if(toonKlas && vd.klas.length){
+      html+=`<div style="padding:.5rem 1rem .25rem;"><span class="niveau-badge badge-klas">🏫 Klaspraktijk</span></div>`;
+      vd.klas.forEach(v=>{
+        html+=vraagBlok(v);
+      });
+    }
+    if(toonOpl && vd.opl.length){
+      html+=`<div style="padding:.5rem 1rem .25rem;"><span class="niveau-badge badge-opl">📋 Opleidingspraktijk</span></div>`;
+      vd.opl.forEach(v=>{
+        html+=vraagBlok(v);
+      });
+    }
+    html+=`</div>`;
+  });
+  document.getElementById('gesprek-content').innerHTML = html;
+}
+
+function vraagBlok(v){
+  return `<div class="vraag-blok">
+    <div class="vraag-tekst">${v.vraag}</div>
+    <div class="vraag-ind">${v.ind}</div>
+    <div class="doorvraag"><strong>Doorvraag:</strong> ${v.doorvraag}</div>
+    <span class="notatie-label">Notaties — citaten en reacties</span>
+    <textarea class="notatie-area" id="not-${v.id}" placeholder="Noteer citaten zo letterlijk mogelijk..." rows="3" onchange="notaties['${v.id}']=this.value">${notaties[v.id]||''}</textarea>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════
+   STAP 3: SYNTHESE
+══════════════════════════════════════════════════ */
+function buildSynthese(){
+  // Bewaar notaties uit stap 2
+  gekozenBS.forEach(bsId=>{
+    const vd = VRAGEN[bsId];
+    const alle = [...(niveau!=='opl'?vd.klas:[]), ...(niveau!=='klas'?vd.opl:[])];
+    alle.forEach(v=>{ const el=document.getElementById('not-'+v.id); if(el) notaties[v.id]=el.value; });
+  });
+
+  let html='';
+  gekozenBS.forEach(bsId=>{
+    const b  = BS.find(x=>x.id===bsId);
+    const sig = signalen[bsId]||'';
+    const toonKlas = niveau==='klas'||niveau==='beide';
+    const toonOpl  = niveau==='opl' ||niveau==='beide';
+
+    html+=`<div class="syn-blok">
+      <div class="syn-header" style="background:${b.bg};border-bottom-color:${b.c}40;">
+        ${hexSVG(b.c,30)}
+        <h3 style="color:${b.dk}">${b.naam}</h3>
+      </div>
+
+      <!-- Signaallabel -->
+      <div class="signaal-keuze">
+        <label>Dominant signaal voor ${b.naam}</label>
+        <button class="sig-btn${sig==='sterk'?' sel-sterk':''}" onclick="setSig('${bsId}','sterk',this)">✅ Sterk</button>
+        <button class="sig-btn${sig==='neutraal'?' sel-neutraal':''}" onclick="setSig('${bsId}','neutraal',this)">➡️ Neutraal</button>
+        <button class="sig-btn${sig==='aandacht'?' sel-aandacht':''}" onclick="setSig('${bsId}','aandacht',this)">⚠️ Aandachtspunt</button>
+      </div>`;
+
+    // Kerncitaten per niveau
+    if(toonKlas){
+      html+=`<div class="syn-veld syn-apart">
+        <label>🏫 Kerncitaten klaspraktijk (2–3 quotes die het verhaal illustreren)</label>
+        <textarea id="cit-${bsId}-klas" placeholder="Kopieer de meest treffende citaten uit je notaties..." rows="3" onchange="citaten['${bsId}-klas']=this.value">${citaten[bsId+'-klas']||''}</textarea>
+      </div>`;
+    }
+    if(toonOpl){
+      html+=`<div class="syn-veld syn-apart">
+        <label>📋 Kerncitaten opleidingspraktijk (2–3 quotes die het verhaal illustreren)</label>
+        <textarea id="cit-${bsId}-opl" placeholder="Kopieer de meest treffende citaten uit je notaties..." rows="3" onchange="citaten['${bsId}-opl']=this.value">${citaten[bsId+'-opl']||''}</textarea>
+      </div>`;
+    }
+
+    html+=`<div class="syn-veld">
+        <label>Conclusie in één zin — wat vertelt dit gesprek ons over ${b.naam}?</label>
+        <textarea id="con-${bsId}" placeholder="Formuleer het dominante inzicht bondig en niet-oordelend..." rows="2" onchange="conclusies['${bsId}']=this.value">${conclusies[bsId]||''}</textarea>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('synthese-content').innerHTML = html;
+}
+
+function setSig(bsId, sig, btn){
+  signalen[bsId]=sig;
+  const parent = btn.closest('.signaal-keuze');
+  parent.querySelectorAll('.sig-btn').forEach(b=>b.classList.remove('sel-sterk','sel-neutraal','sel-aandacht'));
+  btn.classList.add('sel-'+sig);
+}
+
+/* ══════════════════════════════════════════════════
+   DOWNLOAD
+══════════════════════════════════════════════════ */
+function downloadDoc(){
+  // Bewaar velden van huidige stap
+  if(huidigStap>=2){
+    gekozenBS.forEach(bsId=>{
+      const vd=VRAGEN[bsId];
+      const alle=[...(niveau!=='opl'?vd.klas:[]),...(niveau!=='klas'?vd.opl:[])];
+      alle.forEach(v=>{const el=document.getElementById('not-'+v.id);if(el)notaties[v.id]=el.value;});
+    });
+  }
+  if(huidigStap>=3){
+    gekozenBS.forEach(bsId=>{
+      const ck=document.getElementById('cit-'+bsId+'-klas');
+      const co=document.getElementById('cit-'+bsId+'-opl');
+      const cn=document.getElementById('con-'+bsId);
+      if(ck) citaten[bsId+'-klas']=ck.value;
+      if(co) citaten[bsId+'-opl']=co.value;
+      if(cn) conclusies[bsId]=cn.value;
+    });
+  }
+
+  const opl = document.getElementById('ctx-opleiding').value;
+  const toonKlas = niveau==='klas'||niveau==='beide';
+  const toonOpl  = niveau==='opl' ||niveau==='beide';
+  const niveauLabel = niveau==='klas'?'Klaspraktijk':niveau==='opl'?'Opleidingspraktijk':'Klas- en opleidingspraktijk';
+
+  const SIGICO={'sterk':'✅ Sterk','neutraal':'➡️ Neutraal','aandacht':'⚠️ Aandachtspunt'};
+  const SIGKL ={'sterk':'#EAF3DE,#3B6D11','neutraal':'#F5F3D8,#8A8330','aandacht':'#FAEAEA,#B84A4A'};
+
+  let body='';
+  gekozenBS.forEach(bsId=>{
+    const b=BS.find(x=>x.id===bsId);
+    const vd=VRAGEN[bsId];
+    body+='<div class="bs-blok"><div class="bs-titel" style="background:'+b.bg+';border-left:4px solid '+b.c+'"><strong style="color:'+b.dk+'">'+b.naam+'</strong><span style="font-size:11px;color:'+b.dk+';margin-left:8px;">'+vd.intro+'</span></div>';
+
+    // Vragen + notaties
+    if(toonKlas && vd.klas.length){
+      body+='<div class="niv-head klas">🏫 Klaspraktijk</div>';
+      vd.klas.forEach(v=>{
+        body+='<div class="v-blok"><div class="v-tekst">'+v.vraag+'</div><div class="v-ind">'+v.ind+'</div><div class="doorvraag-d"><strong>Doorvraag:</strong> '+v.doorvraag+'</div><div class="not-label">Notaties</div><div class="not-val">'+(notaties[v.id]||'—')+'</div></div>';
+      });
+    }
+    if(toonOpl && vd.opl.length){
+      body+='<div class="niv-head opl">📋 Opleidingspraktijk</div>';
+      vd.opl.forEach(v=>{
+        body+='<div class="v-blok"><div class="v-tekst">'+v.vraag+'</div><div class="v-ind">'+v.ind+'</div><div class="doorvraag-d"><strong>Doorvraag:</strong> '+v.doorvraag+'</div><div class="not-label">Notaties</div><div class="not-val">'+(notaties[v.id]||'—')+'</div></div>';
+      });
+    }
+
+    // Synthese
+    const sig=signalen[bsId];
+    const [sigBg,sigC]=(SIGKL[sig]||'#f1efe8,#888780').split(',');
+    body+='<div class="syn-sec"><div class="syn-sig" style="background:'+sigBg+';color:'+sigC+';">'+(SIGICO[sig]||'— Niet ingevuld')+'</div>';
+    if(toonKlas) body+='<div class="syn-cit-label">🏫 Kerncitaten klaspraktijk</div><div class="syn-cit">'+(citaten[bsId+'-klas']||'—')+'</div>';
+    if(toonOpl)  body+='<div class="syn-cit-label">📋 Kerncitaten opleidingspraktijk</div><div class="syn-cit">'+(citaten[bsId+'-opl']||'—')+'</div>';
+    body+='<div class="syn-con-label">Conclusie</div><div class="syn-con">'+(conclusies[bsId]||'—')+'</div></div>';
+    body+='</div>';
+  });
+
+  // Slotvragen
+  const sg=document.getElementById('slot-goed')?.value||'';
+  const sv=document.getElementById('slot-verandering')?.value||'';
+  const sn=document.getElementById('slot-nps')?.value||'';
+  body+='<div class="slot-sec"><strong>Slotvragen — prioritering</strong>'
+    +'<div class="slot-v"><div class="slot-q">Wat doen we al goed en moeten we behouden?</div><div class="slot-a">'+(sg||'—')+'</div></div>'
+    +'<div class="slot-v"><div class="slot-q">Als je één ding kon veranderen: wat zou dat zijn?</div><div class="slot-a">'+(sv||'—')+'</div></div>'
+    +'<div class="slot-v"><div class="slot-q">Hoe waarschijnlijk beveelt u de opleiding aan — en waarom?</div><div class="slot-a">'+(sn||'—')+'</div></div></div>';
+
+  // Algemene synthese
+  const asterk=document.getElementById('syn-sterk')?.value||'';
+  const aand=document.getElementById('syn-aandacht')?.value||'';
+  const aact=document.getElementById('syn-actie')?.value||'';
+  const alp=document.getElementById('syn-leerpad')?.value||'';
+  body+='<div class="asyn-sec"><strong>Algemene conclusie gesprek</strong>'
+    +'<div class="asyn-r"><span class="asyn-l">Sterkste signaal:</span><span>'+(asterk||'—')+'</span></div>'
+    +'<div class="asyn-r"><span class="asyn-l">Aandachtspunt:</span><span>'+(aand||'—')+'</span></div>'
+    +'<div class="asyn-r"><span class="asyn-l">Actie / opvolging:</span><span>'+(aact||'—')+'</span></div>'
+    +'<div class="asyn-r"><span class="asyn-l">Leerpad:</span><span>'+(alp||'—')+'</span></div></div>';
+
+  const css=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;font-size:11px;color:#1a1a18;padding:2rem;max-width:900px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}.sub{font-size:11px;color:#5f5e5a;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.5rem;break-inside:avoid;}.bs-titel{padding:.5rem .875rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.niv-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.375rem .75rem;margin:.25rem 0;border-radius:4px;}.niv-head.klas{background:#E8F4FF;color:#1A5F9A;}.niv-head.opl{background:#EDF6EC;color:#2D6B27;}.v-blok{border:1px solid #E2DFD7;border-radius:6px;margin-bottom:.5rem;overflow:hidden;}.v-tekst{font-size:11.5px;font-weight:500;padding:.5rem .75rem .2rem;line-height:1.4;}.v-ind{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .25rem;}.doorvraag-d{font-size:10.5px;color:#5f5e5a;padding:0 .75rem .375rem;}.not-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;padding:.375rem .75rem .1rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.not-val{font-size:11px;padding:.25rem .75rem .5rem;background:#f8f7f4;min-height:28px;white-space:pre-wrap;}.syn-sec{background:#f4f3f0;border:1px solid #E2DFD7;border-radius:6px;padding:.75rem 1rem;margin-top:.375rem;}.syn-sig{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;margin-bottom:.5rem;}.syn-cit-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;margin-top:.375rem;}.syn-cit{font-size:11px;font-style:italic;color:#2c2c2a;white-space:pre-wrap;margin-bottom:.375rem;}.syn-con-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;margin-top:.375rem;}.syn-con{font-size:12px;font-weight:500;}.slot-sec{margin-top:1.5rem;padding:.875rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.slot-sec strong{font-size:12px;display:block;margin-bottom:.5rem;}.slot-v{margin-bottom:.625rem;}.slot-q{font-size:11.5px;font-weight:500;margin-bottom:.2rem;}.slot-a{font-size:11px;color:#1a1a18;padding:.25rem 0;white-space:pre-wrap;}.asyn-sec{margin-top:1.5rem;padding:.875rem 1rem;background:#1a1a18;color:#fff;border-radius:6px;}.asyn-sec strong{font-size:12px;display:block;margin-bottom:.5rem;color:#fff;}.asyn-r{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.asyn-l{font-weight:600;min-width:150px;color:#b4b2a9;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok{break-inside:avoid;}}`;
+
+  const ctx='<div class="ctx-info"><span>Opleiding: <strong>'+(opl||'—')+'</strong></span><span>Periode: <strong>'+(document.getElementById('ctx-periode').value||'—')+'</strong></span><span>Begeleider: <strong>'+(document.getElementById('ctx-begeleider').value||'—')+'</strong></span><span>Datum: <strong>'+(document.getElementById('ctx-datum').value||'—')+'</strong></span><span>Deelnemers: <strong>'+(document.getElementById('ctx-aantal').value||'—')+'</strong></span><span>Niveau: <strong>'+niveauLabel+'</strong></span></div>';
+
+  const doc='<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Focusgroep Cursisten — '+(opl||'Crescendo CVO')+'</title><style>'+css+'</style></head><body>'
+    +'<div class="doc-header"><h1>Focusgroep Cursisten — Leidraad &amp; Synthese</h1><div class="sub">Crescendo CVO · Bouwsteenteam Kwaliteitsvol · Kwaliteitsloop 2026–2030</div>'+ctx+'<div style="margin-top:.5rem;font-size:11px;color:#5f5e5a;">Doel: '+(document.getElementById('ctx-doel').value||'—')+'</div></div>'
+    +'<div class="principe"><strong>Observatieprincipe:</strong> Dit gesprek heeft geen beoordelend karakter. We zoeken patronen en signalen — geen oordeel over lesgevers of cursisten.</div>'
+    +body
+    +'<div class="doc-footer"><span>Crescendo CVO · Focusgroep Cursisten · '+niveauLabel+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
+    +'</body></html>';
+
+  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='focusgroep-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.html';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════════════
+   OPSLAAN — SharePoint payload
+══════════════════════════════════════════════════ */
+function saveDoc(){
+  gekozenBS.forEach(bsId=>{
+    const ck=document.getElementById('cit-'+bsId+'-klas');
+    const co=document.getElementById('cit-'+bsId+'-opl');
+    const cn=document.getElementById('con-'+bsId);
+    if(ck) citaten[bsId+'-klas']=ck.value;
+    if(co) citaten[bsId+'-opl']=co.value;
+    if(cn) conclusies[bsId]=cn.value;
+  });
+
+  const payload={
+    instrument:'focusgroep',
+    opleiding:   document.getElementById('ctx-opleiding').value,
+    periode:     document.getElementById('ctx-periode').value,
+    begeleider:  document.getElementById('ctx-begeleider').value,
+    datum:       document.getElementById('ctx-datum').value,
+    aantal:      document.getElementById('ctx-aantal').value,
+    profiel:     document.getElementById('ctx-profiel').value,
+    doel:        document.getElementById('ctx-doel').value,
+    gekozenBS, niveau,
+    notaties, signalen, citaten, conclusies,
+    slotvragen: {
+      goed:       document.getElementById('slot-goed')?.value||'',
+      verandering:document.getElementById('slot-verandering')?.value||'',
+      nps:        document.getElementById('slot-nps')?.value||'',
+    },
+    syn_sterk:   document.getElementById('syn-sterk')?.value||'',
+    syn_aandacht:document.getElementById('syn-aandacht')?.value||'',
+    syn_actie:   document.getElementById('syn-actie')?.value||'',
+    syn_leerpad: document.getElementById('syn-leerpad')?.value||'',
+    timestamp:   new Date().toISOString(),
+  };
+  console.log('SharePoint payload:',JSON.stringify(payload,null,2));
+  if(navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  document.getElementById('save-status').textContent='Opgeslagen om '+new Date().toLocaleTimeString('nl-BE')+' — klaar voor SharePoint';
+  const btn=document.getElementById('btn-opslaan');
+  btn.textContent='✓ Opgeslagen';
+  setTimeout(()=>{btn.textContent='Opslaan';},2000);
+}
+
+init();
+</script>
+</body>
+</html>
