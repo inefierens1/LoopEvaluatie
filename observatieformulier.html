@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observatieformulier Lesobservatie — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#F7F6F2; --surface:#fff; --border:#E2DFD7; --text:#2C2C2A; --muted:#6B6A65;
+  --radius:8px; --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* HEADER */
+.app-header { background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1 { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.app-header p  { font-size:11px; color:var(--muted); margin-top:1px; }
+
+/* SEMESTER TABS */
+.sem-bar { background:#fff; border-bottom:1px solid var(--border); padding:0 1.5rem; display:flex; gap:0; overflow-x:auto; }
+.sem-btn { padding:.625rem 1.125rem; border:none; background:transparent; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; color:var(--muted); border-bottom:2px solid transparent; white-space:nowrap; transition:all .15s; }
+.sem-btn:hover { color:var(--text); }
+.sem-btn.active { color:#1a1a18; border-bottom-color:#1a1a18; font-weight:600; }
+.sem-pane { display:none; } .sem-pane.active { display:block; }
+
+/* CONTEXT BAR */
+.ctx-bar { background:#fff; border-bottom:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:.875rem; flex-wrap:wrap; align-items:flex-end; }
+.ctx-field { display:flex; flex-direction:column; gap:2px; }
+.ctx-field label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field input, .ctx-field select { border:1px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); min-width:130px; }
+
+/* OBSERVATIEDOEL */
+.obs-doel { background:#f8f7f4; border-bottom:1px solid var(--border); padding:.5rem 1.5rem; font-size:11.5px; color:var(--muted); }
+.obs-doel strong { color:var(--text); }
+
+/* MAIN */
+.main { padding:1rem 1.5rem 5rem; }
+
+/* SEMESTER INTRO */
+.sem-intro { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:.875rem; }
+.sem-intro h2 { font-size:14px; font-weight:600; margin-bottom:.25rem; }
+.sem-intro p  { font-size:12px; color:var(--muted); line-height:1.6; }
+.sem-intro .focus-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:.5rem; }
+.focus-tag { font-size:10px; padding:2px 8px; border-radius:99px; font-weight:500; border:1px solid var(--border); background:var(--bg); color:var(--muted); }
+
+/* BOUWSTEEN SECTIE */
+.bs-sectie { margin-bottom:1rem; }
+.bs-header { display:flex; align-items:center; gap:10px; padding:.75rem 1rem; border-radius:var(--radius) var(--radius) 0 0; border:1px solid var(--border); border-bottom:none; background:#fff; }
+.bs-header h3 { font-size:13px; font-weight:600; }
+.bs-header p  { font-size:11px; color:var(--muted); margin-top:1px; font-style:italic; }
+.bs-body { border:1px solid var(--border); border-radius:0 0 var(--radius) var(--radius); background:#fff; overflow:hidden; }
+
+/* CRITERIUM */
+.criterium { border-bottom:1px solid var(--border); }
+.criterium:last-of-type { border-bottom:none; }
+.crit-vraag { padding:.625rem 1rem .375rem; font-size:13px; font-weight:500; line-height:1.45; }
+.crit-focus { padding:0 1rem .375rem; font-size:10px; color:var(--muted); font-style:italic; }
+
+/* RUBRIC — 4 niveaus horizontaal */
+.rubric { display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1px solid var(--border); }
+.rubric-col { padding:.5rem .625rem; border-right:1px solid var(--border); font-size:10.5px; line-height:1.5; cursor:pointer; transition:background .12s; position:relative; }
+.rubric-col:last-child { border-right:none; }
+.rubric-col:hover { background:#f4f3f0; }
+.rubric-col.geselecteerd { background:var(--col-bg,#EBF3F2); }
+.rubric-col input[type=radio] { position:absolute; opacity:0; width:0; height:0; }
+.rubric-label { display:flex; align-items:center; gap:4px; font-size:10px; font-weight:700; margin-bottom:3px; }
+.rubric-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.dot-4{background:#4A8A70;} .dot-3{background:#8FB5AE;} .dot-2{background:#E8B84B;} .dot-1{background:#E07272;}
+.lbl-4{color:#4A8A70;} .lbl-3{color:#5A8880;} .lbl-2{color:#B07800;} .lbl-1{color:#B84A4A;}
+.rubric-tekst { color:#5f5e5a; }
+.rubric-col.col-4.geselecteerd { background:#EAF3DE; }
+.rubric-col.col-3.geselecteerd { background:#EBF3F2; }
+.rubric-col.col-2.geselecteerd { background:#FEF3CD; }
+.rubric-col.col-1.geselecteerd { background:#FAEAEA; }
+
+/* OPMERKINGENVELD */
+.opmerk-wrap { padding:.5rem 1rem .625rem; background:#f8f7f4; border-top:1px solid var(--border); }
+.opmerk-wrap label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.25rem; text-transform:uppercase; letter-spacing:.04em; }
+.opmerk-wrap textarea { width:100%; min-height:48px; border:1px solid var(--border); border-radius:5px; padding:5px 7px; font-size:12px; font-family:inherit; resize:vertical; background:#fff; color:var(--text); }
+
+/* SAMENVATTING */
+.samenvatting-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:.875rem; }
+.samenvatting-card h3 { font-size:13px; font-weight:600; margin-bottom:.5rem; }
+.samenvatting-card textarea { width:100%; min-height:52px; border:1px solid var(--border); border-radius:5px; padding:5px 7px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); margin-top:.3rem; }
+.samenvatting-card label { font-size:12px; color:var(--muted); display:block; }
+
+/* PROGRESS */
+.progress-wrap { padding:.5rem 1.5rem .375rem; background:#fff; border-bottom:1px solid var(--border); }
+.progress-label { font-size:11px; color:var(--muted); margin-bottom:3px; display:flex; justify-content:space-between; }
+.progress-bar { height:4px; background:var(--border); border-radius:99px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:99px; transition:width .3s; background:#1a1a18; }
+
+/* ACTIONS */
+.actions-bar { position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; z-index:10; }
+.btn { padding:6px 15px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
+.btn-primary { background:#1a1a18; color:#fff; border-color:#1a1a18; }
+.btn-secondary { background:var(--bg); color:var(--text); }
+.save-status { font-size:11px; color:var(--muted); font-style:italic; }
+
+@media(max-width:600px){ .rubric{grid-template-columns:1fr 1fr;} }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Observatieformulier Lesobservatie</h1>
+    <p>Crescendo CVO · Aanvangsbegeleiding &amp; kwaliteitsloop · 2026–2030</p>
+  </div>
+</div>
+
+<!-- SEMESTER TABS -->
+<div class="sem-bar">
+  <button class="sem-btn active" onclick="setSem('s1',this)">Semester 1 — Starter</button>
+  <button class="sem-btn"        onclick="setSem('s2',this)">Semester 2 — Verbreding</button>
+  <button class="sem-btn"        onclick="setSem('s3',this)">Semester 3 — Verdieping</button>
+  <button class="sem-btn"        onclick="setSem('s4',this)">Semester 4 / Volledig</button>
+</div>
+
+<!-- CONTEXT -->
+<div class="ctx-bar">
+  <div class="ctx-field"><label>Opleiding</label><input type="text" id="ctx-opleiding" placeholder="bv. Fietshersteller"></div>
+  <div class="ctx-field"><label>Module / les</label><input type="text" id="ctx-module" placeholder="bv. Veilig werken"></div>
+  <div class="ctx-field"><label>Lesgever</label><input type="text" id="ctx-lesgever" placeholder="naam"></div>
+  <div class="ctx-field"><label>Observator</label><input type="text" id="ctx-observator" placeholder="naam"></div>
+  <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum"></div>
+  <div class="ctx-field"><label>Type observatie</label>
+    <select id="ctx-type">
+      <option value="">— kies —</option>
+      <option>Aanvangsbegeleiding</option>
+      <option>Coaching</option>
+      <option>Kwaliteitssignaal</option>
+      <option>Reflectiegesprek</option>
+    </select>
+  </div>
+</div>
+
+<div class="obs-doel">
+  <strong>Observatieprincipe:</strong> We observeren niet de lesgever als persoon, maar <em>wat zichtbaar gebeurt in het leren van cursisten</em> en welke keuzes dit ondersteunen of belemmeren.
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-wrap">
+  <div class="progress-label"><span id="prog-label">0 van 0 criteria ingevuld</span><span id="prog-pct">0%</span></div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main" id="main-content"></div>
+
+<!-- ACTIONS -->
+<div class="actions-bar">
+  <span class="save-status" id="save-status">Nog niet opgeslagen</span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="btn btn-secondary" onclick="downloadDoc()">⬇ Download formulier</button>
+    <button class="btn btn-primary" id="save-btn" onclick="saveDoc()">Opslaan</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   BOUWSTENEN
+══════════════════════════════════════════════════ */
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+
+function hexSVG(kleur,sz=26){
+  const c=sz/2,r=sz*.41,pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><polygon points="${pts.join(' ')}" fill="${kleur}" opacity=".2"/><polygon points="${pts.join(' ')}" fill="${kleur}" transform="scale(.77) translate(${sz*.115},${sz*.115})"/></svg>`;
+}
+
+/* ══════════════════════════════════════════════════
+   DATA PER SEMESTER
+   niveaus: [4=Sterk, 3=Gevorderd, 2=Beginner, 1=Start]
+   Per semester: focus + criteria per bouwsteen
+   S1: basiscriteria (1-2 per bouwsteen), eenvoudige rubrics
+   S2: idem + extra criterium, rubrics iets scherper
+   S3: uitgebreider, meer nuance in rubrics
+   S4: volledig, analytische rubrics, alle indicatoren
+══════════════════════════════════════════════════ */
+
+const DATA = {
+
+  s1: {
+    titel: 'Semester 1 — Eerste stappen als lesgever',
+    beschrijving: 'Focus op de absolute basisprincipes: zijn leerdoelen helder, voelen cursisten zich veilig en doet de les zijn job? We kijken breed en beschrijvend — nog geen diepgaande analyse.',
+    focus: ['Duidelijkheid leerdoelen','Veilig leerklimaat','Eerste contact met cursisten','Basisdidactiek'],
+    bouwstenen: [
+      { bs:'kwal', focus:'Zijn leerdoelen helder en oefenen cursisten voldoende?',
+        criteria: [
+          { id:'s1_k1', vraag:'Cursisten weten wat ze in deze les moeten leren',
+            focus:'Wat zie je bij cursisten — herkennen ze het leerdoel?',
+            niveaus:['Cursisten kunnen in eigen woorden zeggen wat ze vandaag leren. Het leerdoel was helder van bij het begin.',
+                     'Het leerdoel was zichtbaar, maar cursisten verwijzen er niet spontaan naar tijdens de les.',
+                     'Er was een leerdoel maar het bleef vaag of cursisten merkten het nauwelijks op.',
+                     'Er was geen helder leerdoel zichtbaar. Cursisten weten niet wat de les beoogt.'] },
+          { id:'s1_k2', vraag:'Cursisten krijgen voldoende kansen om te oefenen',
+            focus:'Hoeveel tijd gaat naar uitleg vs. actief oefenen?',
+            niveaus:['De les bevat duidelijke oefenmomenten. Cursisten zijn actief bezig, niet alleen toehoorder.',
+                     'Er zijn oefenkansen maar de verhouding instructie/oefenen is soms te zwaar naar instructie.',
+                     'Er is weinig ruimte voor oefenen. Cursisten luisteren meer dan ze doen.',
+                     'De les bestaat vrijwel volledig uit uitleg. Er is geen oefenmoment.'] },
+        ]
+      },
+      { bs:'zorg', focus:'Is er rust, duidelijkheid en een respectvolle sfeer?',
+        criteria: [
+          { id:'s1_z1', vraag:'Er is een rustige, respectvolle sfeer in de klas',
+            focus:'Durven cursisten vragen stellen? Worden fouten genormaliseerd?',
+            niveaus:['De sfeer is warm en rustig. Cursisten durven vragen stellen. Fouten worden behandeld als leermoment.',
+                     'De sfeer is overwegend rustig en respectvol maar er zijn momenten van spanning of terughoudendheid.',
+                     'De sfeer is neutraal maar biedt weinig uitnodiging om te participeren of fouten te maken.',
+                     'Er is spanning of onrust. Cursisten tonen terughoudendheid of vermijden deelname.'] },
+          { id:'s1_z2', vraag:'Verwachtingen en afspraken zijn duidelijk voor cursisten',
+            focus:'Weten cursisten wat er van hen verwacht wordt in deze les?',
+            niveaus:['Afspraken en verwachtingen zijn helder uitgesproken en cursisten weten wat er van hen verwacht wordt.',
+                     'Verwachtingen zijn aanwezig maar worden niet altijd actief gecommuniceerd.',
+                     'Verwachtingen zijn impliciet. Cursisten moeten gissen wat er van hen verwacht wordt.',
+                     'Er zijn geen duidelijke afspraken of verwachtingen zichtbaar.'] },
+        ]
+      },
+      { bs:'leven', focus:'Begrijpen cursisten waarvoor ze dit leren?',
+        criteria: [
+          { id:'s1_l1', vraag:'De lesgever benoemt waarvoor de leerstof nuttig is',
+            focus:'Werd er een link gelegd met werk, leven of toekomst?',
+            niveaus:['De relevantie van de leerstof wordt expliciet benoemd. Cursisten begrijpen waarvoor ze dit leren.',
+                     'Er wordt een link gemaakt maar die is impliciet of niet voor alle cursisten even helder.',
+                     'De relevantie wordt verondersteld maar niet uitgesproken.',
+                     'Er is geen link met de praktijk of het nut van de leerstof.'] },
+        ]
+      },
+      { bs:'betrok', focus:'Doen cursisten actief mee?',
+        criteria: [
+          { id:'s1_b1', vraag:'Cursisten nemen actief deel aan de les',
+            focus:'Wie doet mee? Wie haakt af? Wordt iedereen aangesproken?',
+            niveaus:['De meeste cursisten participeren actief. Verschillende cursisten komen aan bod.',
+                     'Een deel van de cursisten participeert, maar een deel blijft passief.',
+                     'Deelname is beperkt tot enkele cursisten. De rest kijkt toe.',
+                     'Cursisten zijn overwegend passief. Er is nauwelijks interactie.'] },
+        ]
+      },
+      { bs:'samen', focus:'Is er ruimte voor interactie tussen cursisten?',
+        criteria: [
+          { id:'s1_s1', vraag:'Er is ruimte voor interactie of samenwerking tussen cursisten',
+            focus:'Leren cursisten van en met elkaar — of enkel van de lesgever?',
+            niveaus:['Cursisten communiceren met elkaar en leren van elkaar. Samenwerking is doelgericht aanwezig.',
+                     'Er zijn momenten van interactie maar die zijn vluchtig of niet doelgericht.',
+                     'Cursisten werken naast elkaar maar leren niet echt van elkaar.',
+                     'Er is geen ruimte voor interactie. Alles loopt via de lesgever.'] },
+        ]
+      },
+      { bs:'innov', focus:'Worden middelen en werkvormen doordacht ingezet?',
+        criteria: [
+          { id:'s1_i1', vraag:'Gebruikte middelen (digitaal of andere) ondersteunen het leren',
+            focus:'Helpen de ingezette middelen het leren of leiden ze af?',
+            niveaus:['Ingezette middelen (tools, materiaal, werkvormen) ondersteunen het leren duidelijk.',
+                     'Middelen zijn aanwezig maar hun bijdrage aan het leerproces is niet altijd duidelijk.',
+                     'Middelen worden ingezet maar ze leiden soms af of voegen weinig toe.',
+                     'Geen of onbesuisd gebruik van middelen dat het leren eerder bemoeilijkt.'] },
+        ]
+      },
+    ]
+  },
+
+  s2: {
+    titel: 'Semester 2 — Verbreding en bewustwording',
+    beschrijving: 'We kijken naar dezelfde basisprincipes maar nu met meer aandacht voor bewuste keuzes. Doet de lesgever dingen met een bedoeling? Wordt er al nagedacht over differentiatie en feedback?',
+    focus: ['Bewuste didactische keuzes','Feedbackkwaliteit','Differentiatie eerste stappen','Activering alle cursisten'],
+    bouwstenen: [
+      { bs:'kwal', focus:'Zijn leerdoelen helder, activerend en sluit feedback aan bij het leren?',
+        criteria: [
+          { id:'s2_k1', vraag:'Cursisten weten wat ze moeten leren en waarom',
+            focus:'Leerdoel zichtbaar én nut benoemd — begrijpen cursisten de bedoeling?',
+            niveaus:['Cursisten kennen het leerdoel en begrijpen waarom het relevant is. De lesgever verbindt dit actief met de activiteiten.',
+                     'Leerdoel en nut zijn aanwezig maar cursisten leggen de link niet altijd zelf.',
+                     'Leerdoel is zichtbaar maar het nut wordt niet of nauwelijks benoemd.',
+                     'Geen helder leerdoel of relevantie.'] },
+          { id:'s2_k2', vraag:'Cursisten oefenen voldoende en de lesgever geeft gerichte feedback',
+            focus:'Kwaliteit van oefening én feedback — helpt die cursisten vooruit?',
+            niveaus:['Oefenmomenten zijn goed verdeeld. Feedback is concreet: wat goed is, wat beter kan en hoe.',
+                     'Er zijn oefenkansen en feedback, maar feedback is soms algemeen of enkel corrigerend.',
+                     'Oefenen is beperkt. Feedback bestaat maar geeft weinig richting voor verbetering.',
+                     'Weinig of geen oefenkansen. Feedback is afwezig of enkel beoordelend.'] },
+          { id:'s2_k3', vraag:'Evaluatie sluit aan bij wat cursisten geoefend hebben',
+            focus:'Geen verrassingen — is er afstemming tussen oefenen en evalueren?',
+            niveaus:['Wat cursisten oefenen en wat ze geëvalueerd worden op, sluit duidelijk op elkaar aan.',
+                     'De afstemming is grotendeels goed maar soms is er een onderdeel dat niet geoefend werd.',
+                     'Oefenen en evalueren zijn deels losstaand. Cursisten worden soms verrast.',
+                     'Geen zichtbare afstemming tussen oefenen en evalueren.'] },
+        ]
+      },
+      { bs:'zorg', focus:'Is er een veilig klimaat én wordt er gedifferentieerd?',
+        criteria: [
+          { id:'s2_z1', vraag:'Cursisten voelen zich veilig om te participeren en fouten te maken',
+            focus:'Psychologische veiligheid — durven cursisten risico te nemen?',
+            niveaus:['Duidelijke signalen van veiligheid: cursisten stellen vragen, maken fouten openlijk, helpen elkaar.',
+                     'De sfeer is veilig voor de meeste cursisten maar een deel is nog terughoudend.',
+                     'Basisveiligheid aanwezig maar fouten worden eerder vermeden dan genormaliseerd.',
+                     'Cursisten vermijden deelname. Fouten worden niet genormaliseerd of leiden tot ongemak.'] },
+          { id:'s2_z2', vraag:'De lesgever houdt rekening met verschillen tussen cursisten',
+            focus:'Eerste tekenen van differentiatie — dezelfde lat, andere weg?',
+            niveaus:['De lesgever past ondersteuning aan op basis van wat cursisten nodig hebben. Dezelfde verwachting, andere weg.',
+                     'Er is bewustzijn van verschillen maar aanpassing is beperkt of ad hoc.',
+                     'Iedereen krijgt dezelfde aanpak, ook als dat zichtbaar niet werkt voor een deel.',
+                     'Geen rekening gehouden met verschillen.'] },
+        ]
+      },
+      { bs:'leven', focus:'Vertrekt de les vanuit herkenbare contexten?',
+        criteria: [
+          { id:'s2_l1', vraag:'Leerinhouden worden verbonden met herkenbare situaties',
+            focus:'Is er toepassing of blijft het abstract?',
+            niveaus:['Leerstof wordt gekoppeld aan situaties die cursisten herkennen. Toepassing is ingebouwd in de activiteiten.',
+                     'Er zijn herkenbare voorbeelden maar toepassing is beperkt.',
+                     'De link met de praktijk wordt vermeld maar cursisten passen de leerstof niet zelf toe.',
+                     'Les blijft abstract of theoretisch. Geen link met leven of werk.'] },
+          { id:'s2_l2', vraag:'Cursisten passen leerstof toe — niet enkel reproduceren',
+            focus:'Denkopdrachten of enkel invullen?',
+            niveaus:['Opdrachten vragen analyse, toepassing of probleemoplossing. Meer dan reproductie.',
+                     'Er is enige toepassing maar reproductie overheerst.',
+                     'Opdrachten zijn overwegend reproductief. Toepassing is schaars.',
+                     'Alle opdrachten zijn reproductief. Cursisten onthouden en herhalen.'] },
+        ]
+      },
+      { bs:'betrok', focus:'Zijn alle cursisten actief betrokken?',
+        criteria: [
+          { id:'s2_b1', vraag:'Alle cursisten worden uitgenodigd om deel te nemen',
+            focus:'Wie doet mee, wie niet — wordt dat actief bewaakt?',
+            niveaus:['De lesgever bereikt actief alle cursisten. Wie stil is, wordt bewust uitgenodigd zonder druk.',
+                     'De meeste cursisten participeren maar stille cursisten worden niet altijd bewust aangesproken.',
+                     'Deelname is ongelijk. Dezelfde cursisten spreken altijd. De lesgever merkt het maar grijpt niet in.',
+                     'Passiviteit wordt niet opgemerkt of gecorrigeerd.'] },
+          { id:'s2_b2', vraag:'De lesgever motiveert cursisten om te leren',
+            focus:'Is er verbondenheid en uitnodiging — of enkel informatieoverdracht?',
+            niveaus:['De lesgever creëert betrokkenheid: spreekt cursisten bij naam aan, waardeert inzet, nodigt uit.',
+                     'Er is betrokkenheid maar die is niet consistent of enkel voor een deel van de groep.',
+                     'Beperkte verbinding. Les is functioneel maar biedt weinig motiverende impulsen.',
+                     'Weinig tot geen betrokkenheid merkbaar. Cursisten zijn passief toehoorder.'] },
+        ]
+      },
+      { bs:'samen', focus:'Is samenwerking doelgericht en goed begeleid?',
+        criteria: [
+          { id:'s2_s1', vraag:'Samenwerkingsopdrachten zijn duidelijk gestructureerd',
+            focus:'Helder doel, taakverdeling, iedereen betrokken?',
+            niveaus:['Samenwerking heeft een helder doel. Rollen zijn duidelijk. Iedereen draagt bij. De lesgever begeleidt.',
+                     'Samenwerking is aanwezig maar zonder altijd duidelijke taakverdeling of doel.',
+                     'Samenwerking is meer naast elkaar werken dan echt samen leren.',
+                     'Samenwerking is afwezig of onbegeleide chaos.'] },
+        ]
+      },
+      { bs:'innov', focus:'Worden middelen bewust gekozen voor het leerdoel?',
+        criteria: [
+          { id:'s2_i1', vraag:'Werkvormen en middelen worden bewust ingezet voor het leerdoel',
+            focus:'Is er een bedoeling achter de keuze van werkvormen?',
+            niveaus:['De lesgever kiest werkvormen en middelen bewust en kan de keuze verbinden met het leerdoel.',
+                     'Keuzes zijn er maar de bedoeling is niet altijd expliciet of duidelijk voor cursisten.',
+                     'Werkvormen worden gebruikt uit gewoonte eerder dan vanuit een bewuste keuze.',
+                     'Geen bewuste variatie in werkvormen. Altijd hetzelfde patroon.'] },
+          { id:'s2_i2', vraag:'Digitale tools zijn haalbaar voor alle cursisten',
+            focus:'Kan iedereen mee — inclusief wie minder digitaal vaardig is?',
+            niveaus:['Digitale tools zijn toegankelijk voor alle cursisten. Er is altijd een alternatief of begeleiding.',
+                     'Tools werken voor de meeste cursisten maar niet voor iedereen. Geen systematisch plan B.',
+                     'Een deel van de cursisten haakt af door digitale drempel. Dit wordt deels opgemerkt.',
+                     'Digitale tools sluiten een deel van de cursisten uit.'] },
+        ]
+      },
+    ]
+  },
+
+  s3: {
+    titel: 'Semester 3 — Verdieping en professionalisering',
+    beschrijving: 'We kijken nu naar de kwaliteit en consistentie van didactische keuzes. Niet alleen wát er gebeurt, maar hoe bewust, hoe consistent en hoe effectief het leerproces wordt aangestuurd.',
+    focus: ['Kwaliteit van feedback','Differentiatie in de praktijk','Zelfsturing cursisten','Consistentie in aanpak'],
+    bouwstenen: [
+      { bs:'kwal', focus:'Hoe krachtig en leergericht is de didactische aanpak?',
+        criteria: [
+          { id:'s3_k1', vraag:'Leerdoelen sturen de activiteiten en worden actief hernomen',
+            focus:'Niet alleen vermeld — actief gebruikt als kompas voor de les?',
+            niveaus:['Leerdoelen worden hernomen tijdens en aan het einde van de les. Cursisten kunnen ze koppelen aan wat ze gedaan hebben.',
+                     'Leerdoelen zijn aanwezig en sturen activiteiten, maar worden niet altijd actief hernomen.',
+                     'Leerdoelen zijn zichtbaar maar functioneren meer als decoratie dan als kompas.',
+                     'Leerdoelen zijn afwezig of volledig decoratief.'] },
+          { id:'s3_k2', vraag:'Feedback is concreet, tijdig en gericht op groei',
+            focus:'Feedforward: zegt feedback ook wat de volgende stap is?',
+            niveaus:['Feedback is concreet, tijdig en kijkt vooruit. Cursisten weten wat goed was, wat beter kan en hoe.',
+                     'Feedback is bruikbaar maar kijkt meer terug dan vooruit. Soms algemeen.',
+                     'Feedback is sporadisch of enkel corrigerend. Geeft weinig richting voor verdere groei.',
+                     'Feedback is afwezig of beperkt tot "goed" of "fout".'] },
+          { id:'s3_k3', vraag:'De lesgever differentieert bewust — zelfde doelen, andere weg',
+            focus:'Wie krijgt meer sturing? Wie meer uitdaging? Hoe zichtbaar is dat?',
+            niveaus:['Differentiatie is zichtbaar en bewust. Cursisten die meer nodig hebben krijgen het. Gevorderden worden uitgedaagd. Dezelfde eindverwachting.',
+                     'Differentiatie is aanwezig maar niet altijd proactief of volledig doordacht.',
+                     'Differentiatie is beperkt of ad hoc. Niet systematisch.',
+                     'Geen differentiatie. Iedereen dezelfde aanpak ongeacht noden of niveau.'] },
+          { id:'s3_k4', vraag:'Cursisten groeien naar zelfsturing en eigenaarschap',
+            focus:'Worden cursisten uitgedaagd om keuzes te maken en verantwoordelijkheid te nemen?',
+            niveaus:['De les bevat momenten waarop cursisten keuzes maken, reflecteren of hun eigen leerproces aansturen.',
+                     'Er zijn eerste tekenen van zelfsturing maar die zijn niet systematisch ingebouwd.',
+                     'Zelfsturing wordt niet actief gestimuleerd. Cursisten volgen.','Geen aandacht voor zelfsturing of eigenaarschap.'] },
+        ]
+      },
+      { bs:'zorg', focus:'Is zorg structureel en proactief — niet enkel reactief?',
+        criteria: [
+          { id:'s3_z1', vraag:'De lesgever signaleert leerdrempels tijdig en proactief',
+            focus:'Worden drempels opgemerkt vóór ze problemen worden?',
+            niveaus:['Leerdrempels worden proactief gesignaleerd. De lesgever past aan zonder te wachten op een probleem.',
+                     'Drempels worden opgemerkt maar reactief opgevolgd. Na het probleem, niet ervoor.',
+                     'Drempels worden soms gezien maar er wordt niet altijd op ingespeeld.',
+                     'Drempels worden nauwelijks opgemerkt of er wordt niet op gereageerd.'] },
+          { id:'s3_z2', vraag:'Psychologische veiligheid is actief bewaakt en zichtbaar',
+            focus:'Niet alleen afwezig onveiligheid, maar actief gecreëerde veiligheid?',
+            niveaus:['Veiligheid is actief gecreëerd: fouten worden besproken als leermoment, iedereen kan deelnemen, spanning wordt benoemd.',
+                     'Veiligheid is aanwezig maar passief. De lesgever laat het niet onveilig worden, maar creëert niet actief.',
+                     'Veiligheid is fragiel. Niet iedereen voelt zich gelijkwaardig uitgenodigd.',
+                     'Er zijn signalen van onveiligheid die niet worden aangepakt.'] },
+        ]
+      },
+      { bs:'leven', focus:'Is leren authentiek en wordt transfer bewust gestimuleerd?',
+        criteria: [
+          { id:'s3_l1', vraag:'Opdrachten vertrekken vanuit realistische situaties — toepassing staat centraal',
+            focus:'Is de context herkenbaar en wordt transfer actief gestuurd?',
+            niveaus:['Opdrachten vertrekken vanuit realistische contexten. Cursisten passen toe, analyseren of lossen echte problemen op.',
+                     'Realistische contexten zijn aanwezig maar toepassing is beperkt of geclusterd.',
+                     'Voorbeelden zijn herkenbaar maar cursisten passen de leerstof niet zelf toe.',
+                     'Les blijft abstract. Geen koppeling met toepassing.'] },
+          { id:'s3_l2', vraag:'De lesgever stimuleert transfer: "Waar kan je dit straks gebruiken?"',
+            focus:'Wordt de brug naar buiten de klas actief gelegd?',
+            niveaus:['Transfer wordt actief gestimuleerd. De lesgever vraagt expliciet: "Waar gebruik je dit straks?" Cursisten antwoorden vanuit eigen context.',
+                     'Transfer wordt benoemd maar cursisten worden niet actief uitgenodigd om het zelf te verbinden.',
+                     'Transfer is impliciet. De link wordt verondersteld maar niet besproken.',
+                     'Geen aandacht voor transfer.'] },
+        ]
+      },
+      { bs:'betrok', focus:'Is betrokkenheid diep en wordt afhaken tijdig gesignaleerd?',
+        criteria: [
+          { id:'s3_b1', vraag:'Alle cursisten zijn actief betrokken — ook wie minder zichtbaar is',
+            focus:'Wie verdwijnt stilletjes — en wordt dat opgemerkt en gecorrigeerd?',
+            niveaus:['De lesgever heeft zicht op alle cursisten. Wie stiller is wordt bewust uitgenodigd. Betrokkenheid is breed.',
+                     'De meeste cursisten zijn betrokken. Stille cursisten worden soms aangesproken maar niet systematisch.',
+                     'Betrokkenheid is ongelijk en de lesgever merkt het maar grijpt niet consequent in.',
+                     'Passiviteit wordt niet opgemerkt of geaccepteerd als norm.'] },
+          { id:'s3_b2', vraag:'Cursisten tonen eigenaarschap: ze stellen vragen, nemen initiatief',
+            focus:'Is er autonome motivatie zichtbaar — of enkel gehoorzame deelname?',
+            niveaus:['Cursisten stellen vragen uit eigen beweging, nemen initiatief, reflecteren op hun eigen leren.',
+                     'Initiatieven zijn er maar worden eerder uitgelokt dan spontaan.',
+                     'Cursisten wachten af. Deelname is enkel als het gevraagd wordt.',
+                     'Geen zichtbaar eigenaarschap of initiatief.'] },
+        ]
+      },
+      { bs:'samen', focus:'Is samenwerking inclusief en leerzaam?',
+        criteria: [
+          { id:'s3_s1', vraag:'Samenwerking is doelgericht, inclusief en begeleid',
+            focus:'Leren cursisten van en met elkaar — of doen ze het gewoon naast elkaar?',
+            niveaus:['Samenwerking verdiept het leren. Iedereen heeft een rol. Sociale veiligheid wordt bewaakt. De lesgever begeleidt actief.',
+                     'Samenwerking is aanwezig en grotendeels goed begeleid maar niet altijd inclusief of diepgaand.',
+                     'Samenwerking is oppervlakkig of enkele cursisten domineren.',
+                     'Samenwerking is afwezig of onbegeleide chaos zonder leerwaarde.'] },
+          { id:'s3_s2', vraag:'De lesgever maakt samenwerking expliciet als leerstrategie',
+            focus:'Is samenwerken een leerdoel op zich of enkel een werkvorm?',
+            niveaus:['De lesgever benoemt bewust wat samenwerken toevoegt aan het leren. Reflectie op het samen leren is ingebouwd.',
+                     'Samenwerken heeft een duidelijk leerdoel maar dit wordt niet altijd geëxpliciteerd.',
+                     'Samenwerken is een werkvorm maar de leerwaarde ervan wordt niet besproken.',
+                     'Samenwerken wordt niet als leerstrategie ingezet.'] },
+        ]
+      },
+      { bs:'innov', focus:'Zijn innovatieve keuzes effectief en doordacht?',
+        criteria: [
+          { id:'s3_i1', vraag:'Werkvormen en digitale tools versterken het leren aantoonbaar',
+            focus:'Wat voegt de tool of aanpak toe — of maakt het leren complexer?',
+            niveaus:['Keuze van werkvormen en tools is bewust en effectief. Ze versterken het leren en zijn haalbaar voor alle cursisten.',
+                     'Keuzes zijn er en werken grotendeels maar soms leidt een tool af of is niet voor iedereen toegankelijk.',
+                     'Werkvormen zijn ingezet maar hun leerwaarde is beperkt of onduidelijk.',
+                     'Werkvormen of tools leiden af van het leren.'] },
+          { id:'s3_i2', vraag:'De lesgever evalueert de eigen keuzes: werkte dit voor cursisten?',
+            focus:'Zichtbaar reflectieve houding — past de lesgever aan als iets niet werkt?',
+            niveaus:['De lesgever toont een reflectieve houding: past aan als iets niet werkt, vraagt feedback, evalueert de effectiviteit van keuzes.',
+                     'Er zijn tekenen van reflectie maar aanpassing is eerder reactief dan systematisch.',
+                     'Keuzes worden gemaakt zonder zichtbare evaluatie van hun effect op het leren.',
+                     'Geen zichtbare reflectie op de eigen aanpak.'] },
+        ]
+      },
+    ]
+  },
+
+  s4: {
+    titel: 'Semester 4 / Volledig observatieformulier',
+    beschrijving: 'Het volledige, analytische observatieformulier. Geschikt voor ervaren lesgevers en als eindobservatie aanvangsbegeleiding. Alle bouwstenen, alle indicatoren, diepgaande rubrics. Focus op samenhang, autonomie en professionele groei.',
+    focus: ['Alle bouwstenen','Analytische rubrics','Samenhang en autonomie','Professionele reflectie'],
+    bouwstenen: [
+      { bs:'kwal', focus:'Kwaliteitsvol leren: doelgericht, activerend en met groeigerichte feedback',
+        criteria: [
+          { id:'s4_k1', vraag:'Leerdoelen sturen de les en worden actief gebruikt als leercompas',
+            focus:'Procesindicator: leerdoelen zichtbaar, hernomen en door cursisten begrepen',
+            niveaus:['Leerdoelen zijn helder geformuleerd, hernomen tijdens de les en aan het einde. Cursisten kunnen ze in eigen woorden uitleggen en koppelen aan activiteiten. Het leerdoel is een leidraad doorheen de les.',
+                     'Leerdoelen zijn zichtbaar en sturen de activiteiten. Ze worden hernomen maar cursisten zijn er niet altijd actief mee bezig.',
+                     'Leerdoelen zijn aanwezig maar functioneren meer als administratief gegeven. Ze sturen de les niet systematisch.',
+                     'Leerdoelen zijn afwezig, vaag of volledig decoratief. De les heeft geen helder richtsnoer.'] },
+          { id:'s4_k2', vraag:'Cursisten krijgen voldoende en gevarieerde oefenkansen',
+            focus:'Procesindicator: verhouding instructie/oefenen, spreiding leeractiviteiten',
+            niveaus:['De les bevat gevarieerde oefenmomenten afgestemd op het leerdoel. Cursisten zijn actief bezig. Instructie en oefenen zijn in balans.',
+                     'Er zijn oefenkansen maar instructie overheerst soms. De variatie in werkvormen is beperkt.',
+                     'Oefenmomenten zijn schaars. Cursisten zijn overwegend passief toehoorder.',
+                     'De les bestaat vrijwel volledig uit uitleg. Geen oefenkansen.'] },
+          { id:'s4_k3', vraag:'Feedback is concreet, tijdig, groeigericht en kijkt vooruit',
+            focus:'Procesindicator: feedbackkwaliteit, feedforward, veiligheid om te leren',
+            niveaus:['Feedback is concreet, tijdig en tweezijdig: wat goed was, wat beter kan én hoe. De lesgever geeft ook feedforward. Cursisten gebruiken feedback om bij te sturen.',
+                     'Feedback is aanwezig en bruikbaar maar kijkt meer terug dan vooruit. Soms algemeen.',
+                     'Feedback is sporadisch of enkel corrigerend. Geeft weinig richting voor verdere groei.',
+                     'Feedback is afwezig, enkel beoordelend of niet bruikbaar voor cursisten.'] },
+          { id:'s4_k4', vraag:'Evaluatie sluit aan bij wat cursisten geoefend hebben — geen verrassingen',
+            focus:'Procesindicator: constructieve afstemming oefenen ↔ evalueren',
+            niveaus:['Er is volledige afstemming. Wat cursisten oefenen en hoe ze geëvalueerd worden, sluit naadloos op elkaar aan. Criteria zijn vooraf duidelijk.',
+                     'Afstemming is grotendeels aanwezig maar er zijn soms onderdelen die niet geoefend werden.',
+                     'Oefenen en evalueren zijn deels losstaand. Cursisten worden soms verrast.',
+                     'Geen zichtbare afstemming. Cursisten weten niet wat er van hen verwacht wordt bij evaluatie.'] },
+          { id:'s4_k5', vraag:'Cursisten groeien naar autonomie en zelfsturend leren',
+            focus:'Procesindicator: eigenaarschap, keuzevrijheid, reflectie op eigen leerproces',
+            niveaus:['De les bevat momenten waarop cursisten keuzes maken, hun leerproces reflecteren of zelfstandig aansturen. Eigenaarschap is zichtbaar.',
+                     'Eerste tekenen van zelfsturing maar niet systematisch ingebouwd.',
+                     'Zelfsturing wordt niet gestimuleerd. Cursisten volgen instructies passief.',
+                     'Geen aandacht voor zelfsturing. Cursisten zijn afhankelijk van de lesgever.'] },
+        ]
+      },
+      { bs:'zorg', focus:'Zorgzaam leren: veiligheid, differentiatie en proactieve ondersteuning',
+        criteria: [
+          { id:'s4_z1', vraag:'Psychologische veiligheid is actief gecreëerd — fouten zijn leermoment',
+            focus:'Procesindicator: veilig leerklimaat, respect, bereidheid om risico te nemen',
+            niveaus:['Veiligheid is actief gecreëerd. Fouten worden behandeld als leermoment. Iedereen voelt zich uitgenodigd. Spanning wordt benoemd en opgelost.',
+                     'Veiligheid is aanwezig maar passief bewaakt. De lesgever laat het niet onveilig worden maar creëert niet actief.',
+                     'Basisveiligheid aanwezig maar fragiel. Niet iedereen voelt zich even uitgenodigd.',
+                     'Signalen van onveiligheid die niet worden aangepakt. Cursisten zijn terughoudend of gespannen.'] },
+          { id:'s4_z2', vraag:'De lesgever differentieert proactief — zelfde doelen, andere weg',
+            focus:'Procesindicator: inclusieve didactiek, omgaan met verschillen, gelijke kansen',
+            niveaus:['Differentiatie is zichtbaar en proactief. Cursisten die meer nodig hebben krijgen meer sturing. Gevorderden krijgen uitdaging. De eindverwachting blijft gelijk.',
+                     'Differentiatie is aanwezig maar niet altijd proactief of volledig doordacht.',
+                     'Differentiatie is beperkt of ad hoc. Niet systematisch.',
+                     'Geen differentiatie. Iedereen dezelfde aanpak ongeacht noden of niveau.'] },
+          { id:'s4_z3', vraag:'Leerdrempels worden proactief gesignaleerd en opgevolgd',
+            focus:'Procesindicator: tijdige signalering, gerichte ondersteuning, doorverwijzing',
+            niveaus:['Leerdrempels worden vroeg opgemerkt. De lesgever past aan of activeert ondersteuning zonder te wachten op een probleem. Cursisten weten waar ze terechtkunnen.',
+                     'Drempels worden opgemerkt maar reactief opgevolgd. Na het probleem, niet ervoor.',
+                     'Drempels worden soms gezien maar er wordt niet altijd op gereageerd.',
+                     'Drempels worden nauwelijks gesignaleerd of genegeerd.'] },
+          { id:'s4_z4', vraag:'Taalaccessibiliteit: taal en instructies zijn begrijpelijk voor alle cursisten',
+            focus:'Procesindicator: begrijpelijke taal, woordenschat uitgelegd, instructies helder',
+            niveaus:['Taal en instructies zijn bewust afgestemd op het niveau van de cursistengroep. Nieuwe vaktermen worden uitgelegd. Cursisten begrijpen wat er van hen verwacht wordt.',
+                     'Taal is grotendeels toegankelijk maar wordt niet altijd bewust gescreend op drempels.',
+                     'Soms zijn er taaldrempels die leren belemmeren maar die niet actief worden aangepakt.',
+                     'Taal of instructies vormen een structurele drempel die niet aangepakt wordt.'] },
+        ]
+      },
+      { bs:'leven', focus:'Levensecht leren: toepassing, relevantie en transfer naar werk en leven',
+        criteria: [
+          { id:'s4_l1', vraag:'Leerinhouden worden verbonden met herkenbare, realistische situaties',
+            focus:'Procesindicator: levensechte contexten, authentieke opdrachten',
+            niveaus:['Leerstof vertrekt consequent vanuit realistische situaties. Cursisten herkennen de link met hun werk of leven. Toepassing is structureel ingebouwd.',
+                     'Herkenbare voorbeelden zijn aanwezig maar toepassing is beperkt of geclusterd aan het einde.',
+                     'Voorbeelden zijn aanwezig maar cursisten passen de leerstof niet zelf toe.',
+                     'Les blijft abstract of theoretisch. Geen koppeling met praktijk.'] },
+          { id:'s4_l2', vraag:'Cursisten passen leerstof toe: analyseren, oplossen, creëren',
+            focus:'Procesindicator: cognitief niveau opdrachten — meer dan reproductie',
+            niveaus:['Opdrachten vragen toepassing, analyse of creatie. Cursisten moeten nadenken en verbanden leggen, niet enkel herhalen.',
+                     'Er is enige toepassing maar reproductie overheerst nog.',
+                     'Opdrachten zijn overwegend reproductief. Toepassing is schaars of oppervlakkig.',
+                     'Alle opdrachten zijn reproductief. Diepgaander denken wordt niet gevraagd.'] },
+          { id:'s4_l3', vraag:'Transfer wordt actief gestimuleerd: "Waar gebruik je dit straks?"',
+            focus:'Procesindicator: expliciete transfer, cursisten verbinden met eigen context',
+            niveaus:['Transfer wordt actief en systematisch gestimuleerd. Cursisten worden gevraagd de link zelf te leggen met hun eigen context.',
+                     'Transfer wordt benoemd maar cursisten worden niet actief uitgenodigd om het zelf te verbinden.',
+                     'Transfer is impliciet. De link wordt verondersteld maar niet besproken.',
+                     'Geen aandacht voor transfer.'] },
+        ]
+      },
+      { bs:'betrok', focus:'Betrokken leren: engagement, verbondenheid en eigenaarschap',
+        criteria: [
+          { id:'s4_b1', vraag:'Alle cursisten zijn actief betrokken — ook wie minder zichtbaar is',
+            focus:'Procesindicator: breedte betrokkenheid, stille cursisten worden bereikt',
+            niveaus:['De lesgever bereikt actief alle cursisten. Wie stiller is wordt bewust uitgenodigd. Betrokkenheid is breed en diep.',
+                     'De meeste cursisten zijn betrokken. Stille cursisten worden soms aangesproken maar niet systematisch.',
+                     'Betrokkenheid is ongelijk. Passiviteit wordt opgemerkt maar niet consequent gecorrigeerd.',
+                     'Passiviteit wordt niet opgemerkt of geaccepteerd als norm.'] },
+          { id:'s4_b2', vraag:'Cursisten tonen eigenaarschap en nemen initiatief in hun leren',
+            focus:'Procesindicator: autonome motivatie, zelfinitiatief, reflectie',
+            niveaus:['Cursisten stellen vragen uit eigen beweging, nemen initiatief en reflecteren op hun eigen leerproces. Eigenaarschap is duidelijk zichtbaar.',
+                     'Initiatieven zijn er maar worden eerder uitgelokt dan spontaan genomen.',
+                     'Cursisten wachten af. Deelname is enkel als het gevraagd wordt.',
+                     'Geen zichtbaar eigenaarschap of initiatief.'] },
+          { id:'s4_b3', vraag:'Signalen van afhaken worden tijdig opgemerkt en aangepakt',
+            focus:'Procesindicator: signalering leerdrempels, uitvalrisico',
+            niveaus:['De lesgever merkt wie dreigt af te haken en reageert proactief: vraagt, past aan of verwijst door.',
+                     'Signalen worden opgemerkt maar reactief opgepakt.',
+                     'Signalen worden soms gemist of er wordt te laat op gereageerd.',
+                     'Afhaken wordt niet opgemerkt of genegeerd.'] },
+        ]
+      },
+      { bs:'samen', focus:'Samen leren: doelgericht, inclusief en met leerwaarde',
+        criteria: [
+          { id:'s4_s1', vraag:'Samenwerking verdiept het leren en is inclusief en doelgericht',
+            focus:'Procesindicator: leerwaarde samenwerking, inclusie, sociale veiligheid',
+            niveaus:['Samenwerking verdiept het leren. Iedereen heeft een rol. Sociale veiligheid wordt bewaakt. De lesgever begeleidt actief en benoemt de leerwaarde.',
+                     'Samenwerking is aanwezig en grotendeels goed begeleid maar niet altijd diepgaand of inclusief.',
+                     'Samenwerking is oppervlakkig of domineert door enkelen.',
+                     'Samenwerking is afwezig of heeft geen zichtbare leerwaarde.'] },
+          { id:'s4_s2', vraag:'De lesgever maakt de leerwaarde van samenwerken expliciet',
+            focus:'Procesindicator: reflectie op samen leren, doelbewust inzetten',
+            niveaus:['Samenwerken is een bewuste leerstrategie. De lesgever benoemt wat het toevoegt en bouwt reflectie op het samen leren in.',
+                     'Samenwerken heeft een doel maar de leerwaarde wordt niet altijd geëxpliciteerd.',
+                     'Samenwerken is een werkvorm maar de leerwaarde wordt niet besproken.',
+                     'Samenwerken wordt niet als leerstrategie ingezet.'] },
+          { id:'s4_s3', vraag:'Conflicten of ongelijkheid in samenwerking worden proactief aangepakt',
+            focus:'Procesindicator: groepsdynamiek bewaakt, iedereen bijdraagt',
+            niveaus:['De lesgever bewaakt actief wie bijdraagt en grijpt in bij ongelijkheid of conflict. Dit wordt als leermoment behandeld.',
+                     'Problemen worden aangepakt maar pas nadat ze zichtbaar zijn.',
+                     'Ongelijkheid of spanning in groepswerk wordt opgemerkt maar niet altijd aangepakt.',
+                     'Groepsdynamiek wordt niet bewaakt.'] },
+        ]
+      },
+      { bs:'innov', focus:'Innovatief leren: doordachte keuzes die leren versterken',
+        criteria: [
+          { id:'s4_i1', vraag:'Werkvormen en tools zijn bewust gekozen voor het leerdoel',
+            focus:'Procesindicator: doelbewuste didactische keuzes, afstemming op leerproces',
+            niveaus:['Elke werkvormen- en toolkeuze is bewust en effectief. De lesgever kan de keuze verbinden met het leerdoel en het leerproces.',
+                     'Keuzes zijn er en werken grotendeels maar de bedoeling is niet altijd expliciet.',
+                     'Keuzes zijn gemaakt uit gewoonte. De leerwaarde is niet altijd bewust.',
+                     'Geen bewuste keuzes in werkvormen of tools. Altijd hetzelfde patroon.'] },
+          { id:'s4_i2', vraag:'Digitale tools versterken het leren en zijn inclusief ingezet',
+            focus:'Procesindicator: digitale leerhefboom, toegankelijkheid, plan B',
+            niveaus:['Digitale tools versterken het leren aantoonbaar. Ze zijn toegankelijk voor alle cursisten. Er is altijd een plan B.',
+                     'Tools werken voor de meeste cursisten en dragen bij aan het leren maar niet voor iedereen.',
+                     'Tools zijn ingezet maar hun leerwaarde is onduidelijk of ze sluiten een deel van de cursisten uit.',
+                     'Digitale tools leiden af of sluiten cursisten uit.'] },
+          { id:'s4_i3', vraag:'De lesgever toont reflectief vakmanschap: past aan op basis van wat werkt',
+            focus:'Procesindicator: adaptieve lespraktijk, professionele reflectie zichtbaar',
+            niveaus:['De lesgever toont zichtbaar reflectief vakmanschap: past aan als iets niet werkt, vraagt feedback van cursisten, evalueert bewust de effectiviteit van keuzes.',
+                     'Er zijn tekenen van reflectie maar aanpassing is eerder reactief dan systematisch.',
+                     'Keuzes worden gemaakt zonder zichtbare evaluatie van hun effect op cursisten.',
+                     'Geen zichtbare reflectie op de eigen aanpak.'] },
+        ]
+      },
+    ]
+  },
+};
+
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+let huidigSem = 's1';
+let scores = {}; // { criteriumId: 1-4 }
+let opmerkingen = {}; // { criteriumId: tekst }
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+function init(){
+  document.getElementById('ctx-datum').value = new Date().toISOString().split('T')[0];
+  renderContent();
+}
+
+function setSem(sem, btn){
+  huidigSem = sem;
+  document.querySelectorAll('.sem-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderContent();
+  updateProg();
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════ */
+function renderContent(){
+  const data = DATA[huidigSem];
+  let html = `
+    <div class="sem-intro">
+      <h2>${data.titel}</h2>
+      <p>${data.beschrijving}</p>
+      <div class="focus-tags">${data.focus.map(f=>`<span class="focus-tag">${f}</span>`).join('')}</div>
+    </div>`;
+
+  data.bouwstenen.forEach(sectie=>{
+    const b = BS.find(x=>x.id===sectie.bs);
+    html+=`
+      <div class="bs-sectie">
+        <div class="bs-header" style="background:${b.bg};border-color:${b.c}40;">
+          ${hexSVG(b.c,36)}
+          <div>
+            <h3 style="color:${b.dk}">${b.naam}</h3>
+            <p>${sectie.focus}</p>
+          </div>
+        </div>
+        <div class="bs-body" style="border-color:${b.c}40;">`;
+
+    sectie.criteria.forEach((cr,ci)=>{
+      const score = scores[cr.id]||0;
+      html+=`
+          <div class="criterium">
+            <div class="crit-vraag">${cr.vraag}</div>
+            <div class="crit-focus">${cr.focus}</div>
+            <div class="rubric">
+              ${[4,3,2,1].map(n=>`
+                <label class="rubric-col col-${n}${score===n?' geselecteerd':''}" onclick="setScore('${cr.id}',${n},this)">
+                  <input type="radio" name="${cr.id}" value="${n}" ${score===n?'checked':''}>
+                  <div class="rubric-label">
+                    <div class="rubric-dot dot-${n}"></div>
+                    <span class="lbl-${n}">${['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Sterk'][n]}</span>
+                  </div>
+                  <div class="rubric-tekst">${cr.niveaus[4-n]}</div>
+                </label>`).join('')}
+            </div>
+            <div class="opmerk-wrap">
+              <label>Opmerkingen / observaties</label>
+              <textarea id="op-${cr.id}" placeholder="Beschrijf wat je zag bij cursisten..." rows="2" onchange="setOpmerking('${cr.id}',this.value)">${opmerkingen[cr.id]||''}</textarea>
+            </div>
+          </div>`;
+    });
+
+    html+=`</div></div>`;
+  });
+
+  // Samenvatting
+  html+=`
+    <div class="samenvatting-card">
+      <h3>Samenvatting &amp; reflectiegesprek</h3>
+      <label>Sterktes — wat droeg het meest bij aan het leren van cursisten?</label>
+      <textarea id="sterktes" placeholder="Beschrijf de sterkste signalen voor leren..." rows="2"></textarea>
+      <label style="margin-top:.5rem">Groeikansen — wat zou het leren verder versterken?</label>
+      <textarea id="groei" placeholder="Beschrijf groeikansen concreet en niet-oordelend..." rows="2"></textarea>
+      <label style="margin-top:.5rem">Afgesproken experiment of volgende stap</label>
+      <textarea id="experiment" placeholder="Welk klein experiment of concrete actie spreek je af?" rows="2"></textarea>
+      <label style="margin-top:.5rem">Aansluiting bij leerpaden (optioneel)</label>
+      <input type="text" id="leerpad" placeholder="bv. Kwaliteitsvol leren, Feedback & evaluatie, Zorgzaam onderwijs..." style="width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:12px;font-family:inherit;background:var(--bg);margin-top:.3rem;">
+    </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+  updateProg();
+}
+
+/* ══════════════════════════════════════════════════
+   INTERACTIE
+══════════════════════════════════════════════════ */
+function setScore(id, score, labelEl){
+  scores[id] = score;
+  // Update alle kolommen voor dit criterium
+  const cols = labelEl.closest('.rubric').querySelectorAll('.rubric-col');
+  cols.forEach(col=>{
+    col.classList.remove('geselecteerd');
+    if(+col.querySelector('input').value === score) col.classList.add('geselecteerd');
+  });
+  updateProg();
+}
+
+function setOpmerking(id, val){ opmerkingen[id] = val; }
+
+function getAllCriteria(){
+  return DATA[huidigSem].bouwstenen.flatMap(s=>s.criteria);
+}
+
+function updateProg(){
+  const all = getAllCriteria();
+  const total = all.length;
+  const done  = all.filter(c=>scores[c.id]).length;
+  const pct   = total ? Math.round(done/total*100) : 0;
+  document.getElementById('prog-label').textContent = `${done} van ${total} criteria ingevuld`;
+  document.getElementById('prog-pct').textContent   = `${pct}%`;
+  document.getElementById('prog-fill').style.width  = `${pct}%`;
+}
+
+/* ══════════════════════════════════════════════════
+   DOWNLOAD
+══════════════════════════════════════════════════ */
+function downloadDoc(){
+  const data = DATA[huidigSem];
+  const opl  = document.getElementById('ctx-opleiding').value;
+  const LVLS = ['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Sterk'];
+  const COLS = ['','#E07272','#E8B84B','#8FB5AE','#4A8A70'];
+
+  let body = '';
+  data.bouwstenen.forEach(sectie=>{
+    const b = BS.find(x=>x.id===sectie.bs);
+    body += '<div class="bs-blok"><div class="bs-titel" style="background:'+b.bg+';border-left:4px solid '+b.c+'"><strong style="color:'+b.dk+'">'+b.naam+'</strong><span style="font-size:10px;color:'+b.dk+';margin-left:8px;">'+sectie.focus+'</span></div>';
+
+    sectie.criteria.forEach((cr,ci)=>{
+      const score = scores[cr.id]||0;
+      body += '<div class="cr-rij'+(ci%2===1?' cr-alt':'')+'"><div class="cr-vraag">'+cr.vraag+'<div class="cr-focus">'+cr.focus+'</div></div>';
+      body += '<div class="rubric-grid">';
+      [4,3,2,1].forEach(n=>{
+        const sel = score===n;
+        body += '<div class="rub-col'+(sel?' rub-sel':'') +'" style="'+(sel?'background:'+COLS[n]+'22;border-color:'+COLS[n]+';':'')+'">'
+          + '<div class="rub-lbl" style="color:'+COLS[n]+'">'+LVLS[n]+'</div>'
+          + '<div class="rub-tekst'+(sel?' rub-tekst-sel':'')+'">'+cr.niveaus[4-n]+(sel?'<span class="chk"> ✓</span>':'')+'</div>'
+          + '</div>';
+      });
+      body += '</div>';
+      const op = opmerkingen[cr.id]||'';
+      body += '<div class="op-blok"><div class="op-label">Opmerkingen / observaties</div>'+(op?'<div class="op-tekst">'+op+'</div>':'<div class="op-lijn"></div>')+'</div>';
+      body += '</div>';
+    });
+    body += '</div>';
+  });
+
+  const sterktes   = document.getElementById('sterktes')?.value||'';
+  const groei      = document.getElementById('groei')?.value||'';
+  const experiment = document.getElementById('experiment')?.value||'';
+  const leerpad    = document.getElementById('leerpad')?.value||'';
+
+  body += '<div class="samen-blok"><strong>Samenvatting &amp; reflectiegesprek</strong>'
+    +'<div class="samen-rij"><span class="samen-lbl">Sterktes:</span><span class="samen-val">'+(sterktes||'—')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Groeikansen:</span><span class="samen-val">'+(groei||'—')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Experiment / volgende stap:</span><span class="samen-val">'+(experiment||'—')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Leerpad:</span><span class="samen-val">'+(leerpad||'—')+'</span></div>'
+    +'</div>';
+
+  const ctx = '<div class="ctx-info"><span>Opleiding: <strong>'+(opl||'—')+'</strong></span>'
+    +'<span>Module: <strong>'+(document.getElementById('ctx-module').value||'—')+'</strong></span>'
+    +'<span>Lesgever: <strong>'+(document.getElementById('ctx-lesgever').value||'—')+'</strong></span>'
+    +'<span>Observator: <strong>'+(document.getElementById('ctx-observator').value||'—')+'</strong></span>'
+    +'<span>Datum: <strong>'+(document.getElementById('ctx-datum').value||'—')+'</strong></span>'
+    +'<span>Type: <strong>'+(document.getElementById('ctx-type').value||'—')+'</strong></span></div>';
+
+  const css = `*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;background:#fff;padding:2rem;max-width:960px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}.doc-header .sub{font-size:11px;color:#5f5e5a;}.doc-header .sem{font-size:12px;font-weight:600;margin-top:.4rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.obs-principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.25rem;}.bs-titel{padding:.5rem .75rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.cr-rij{border:1px solid #E2DFD7;border-radius:6px;overflow:hidden;margin-bottom:.5rem;}.cr-alt{}.cr-vraag{font-size:11.5px;font-weight:500;padding:.5rem .75rem .25rem;line-height:1.4;}.cr-focus{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .375rem;}.rubric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #E2DFD7;}.rub-col{padding:.4rem .5rem;border-right:1px solid #E2DFD7;font-size:9.5px;}.rub-col:last-child{border-right:none;}.rub-lbl{font-weight:700;font-size:9px;margin-bottom:2px;}.rub-tekst{color:#888780;line-height:1.45;}.rub-tekst-sel{color:#1a1a18;font-weight:500;}.chk{font-weight:700;}.op-blok{padding:.375rem .75rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.op-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;}.op-tekst{font-size:11px;}.op-lijn{border-bottom:1px dashed #c8c6be;padding-top:.5rem;}.samen-blok{margin-top:1.5rem;padding:.75rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.samen-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}.samen-rij{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.samen-lbl{font-weight:600;min-width:180px;color:#5f5e5a;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok,.cr-rij{break-inside:avoid;}}`;
+
+  const doc = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Observatieformulier — '+(opl||'Crescendo CVO')+'</title><style>'+css+'</style></head><body>'
+    +'<div class="doc-header"><h1>Observatieformulier Lesobservatie</h1><div class="sub">Crescendo CVO · Aanvangsbegeleiding &amp; kwaliteitsloop · 2026–2030</div><div class="sem">'+data.titel+'</div>'+ctx+'</div>'
+    +'<div class="obs-principe"><strong>Observatieprincipe:</strong> We observeren niet de lesgever als persoon, maar wat zichtbaar gebeurt in het leren van cursisten en welke keuzes dit ondersteunen of belemmeren.</div>'
+    +body
+    +'<div class="doc-footer"><span>Crescendo CVO · Observatieformulier · '+data.titel+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
+    +'</body></html>';
+
+  const blob = new Blob([doc],{type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'observatieformulier-'+huidigSem+'-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.html';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════════════
+   OPSLAAN
+══════════════════════════════════════════════════ */
+function saveDoc(){
+  const payload = {
+    instrument: 'observatieformulier',
+    semester: huidigSem,
+    opleiding:   document.getElementById('ctx-opleiding').value,
+    module:      document.getElementById('ctx-module').value,
+    lesgever:    document.getElementById('ctx-lesgever').value,
+    observator:  document.getElementById('ctx-observator').value,
+    datum:       document.getElementById('ctx-datum').value,
+    type:        document.getElementById('ctx-type').value,
+    scores, opmerkingen,
+    sterktes:    document.getElementById('sterktes')?.value||'',
+    groei:       document.getElementById('groei')?.value||'',
+    experiment:  document.getElementById('experiment')?.value||'',
+    leerpad:     document.getElementById('leerpad')?.value||'',
+    timestamp:   new Date().toISOString(),
+  };
+  console.log('SharePoint payload:', JSON.stringify(payload,null,2));
+  if(navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  document.getElementById('save-status').textContent = `Opgeslagen om ${new Date().toLocaleTimeString('nl-BE')} — klaar voor SharePoint`;
+  const btn = document.getElementById('save-btn');
+  btn.textContent='✓ Opgeslagen';
+  setTimeout(()=>{btn.textContent='Opslaan';},2000);
+}
+
+init();
+</script>
+</body>
+</html>
