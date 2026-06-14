@@ -101,6 +101,7 @@
   <button class="tab-btn active" onclick="switchTab('planningsloop',this)">Planningsloop</button>
   <button class="tab-btn"        onclick="switchTab('loopvisual',this)">Vernieuwde loop (visueel)</button>
   <button class="tab-btn"        onclick="switchTab('cipo',this)">Wat meten we?</button>
+  <button class="tab-btn"        onclick="switchTab('instrumenten',this)">Instrumenten</button>
 </div>
 
 <!-- ══════════ TAB 1: PLANNINGSLOOP ══════════ -->
@@ -522,7 +523,190 @@
 
 </div>
 
-<footer>Crescendo CVO &nbsp;·&nbsp; Kwaliteitsloop &nbsp;·&nbsp; versie juni 2026</footer>
+<!-- ══════════ TAB 4: INSTRUMENTEN ══════════ -->
+<div class="tab-pane" id="pane-instrumenten">
+<style>
+  /* ── Instrumenten tab stijlen ── */
+  .instr-section-label {
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+    color:#888780; padding:1.25rem 0 .5rem; display:block;
+  }
+  .instr-grid {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; margin-bottom:1.5rem;
+  }
+  .instr-card {
+    background:#fff; border:1px solid #E2DFD7; border-radius:10px;
+    padding:.875rem 1rem; text-decoration:none; color:inherit;
+    display:flex; flex-direction:column; gap:6px; transition:all .15s;
+  }
+  .instr-card:hover { border-color:#aaa; box-shadow:0 2px 8px rgba(0,0,0,.07); transform:translateY(-1px); }
+  .instr-card-top { display:flex; align-items:center; gap:9px; }
+  .instr-card-icon { width:32px; height:32px; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .instr-card h3 { font-size:12.5px; font-weight:600; line-height:1.3; }
+  .instr-card p  { font-size:11px; color:#6B6A65; line-height:1.5; }
+  .instr-card-tags { display:flex; gap:4px; flex-wrap:wrap; }
+  .instr-card-arrow { font-size:11px; color:#b4b2a9; margin-top:auto; }
+  .instr-card:hover .instr-card-arrow { color:#2C2C2A; }
+  .instr-card-wide { grid-column:1/-1; background:#f4f3f0; border-color:#d3d1c7; }
+  .instr-card-wide h3 { font-size:13.5px; }
+  .instr-card-disabled { opacity:.55; cursor:default; pointer-events:none; }
+  .itag { font-size:10px; padding:2px 7px; border-radius:99px; font-weight:500; border:1px solid transparent; }
+  .itag-kwal   { background:#EBF3F2; color:#5A8880; border-color:#8FB5AE; }
+  .itag-zorg   { background:#E6EFF7; color:#3D6A91; border-color:#6B90B5; }
+  .itag-leven  { background:#FAEAEA; color:#B84A4A; border-color:#E07272; }
+  .itag-betrok { background:#F5F3D8; color:#8A8330; border-color:#CFC87A; }
+  .itag-samen  { background:#EAF0DE; color:#5A7238; border-color:#8FA563; }
+  .itag-innov  { background:#F3E8E3; color:#7A4A35; border-color:#B07560; }
+  .bstn-hex-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1rem; }
+  .bstn-hex-pill {
+    display:flex; align-items:center; gap:5px; padding:3px 10px 3px 6px;
+    border-radius:99px; font-size:11px; font-weight:600; border:1px solid transparent;
+  }
+</style>
+
+<div style="padding:0 1.5rem 2rem;">
+
+  <!-- Bouwstenen -->
+  <div class="bstn-hex-row" style="padding-top:1rem;">
+    <div class="bstn-hex-pill itag-kwal">
+      <svg viewBox="0 0 12 14" width="11" height="13"><polygon points="6,0.5 11.5,3.5 11.5,10.5 6,13.5 0.5,10.5 0.5,3.5" fill="#8FB5AE"/></svg>Kwaliteitsvol
+    </div>
+    <div class="bstn-hex-pill itag-zorg">
+      <svg viewBox="0 0 12 14" width="11" height="13"><polygon points="6,0.5 11.5,3.5 11.5,10.5 6,13.5 0.5,10.5 0.5,3.5" fill="#6B90B5"/></svg>Zorgzaam
+    </div>
+    <div class="bstn-hex-pill itag-leven">
+      <svg viewBox="0 0 12 14" width="11" height="13"><polygon points="6,0.5 11.5,3.5 11.5,10.5 6,13.5 0.5,10.5 0.5,3.5" fill="#E07272"/></svg>Levensecht
+    </div>
+    <div class="bstn-hex-pill itag-betrok">
+      <svg viewBox="0 0 12 14" width="11" height="13"><polygon points="6,0.5 11.5,3.5 11.5,10.5 6,13.5 0.5,10.5 0.5,3.5" fill="#CFC87A"/></svg>Betrokken
+    </div>
+    <div class="bstn-hex-pill itag-samen">
+      <svg viewBox="0 0 12 14" width="11" height="13"><polygon points="6,0.5 11.5,3.5 11.5,10.5 6,13.5 0.5,10.5 0.5,3.5" fill="#8FA563"/></svg>Samen
+    </div>
+    <div class="bstn-hex-pill itag-innov">
+      <svg viewBox="0 0 12 14" width="11" height="13"><polygon points="6,0.5 11.5,3.5 11.5,10.5 6,13.5 0.5,10.5 0.5,3.5" fill="#B07560"/></svg>Innovatief
+    </div>
+  </div>
+
+  <!-- Loop jaar 1 -->
+  <span class="instr-section-label">Instrumenten — loop jaar 1 (diepgaande meting)</span>
+  <div class="instr-grid">
+
+    <a class="instr-card" href="kijkwijzer_evaluatie.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#EBF3F2;">📋</div>
+        <div><h3>Scan Kwaliteitsvolle Evaluatie</h3></div>
+      </div>
+      <p>Analytische rubric · Klaspraktijk en opleidingspraktijk · Korte en uitgebreide scan</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-leven">Levensecht</span><span class="itag itag-betrok">Betrokken</span>
+        <span class="itag itag-samen">Samen</span><span class="itag itag-innov">Innovatief</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+    <a class="instr-card" href="kijkwijzer_leermateriaal.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#EBF3F2;">📄</div>
+        <div><h3>Scan Kwaliteitsvol Leermateriaal</h3></div>
+      </div>
+      <p>Analytische rubric · 8 domeinen · Klaspraktijk en opleidingspraktijk · Co-creatie materiaalbank</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-leven">Levensecht</span><span class="itag itag-betrok">Betrokken</span>
+        <span class="itag itag-samen">Samen</span><span class="itag itag-innov">Innovatief</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+    <div class="instr-card instr-card-disabled">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#E6EFF7;">🏫</div>
+        <div><h3>Observatieformulier Lesobservatie</h3></div>
+      </div>
+      <p>Gestructureerd observatieformulier · Per bouwsteen · Nagesprek lesgever</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span><span class="itag itag-betrok">Betrokken</span>
+      </div>
+      <div class="instr-card-arrow">🔒 Binnenkort beschikbaar</div>
+    </div>
+
+    <a class="instr-card" href="cursistenbevraging.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#F5F3D8;">💬</div>
+        <div><h3>Cursistenbevraging — Verdiepende bevraging</h3></div>
+      </div>
+      <p>Diepgaande bevraging · 4–6 vragen per bouwsteen · NPS · Klaspraktijk en opleidingspraktijk</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-betrok">Betrokken</span><span class="itag itag-leven">Levensecht</span>
+        <span class="itag itag-samen">Samen</span><span class="itag itag-innov">Innovatief</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+    <div class="instr-card instr-card-disabled">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#FAEAEA;">🗣️</div>
+        <div><h3>Focusgroep cursisten — leidraad</h3></div>
+      </div>
+      <p>Gesprekshandleiding kwalitatief focusgesprek · 6–8 cursisten · Open vragen per bouwsteen</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-zorg">Zorgzaam</span><span class="itag itag-betrok">Betrokken</span><span class="itag itag-leven">Levensecht</span>
+      </div>
+      <div class="instr-card-arrow">🔒 Binnenkort beschikbaar</div>
+    </div>
+
+    <div class="instr-card instr-card-disabled">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#EAF0DE;">🤝</div>
+        <div><h3>Teamdialoog — onderwijsmatrix</h3></div>
+      </div>
+      <p>Gesprekshandleiding teamdialoog · Onderwijsmatrix als kapstok · Per bouwsteen</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-samen">Samen</span><span class="itag itag-betrok">Betrokken</span>
+      </div>
+      <div class="instr-card-arrow">🔒 Binnenkort beschikbaar</div>
+    </div>
+
+    <div class="instr-card instr-card-disabled">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#F3E8E3;">🏭</div>
+        <div><h3>Focusgesprek werkveld</h3></div>
+      </div>
+      <p>Leidraad voor gesprekken met werkgevers en stagebegeleiders · Levensechtheid</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-leven">Levensecht</span><span class="itag itag-innov">Innovatief</span>
+      </div>
+      <div class="instr-card-arrow">🔒 Binnenkort beschikbaar</div>
+    </div>
+
+  </div>
+
+  <!-- Loop jaar 2-3 -->
+  <span class="instr-section-label">Instrumenten — jaar 2 &amp; 3 (lichte monitoring)</span>
+  <div class="instr-grid">
+
+    <a class="instr-card" href="cursistenbevraging.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#F5F3D8;">💬</div>
+        <div><h3>Cursistenbevraging — Korte bevraging</h3></div>
+      </div>
+      <p>Signaalbevraging · 2–3 vragen per bouwsteen · NPS · Jaarlijks · Alle opleidingen</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-betrok">Betrokken</span><span class="itag itag-leven">Levensecht</span>
+        <span class="itag itag-samen">Samen</span><span class="itag itag-innov">Innovatief</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+  </div>
+</div>
+</div>
+
+<footer>Crescendo CVO &nbsp;·&nbsp; Kwaliteitsloop 2026–2030 &nbsp;·&nbsp; versie juni 2026</footer>
 
 <script>
 function switchTab(id,btn){
@@ -583,7 +767,8 @@ const DATA={
     ]},
   bev:{titel:'Cursistenbevragingen & focusgroep',wanneer:'December',wie:'Team kwaliteit',methode:'Kwant. + Kwal.',beschrijving:'Verdiepende bevraging (MS Forms → SharePoint) + kwalitatief focusgesprek. Items gekoppeld aan CIPO-indicatoren per bouwsteen. 4-puntsschaal, geen middenoptie.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],
     instrumenten:[
-      {naam:'Cursistenbevraging (digitaal)',bestand:null,icon:'💬',beschikbaar:false},
+      {naam:'Cursistenbevraging — Korte bevraging',bestand:'cursistenbevraging.html',icon:'💬',beschikbaar:true},
+      {naam:'Cursistenbevraging — Verdiepende bevraging',bestand:'cursistenbevraging.html',icon:'💬',beschikbaar:true},
       {naam:'Focusgroep cursisten — leidraad',bestand:null,icon:'🗣️',beschikbaar:false},
     ]},
   analyse:{titel:'Opvolging les- & evaluatiemateriaal',wanneer:'Januari',wie:'Team kwaliteit',methode:'Documentanalyse',beschrijving:'Opvolging lesmateriaal en evaluatiemateriaal. Steekproef van moduleplannen en opdrachten via kijkwijzers.',bstn:['Kwaliteitsvol','Levensecht'],
