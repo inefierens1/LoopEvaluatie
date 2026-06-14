@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teamdialoog Onderwijsmatrix — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#F7F6F2; --surface:#fff; --border:#E2DFD7;
+  --text:#2C2C2A; --muted:#6B6A65; --radius:8px;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+.app-header { background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1 { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.app-header p  { font-size:11px; color:var(--muted); margin-top:1px; }
+
+.stap-bar { background:#fff; border-bottom:1px solid var(--border); padding:.5rem 1.5rem; display:flex; gap:0; align-items:center; }
+.stap-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); padding:.375rem .75rem; border-radius:99px; transition:all .15s; }
+.stap-item.active { background:#1a1a18; color:#fff; font-weight:600; }
+.stap-item.done   { color:#4A8A70; }
+.stap-nr { width:18px; height:18px; border-radius:50%; background:currentColor; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; opacity:.7; }
+.stap-item.active .stap-nr { background:#fff; color:#1a1a18; opacity:1; }
+.stap-sep { color:var(--border); padding:0 4px; font-size:14px; }
+
+.main { padding:1rem 1.5rem 5rem; max-width:860px; }
+.stap-panel { display:none; } .stap-panel.active { display:block; }
+
+/* SETUP */
+.setup-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+.setup-card h2 { font-size:14px; font-weight:600; margin-bottom:.75rem; }
+.ctx-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+.ctx-field { display:flex; flex-direction:column; gap:3px; }
+.ctx-field label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field input, .ctx-field select, .ctx-field textarea { border:1px solid var(--border); border-radius:5px; padding:5px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); }
+.ctx-field textarea { resize:vertical; min-height:52px; }
+.ctx-field.full { grid-column:1/-1; }
+
+/* BOUWSTEEN SELECTIE */
+.bs-select-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:.5rem; }
+.bs-select-item { display:flex; align-items:center; gap:8px; padding:.625rem .875rem; border-radius:8px; border:1.5px solid var(--border); cursor:pointer; transition:all .15s; background:#fff; }
+.bs-select-item:hover { border-color:#aaa; }
+.bs-select-item.gekozen { border-color:var(--bs-c); background:var(--bs-bg); }
+.bs-select-item input[type=checkbox] { display:none; }
+.bs-naam { font-size:12px; font-weight:600; color:var(--muted); }
+.bs-select-item.gekozen .bs-naam { color:var(--bs-dk); }
+
+/* NIVEAU */
+.niveau-select { display:flex; gap:8px; margin-top:.5rem; flex-wrap:wrap; }
+.niv-btn { padding:5px 14px; border-radius:6px; border:1.5px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; background:#fff; color:var(--muted); transition:all .15s; }
+.niv-btn.active-klas  { background:#E8F4FF; color:#1A5F9A; border-color:#85B7EB; }
+.niv-btn.active-opl   { background:#EDF6EC; color:#2D6B27; border-color:#8FA563; }
+.niv-btn.active-beide { background:#F5F3D8; color:#8A8330; border-color:#CFC87A; }
+
+/* GESPREK */
+.bs-blok { background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.bs-blok-header { display:flex; align-items:center; gap:10px; padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.bs-blok-header h3 { font-size:13px; font-weight:600; }
+.bs-blok-header p  { font-size:11px; color:var(--muted); margin-top:1px; font-style:italic; }
+
+.niveau-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:99px; font-size:10px; font-weight:600; margin:.5rem 1rem .25rem; }
+.badge-klas { background:#E8F4FF; color:#1A5F9A; border:1px solid #B8D8F5; }
+.badge-opl  { background:#EDF6EC; color:#2D6B27; border:1px solid #B5D9B2; }
+
+/* ZELFSCORE */
+.zelfscore-wrap { padding:.625rem 1rem .25rem; border-bottom:1px solid var(--border); background:#f8f7f4; }
+.zelfscore-wrap label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.375rem; text-transform:uppercase; letter-spacing:.04em; }
+.zelfscore-schaal { display:flex; gap:4px; }
+.zs-opt { position:relative; }
+.zs-opt input { position:absolute; opacity:0; width:0; height:0; }
+.zs-opt label { display:flex; flex-direction:column; align-items:center; gap:2px; padding:5px 8px; border-radius:5px; border:1.5px solid var(--border); cursor:pointer; font-size:10px; font-weight:600; background:#fff; color:var(--muted); transition:all .12s; min-width:44px; text-align:center; font-family:inherit; }
+.zs-opt label:hover { border-color:#aaa; }
+.zs-opt input:checked + label { border-color:var(--zs-c); background:var(--zs-bg); color:var(--zs-dk); }
+.zs-1 { --zs-c:#E07272; --zs-bg:#FAEAEA; --zs-dk:#B84A4A; }
+.zs-2 { --zs-c:#E8B84B; --zs-bg:#FEF3CD; --zs-dk:#856404; }
+.zs-3 { --zs-c:#CFC87A; --zs-bg:#F5F3D8; --zs-dk:#8A8330; }
+.zs-4 { --zs-c:#8FB5AE; --zs-bg:#EBF3F2; --zs-dk:#5A8880; }
+.zs-5 { --zs-c:#4A8A70; --zs-bg:#EAF3DE; --zs-dk:#3B6D11; }
+.zs-dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+
+/* VRAAGBLOK */
+.vraag-blok { padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.vraag-blok:last-of-type { border-bottom:none; }
+.vraag-tekst { font-size:13px; font-weight:500; margin-bottom:.25rem; line-height:1.45; }
+.vraag-ind   { font-size:10px; color:var(--muted); font-style:italic; margin-bottom:.375rem; }
+.verdieping  { font-size:11px; color:#5f5e5a; margin-bottom:.5rem; line-height:1.55; }
+.verdieping strong { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; }
+.notatie-label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:3px; text-transform:uppercase; letter-spacing:.04em; }
+.notatie-area { width:100%; min-height:60px; border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); }
+.notatie-area:focus { outline:none; border-color:#aaa; background:#fff; }
+
+/* SLOTVRAGEN */
+.slot-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:1rem; }
+.slot-card h3 { font-size:13px; font-weight:600; margin-bottom:.625rem; }
+.slot-vraag { margin-bottom:.75rem; }
+.slot-vraag p { font-size:13px; font-weight:500; margin-bottom:.3rem; line-height:1.4; }
+.slot-sub { font-size:11px; color:var(--muted); margin-bottom:.375rem; }
+
+/* SYNTHESE */
+.syn-blok { background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.syn-header { display:flex; align-items:center; gap:10px; padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.syn-header h3 { font-size:13px; font-weight:600; }
+.signaal-keuze { display:flex; gap:6px; padding:.75rem 1rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.signaal-keuze > label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.4rem; width:100%; text-transform:uppercase; letter-spacing:.04em; }
+.sig-btn { padding:4px 12px; border-radius:99px; border:1.5px solid var(--border); font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; background:#fff; color:var(--muted); transition:all .15s; }
+.sig-btn.sel-sterk    { background:#EAF3DE; color:#3B6D11; border-color:#8FA563; }
+.sig-btn.sel-neutraal { background:#F5F3D8; color:#8A8330; border-color:#CFC87A; }
+.sig-btn.sel-aandacht { background:#FAEAEA; color:#B84A4A; border-color:#E07272; }
+.syn-veld { padding:.625rem 1rem; border-bottom:1px solid var(--border); }
+.syn-veld:last-child { border-bottom:none; }
+.syn-veld label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.3rem; text-transform:uppercase; letter-spacing:.04em; }
+.syn-veld textarea, .syn-veld input { width:100%; border:1px solid var(--border); border-radius:5px; padding:5px 7px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); }
+.syn-veld textarea { min-height:48px; }
+.syn-apart { background:#f8f7f4; }
+
+/* ACTIONS */
+.actions-bar { position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; z-index:10; }
+.btn { padding:6px 15px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
+.btn-primary { background:#1a1a18; color:#fff; border-color:#1a1a18; }
+.btn-secondary { background:var(--bg); color:var(--text); }
+.save-status { font-size:11px; color:var(--muted); font-style:italic; }
+
+@media(max-width:520px){ .bs-select-grid{grid-template-columns:1fr 1fr;} .ctx-grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Teamdialoog — Onderwijsmatrix</h1>
+    <p>Crescendo CVO · Team kwaliteit + vakgroep + lesgevers + coördinatoren · 2026–2030</p>
+  </div>
+</div>
+
+<div class="stap-bar">
+  <div class="stap-item active" id="stap-ind-1"><div class="stap-nr">1</div> Setup</div>
+  <span class="stap-sep">›</span>
+  <div class="stap-item" id="stap-ind-2"><div class="stap-nr">2</div> Dialoog</div>
+  <span class="stap-sep">›</span>
+  <div class="stap-item" id="stap-ind-3"><div class="stap-nr">3</div> Synthese</div>
+</div>
+
+<div class="main">
+
+<!-- STAP 1: SETUP -->
+<div class="stap-panel active" id="stap-1">
+
+  <div class="setup-card">
+    <h2>Contextgegevens</h2>
+    <div class="ctx-grid">
+      <div class="ctx-field"><label>Opleiding / vakgroep</label><input type="text" id="ctx-opleiding" placeholder="bv. Fietshersteller"></div>
+      <div class="ctx-field"><label>Schooljaar / periode</label><input type="text" id="ctx-periode" placeholder="bv. 2026–2027, semester 2"></div>
+      <div class="ctx-field"><label>Begeleider dialoog</label><input type="text" id="ctx-begeleider" placeholder="naam begeleider / team kwaliteit"></div>
+      <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum"></div>
+      <div class="ctx-field"><label>Aanwezigen</label><input type="text" id="ctx-aanwezigen" placeholder="bv. OC, 3 lesgevers, adjunct"></div>
+      <div class="ctx-field"><label>Profiel</label>
+        <select id="ctx-profiel">
+          <option value="">— kies —</option>
+          <option>Persoonlijke ontwikkeling</option>
+          <option>Beroepsopleiding / DSBO</option>
+          <option>NT2</option>
+        </select>
+      </div>
+      <div class="ctx-field full"><label>Aanleiding / doel van dit gesprek</label>
+        <textarea id="ctx-doel" placeholder="bv. Teamdialoog na lesobservaties + cursistenbevraging semester 1 — focus op kwaliteitsvol en zorgzaam" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Kies de bouwstenen voor deze dialoog</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:.75rem;line-height:1.6;">Selecteer de bouwstenen die centraal staan in deze teamdialoog. Kies op basis van beschikbare data (bevraging, observaties, materiaalanalyse) of op basis van de aandachtspunten uit het vorige gesprek.</p>
+    <div class="bs-select-grid" id="bs-select-grid"></div>
+  </div>
+
+  <div class="setup-card">
+    <h2>Niveau van de dialoog</h2>
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:.625rem;line-height:1.6;">Gaat het gesprek over de klaspraktijk van lesgevers, over de opleiding als geheel, of over beide?</p>
+    <div class="niveau-select">
+      <button class="niv-btn" id="niv-klas"  onclick="setNiveau('klas',this)">🏫 Klaspraktijk</button>
+      <button class="niv-btn" id="niv-opl"   onclick="setNiveau('opl',this)">📋 Opleidingspraktijk</button>
+      <button class="niv-btn active-beide" id="niv-beide" onclick="setNiveau('beide',this)">🔄 Beide</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- STAP 2: DIALOOG -->
+<div class="stap-panel" id="stap-2">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:.375rem;">Gespreksopbouw (60–90 min)</h2>
+    <p style="font-size:12px;color:var(--muted);line-height:1.65;">Start met een korte context (5 min): waarom dit gesprek, welke data liggen eronder. Per bouwsteen: laat deelnemers eerst de zelfscore invullen, bespreek daarna de vragen. Kies bewust 3–4 vragen per bouwsteen — niet alles hoeft aan bod te komen. Sluit elke bouwsteen af met één inzicht en één kleine actie.</p>
+  </div>
+  <div id="dialoog-content"></div>
+
+  <div class="slot-card">
+    <h3>Slotvragen — prioritering en borging</h3>
+    <div class="slot-vraag">
+      <p>Wat loopt er volgens het team al goed — en moeten we zeker behouden?</p>
+      <div class="slot-sub">Benoem sterktes expliciet — ook als ze vanzelfsprekend lijken.</div>
+      <textarea class="notatie-area" id="slot-goed" placeholder="Noteer inzichten en reacties..." rows="2"></textarea>
+    </div>
+    <div class="slot-vraag">
+      <p>Als het team één ding zou verbeteren dit schooljaar: wat zou dat zijn?</p>
+      <div class="slot-sub">Dit geeft prioriteit aan verbeterpunten en leidt naar concrete acties.</div>
+      <textarea class="notatie-area" id="slot-prio" placeholder="Noteer inzichten en reacties..." rows="2"></textarea>
+    </div>
+    <div class="slot-vraag">
+      <p>Welke ondersteuning of professionalisering heeft het team nodig om verder te groeien?</p>
+      <div class="slot-sub">Koppelen aan leerpaden, coaching, intervisie of teamvorming.</div>
+      <textarea class="notatie-area" id="slot-ondersteuning" placeholder="Noteer noden en suggesties..." rows="2"></textarea>
+    </div>
+    <div class="slot-vraag">
+      <p>Welk klein experiment of concrete actie spreken we vandaag af?</p>
+      <div class="slot-sub">Concreet, haalbaar en met een eigenaar — geen grote plannen.</div>
+      <textarea class="notatie-area" id="slot-actie" placeholder="Wie doet wat tegen wanneer..." rows="2"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- STAP 3: SYNTHESE -->
+<div class="stap-panel" id="stap-3">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;">
+    <h2 style="font-size:14px;font-weight:600;margin-bottom:.375rem;">Synthese na de dialoog</h2>
+    <p style="font-size:12px;color:var(--muted);line-height:1.65;">Vul de synthese in onmiddellijk na het gesprek. Per bouwsteen geef je een signaallabel, noteer je de gemiddelde zelfscore van het team, voeg je 2–3 kernuitspraken toe en formuleer je één conclusie. Dit wordt opgeslagen als kwalitatieve data naast de andere instrumenten.</p>
+  </div>
+  <div id="synthese-content"></div>
+
+  <div class="syn-blok">
+    <div class="syn-header"><h3>Algemene conclusie dialoog</h3></div>
+    <div class="syn-veld">
+      <label>Wat was het sterkste inzicht uit deze teamdialoog?</label>
+      <textarea id="syn-inzicht" placeholder="Formuleer het dominante inzicht in 1–2 zinnen..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Welk aandachtspunt vraagt opvolging op teamof opleidingsniveau?</label>
+      <textarea id="syn-aandacht" placeholder="Concreet en niet-oordelend..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Afgesproken actie(s) en eigenaar(s)</label>
+      <textarea id="syn-actie" placeholder="Wie doet wat tegen wanneer..." rows="2"></textarea>
+    </div>
+    <div class="syn-veld">
+      <label>Koppeling aan leerpaden of professionalisering</label>
+      <input type="text" id="syn-leerpad" placeholder="bv. Feedback & evaluatie, Zorgzaam onderwijs, Autonomie & ZRL...">
+    </div>
+    <div class="syn-veld">
+      <label>Opvolgmoment — wanneer bespreken we dit opnieuw?</label>
+      <input type="text" id="syn-opvolging" placeholder="bv. Teamdialoog semester 2, teamoverleg maart 2027...">
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="actions-bar">
+  <span class="save-status" id="save-status">Stap 1 van 3</span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="btn btn-secondary" id="btn-terug"   onclick="navigeer(-1)" style="display:none;">← Terug</button>
+    <button class="btn btn-secondary" onclick="downloadDoc()">⬇ Download</button>
+    <button class="btn btn-primary"   id="btn-verder"  onclick="navigeer(1)">Dialoog starten →</button>
+    <button class="btn btn-primary"   id="btn-opslaan" onclick="saveDoc()" style="display:none;">Opslaan</button>
+  </div>
+</div>
+
+<script>
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+
+function hexSVG(kleur,sz=22){
+  const c=sz/2,r=sz*.41,pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  const p=pts.join(' ');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><polygon points="${p}" fill="${kleur}" opacity=".2"/><polygon points="${p}" fill="${kleur}" transform="scale(.77) translate(${sz*.115},${sz*.115})"/></svg>`;
+}
+
+/* VRAGEN — gebaseerd op onderwijsmatrix */
+const VRAGEN = {
+  kwal: {
+    intro: 'In welke mate dragen lessen, lesmateriaal en evaluaties bij aan kwaliteitsvol onderwijs?',
+    zelfscore_klas: 'In welke mate draagt jouw les bij aan kwaliteitsvol onderwijs — met duidelijke doelen, sterke feedback en betrouwbare evaluaties?',
+    zelfscore_opl:  'In welke mate zijn er binnen de opleiding duidelijke afspraken rond doelen, samenhang en evaluatie?',
+    klas: [
+      { id:'kk1', vraag:'Hoe vertalen jullie module- of opleidingsdoelen naar concrete leerdoelen voor cursisten?',
+        ind:'Procesindicator: doelgerichtheid en transparantie leerdoelen',
+        verdieping:'Gebruik je een methodiek (bv. Bloom)? Hoe weet je dat cursisten de doelen begrijpen? Hoe verduidelijk je de beoordelingscriteria?' },
+      { id:'kk2', vraag:'Hoe organiseren jullie feedback en evaluatie — en hoe bewaken jullie dat die leergericht zijn?',
+        ind:'Procesindicator: feedbackcultuur en evaluatiebeleid klas',
+        verdieping:'Welke evaluatievormen gebruik je en waarom? Zijn er afspraken binnen de opleiding? Hoe schenk je aandacht aan feed-up, feedback en feed-forward?' },
+      { id:'kk3', vraag:'Hoe ontwikkelen en delen jullie lesmateriaal — en zijn er kwaliteitsafspraken?',
+        ind:'Procesindicator: kwaliteit en afstemming lesmateriaal',
+        verdieping:'Wie bepaalt de doelen van een module? Zijn er sjablonen of kwaliteitscriteria? Waar slaan jullie materiaal op en hoe deel je het met collega\'s?' },
+    ],
+    opl: [
+      { id:'ko1', vraag:'Hoe bewaken jullie de horizontale en verticale samenhang tussen modules?',
+        ind:'Procesindicator: leerlijn en coherentie opleiding',
+        verdieping:'Welke afspraken zijn er voor horizontale samenhang (binnen eenzelfde module)? En voor verticale samenhang (tussen modules en jaren)? Wie volgt leerlijnen op?' },
+      { id:'ko2', vraag:'Hoe wordt het evaluatiebeleid binnen de opleiding opgevolgd en geborgd?',
+        ind:'Procesindicator: evaluatiebeleid en kwaliteitszorg opleiding',
+        verdieping:'Hoe wordt bewaakt dat evaluaties transparant, betrouwbaar en fair zijn? Wie neemt het initiatief om kwaliteit te monitoren? Welke afspraken bestaan er rond feedback?' },
+      { id:'ko3', vraag:'Hoe worden de visie en verwachtingen rond kwaliteitsvol onderwijs vertaald naar concrete afspraken in de opleiding?',
+        ind:'Procesindicator: visiedoorwerking klas ↔ opleiding',
+        verdieping:'Hoe wordt opgevolgd of alle lesgevers de visie kennen? Wie legt dit uit aan starters? Welke rol speelt SharePoint of Teams hierin?' },
+    ],
+  },
+  zorg: {
+    intro: 'Hoe waarmaken jullie brede basiszorg — voor cursisten én voor het team?',
+    zelfscore_klas: 'In welke mate kan jij als lesgever brede basiszorg waarmaken, met voldoende ondersteuning vanuit de teams?',
+    zelfscore_opl:  'In welke mate is brede basiszorg en ondersteuning structureel ingebouwd binnen de opleiding?',
+    klas: [
+      { id:'zk1', vraag:'Hoe herkennen jullie leerdrempels bij cursisten — en hoe pakken jullie die aan?',
+        ind:'Procesindicator: signalering en differentiatie klaspraktijk',
+        verdieping:'Op welke manier pas je activiteiten aan voor cursisten met verschillende noden? Hoe geef je signalen door aan collega\'s of coördinatoren? Wanneer verwijs je door?' },
+      { id:'zk2', vraag:'Hoe verloopt de samenwerking tussen lesgevers en ondersteunende teams (trajectbegeleiding, zorgcoach)?',
+        ind:'Procesindicator: samenwerking met ondersteuning',
+        verdieping:'Hoe stimuleer je eigenaarschap bij cursisten over hun eigen leerproces? Hoe ondersteun je cursisten bij plannen en werkdruk? Bij wie kan je als lesgever terecht?' },
+    ],
+    opl: [
+      { id:'zo1', vraag:'Hoe brengt de opleiding de beginsituatie van cursisten in kaart — en hoe worden die gegevens gedeeld?',
+        ind:'Procesindicator: intakeprocedure en informatiedeling',
+        verdieping:'Wie is verantwoordelijk voor opvolging van de beginsituatie? Hoe worden deze gegevens toegankelijk gemaakt voor alle betrokkenen? Welke rol speelt CVS?' },
+      { id:'zo2', vraag:'Hoe bewaken jullie dat de werkdruk en zorgvragen de draagkracht van het team niet overstijgen?',
+        ind:'Procesindicator: welzijn team en haalbaarheid',
+        verdieping:'Welke afspraken zijn er rond werkdruk en deadlines? Hoe wordt aandacht besteed aan welbevinden van lesgevers zelf? Wie volgt op of zorgmaatregelen effectief zijn?' },
+    ],
+  },
+  leven: {
+    intro: 'In welke mate is het leren in deze opleiding verbonden met werk, leven en de echte wereld?',
+    zelfscore_klas: 'In welke mate zijn jouw lessen levensecht — met authentieke contexten en echte toepassingen?',
+    zelfscore_opl:  'In welke mate zijn evaluaties en opdrachten in de opleiding levensecht en werkveldgericht?',
+    klas: [
+      { id:'lk1', vraag:'Hoe verbinden jullie lesinhouden met de echte wereld van cursisten?',
+        ind:'Procesindicator: levensechte contexten en betekenisgeving',
+        verdieping:'Leg altijd uit: "Dit heb je nodig omdat..." Laat cursisten toepassen, niet enkel invullen. Waar verwijzen jullie naar in werk, leven of actualiteit?' },
+      { id:'lk2', vraag:'In welke mate vragen jullie evaluaties om toepassing — niet enkel reproductie?',
+        ind:'Procesindicator: authenticiteit evaluatieopdrachten',
+        verdieping:'Welke evaluatievormen tonen wat cursisten écht kunnen? Zijn er opdrachten waarbij cursisten analyseren, oplossen of creëren? Hoe bewaken jullie dit?' },
+    ],
+    opl: [
+      { id:'lo1', vraag:'Hoe stem je de opleiding af met het werkveld — en hoe actualiseer je lesinhouden?',
+        ind:'Procesindicator: werkveldafstemming en actualiteit opleiding',
+        verdieping:'Zijn er contacten met werkgevers of stagebegeleiders? Hoe komen signalen van het werkveld binnen in de opleiding? Hoe wordt dit vertaald naar aanpassingen?' },
+      { id:'lo2', vraag:'Hoe bouwen jullie een logische leerlijn op van begrip naar toepassing doorheen de opleiding?',
+        ind:'Procesindicator: coherente opbouw naar eindcompetenties',
+        verdieping:'Wie volgt de opbouw van de opleiding op? Worden modules bewust op elkaar afgestemd? Hoe vermijden jullie dat cursisten dezelfde leerstof driemaal krijgen?' },
+    ],
+  },
+  betrok: {
+    intro: 'Hoe stimuleren jullie actieve betrokkenheid en eigenaarschap bij cursisten?',
+    zelfscore_klas: 'In welke mate slaag jij erin cursisten actief te betrekken en eigenaarschap over hun leren te stimuleren?',
+    zelfscore_opl:  'In welke mate is betrokkenheid en engagement van cursisten structureel bewaakt binnen de opleiding?',
+    klas: [
+      { id:'bk1', vraag:'Hoe zorgen jullie dat alle cursisten actief deelnemen — ook wie stiller is?',
+        ind:'Procesindicator: breedte betrokkenheid klaspraktijk',
+        verdieping:'Welke werkvormen helpen jullie om iedereen te bereiken? Hoe spreken jullie cursisten bij naam aan? Hoe waardeer je inzet, ook als het antwoord fout is?' },
+      { id:'bk2', vraag:'Hoe stimuleren jullie eigenaarschap bij cursisten over hun eigen leerproces?',
+        ind:'Procesindicator: autonomie en zelfsturing cursisten',
+        verdieping:'Hoe laten jullie cursisten keuzes maken in aanpak of volgorde? Zijn er reflectiemomenten ingebouwd? Hoe geven cursisten hun eigen leerwinst bij?' },
+    ],
+    opl: [
+      { id:'bo1', vraag:'Hoe bewaken jullie betrokkenheid en signaleren jullie afhaken tijdig?',
+        ind:'Procesindicator: signalering afhaken en opvolging opleiding',
+        verdieping:'Wie volgt aanwezigheid en engagement op? Hoe wordt afhaken besproken in het team? Welke aanpak werkt om cursisten terug aan boord te krijgen?' },
+      { id:'bo2', vraag:'Hoe betrekken jullie cursisten bij de opleiding — via inspraak, feedback of medezeggenschap?',
+        ind:'Procesindicator: cursistenperspectief in opleidingsbeleid',
+        verdieping:'Krijgen cursisten inspraak in de manier van evalueren? Hoe verwerken jullie feedback van cursisten in de opleiding? Wat is er concreet veranderd op basis van cursistensignalen?' },
+    ],
+  },
+  samen: {
+    intro: 'Hoe sterk is de cultuur van samenwerken en kennisdelen in jullie team?',
+    zelfscore_klas: 'In welke mate begeleid jij samenwerking in de klas doelgericht en inclusief?',
+    zelfscore_opl:  'In welke mate werken lesgevers en coördinatoren structureel samen — ook met andere clusters?',
+    klas: [
+      { id:'sk1', vraag:'Hoe organiseren jullie samenwerking in de klas — doelgericht, inclusief en met leerwaarde?',
+        ind:'Procesindicator: kwaliteit samenwerkingsopdrachten',
+        verdieping:'Hoe geef je een duidelijk doel aan groepswerk? Hoe verdeel je rollen? Hoe bewaak je dat iedereen bijdraagt — ook wie stiller is? Hoe begeleid je actief?' },
+      { id:'sk2', vraag:'Hoe delen jullie als team lesmateriaal, goede praktijken en inzichten?',
+        ind:'Procesindicator: professionele uitwisseling en gedeelde materiaalbank',
+        verdieping:'Waar slaan jullie gedeeld materiaal op? Hoe dikwijls spreken jullie af om ervaringen te delen? Wat werkt goed — en wat verhindert meer samenwerking?' },
+    ],
+    opl: [
+      { id:'so1', vraag:'Hoe sterk is de samenwerking binnen jullie vakgroep — en met andere clusters?',
+        ind:'Procesindicator: teamcultuur en centrumbrede samenwerking',
+        verdieping:'Welke overlegmomenten zijn er? Welke belemmeringen ervaar je? Welke thema\'s lenen zich het best voor clusteroverschrijdende samenwerking (bv. zorg, evaluatie, digitalisering)?' },
+      { id:'so2', vraag:'Hoe worden goede praktijken uit andere clusters of opleidingen gedeeld en benut?',
+        ind:'Procesindicator: kennisdeling en samenwerking over grenzen heen',
+        verdieping:'Hoe vaak hoor je over goede praktijken buiten je eigen cluster? Hoe waardevol vind je die kennisdeling? Welke instrumenten of platformen gebruiken jullie?' },
+    ],
+  },
+  innov: {
+    intro: 'Hoe doordacht en werkbaar is digitale innovatie in jullie opleiding?',
+    zelfscore_klas: 'In welke mate zet jij digitale middelen doordacht in — ten dienste van het leren en toegankelijk voor iedereen?',
+    zelfscore_opl:  'In welke mate heeft de opleiding een coherente, inclusieve digitale aanpak met voldoende ondersteuning?',
+    klas: [
+      { id:'ik1', vraag:'Hoe kiezen jullie welke digitale tools of werkvormen je inzet — en voor wie werkt dat?',
+        ind:'Procesindicator: doelbewuste digitale keuzes klaspraktijk',
+        verdieping:'Kies één tool per les. Leg altijd uit waarom. Geef een demo of voorbeeld. Voorzie altijd een plan B. Kunnen alle cursisten mee — ook wie minder digitaal vaardig is?' },
+      { id:'ik2', vraag:'Hoe evalueren jullie of digitale innovatie het leren écht versterkt?',
+        ind:'Procesindicator: reflectieve houding digitale aanpak',
+        verdieping:'Vraag cursisten actief: "Helpt dit jullie leren, of niet?" Wat zou je weglaten? Waar maakt digitalisering leren eenvoudiger — en waar complexer?' },
+    ],
+    opl: [
+      { id:'io1', vraag:'Zijn er centrumbrede of opleidingsbrede afspraken over digitale tools — en hoe consequent worden die toegepast?',
+        ind:'Procesindicator: coherentie digitale aanpak opleiding',
+        verdieping:'Welke platformen gebruiken jullie (SharePoint, Teams)? Hoe ver staat de zone Onderwijsbeleid op SharePoint — en hoe gebruiken jullie die? Wat is er nodig om dit gebruiksvriendelijker te maken?' },
+      { id:'io2', vraag:'Hoe worden lesgevers ondersteund bij digitale innovatie — in tijd, middelen en coaching?',
+        ind:'Procesindicator: professionalisering en ondersteuning digitale innovatie',
+        verdieping:'Welke initiatieven kwamen voort uit PSD 23-24 of 24-25? Wie volgt dit op? Welke thematische werkgroepen zijn er dit schooljaar en waarom?' },
+    ],
+  },
+};
+
+/* STATE */
+let huidigStap = 1;
+let gekozenBS  = [];
+let niveau     = 'beide';
+let notaties   = {};
+let zelfscore  = {};
+let signalen   = {};
+let citaten    = {};
+let conclusies = {};
+
+function init(){
+  document.getElementById('ctx-datum').value = new Date().toISOString().split('T')[0];
+  buildBsSelectGrid();
+}
+
+function buildBsSelectGrid(){
+  document.getElementById('bs-select-grid').innerHTML = BS.map(b=>`
+    <label class="bs-select-item" style="--bs-c:${b.c};--bs-bg:${b.bg};--bs-dk:${b.dk};" id="bsitem-${b.id}">
+      <input type="checkbox" value="${b.id}" onchange="toggleBS('${b.id}',this)">
+      ${hexSVG(b.c,22)}
+      <span class="bs-naam">${b.naam}</span>
+    </label>`).join('');
+}
+
+function toggleBS(id, el){
+  if(el.checked){
+    gekozenBS.push(id);
+    document.getElementById('bsitem-'+id).classList.add('gekozen');
+  } else {
+    gekozenBS = gekozenBS.filter(x=>x!==id);
+    document.getElementById('bsitem-'+id).classList.remove('gekozen');
+  }
+}
+
+function setNiveau(niv, btn){
+  niveau=niv;
+  document.querySelectorAll('.niv-btn').forEach(b=>b.classList.remove('active-klas','active-opl','active-beide'));
+  btn.classList.add('active-'+niv);
+}
+
+function navigeer(richting){
+  if(richting===1 && huidigStap===1){
+    if(gekozenBS.length===0){ alert('Kies minstens één bouwsteen.'); return; }
+    buildDialoog();
+  }
+  if(richting===1 && huidigStap===2) buildSynthese();
+  huidigStap = Math.max(1,Math.min(3,huidigStap+richting));
+  updateUI();
+}
+
+function updateUI(){
+  document.querySelectorAll('.stap-panel').forEach((p,i)=>p.classList.toggle('active',i+1===huidigStap));
+  document.querySelectorAll('.stap-item').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i+1===huidigStap) el.classList.add('active');
+    if(i+1<huidigStap)   el.classList.add('done');
+  });
+  document.getElementById('btn-terug').style.display  = huidigStap>1?'':'none';
+  document.getElementById('btn-verder').style.display = huidigStap<3?'':'none';
+  document.getElementById('btn-opslaan').style.display= huidigStap===3?'':'none';
+  document.getElementById('btn-verder').textContent   = huidigStap===1?'Dialoog starten →':'Naar synthese →';
+  document.getElementById('save-status').textContent  = `Stap ${huidigStap} van 3`;
+  window.scrollTo(0,0);
+}
+
+/* STAP 2 */
+function buildDialoog(){
+  let html='';
+  gekozenBS.forEach(bsId=>{
+    const b=BS.find(x=>x.id===bsId);
+    const vd=VRAGEN[bsId];
+    const tK=niveau==='klas'||niveau==='beide';
+    const tO=niveau==='opl'||niveau==='beide';
+    const zsVraag = tK&&tO ? vd.zelfscore_klas+' / '+vd.zelfscore_opl
+                   : tK    ? vd.zelfscore_klas : vd.zelfscore_opl;
+
+    html+=`<div class="bs-blok">
+      <div class="bs-blok-header" style="background:${b.bg};border-bottom-color:${b.c}40;">
+        ${hexSVG(b.c,36)}
+        <div><h3 style="color:${b.dk}">${b.naam}</h3><p>${vd.intro}</p></div>
+      </div>
+      <div class="zelfscore-wrap">
+        <label>Zelfscore team (1 = Oneens → 5 = Eens) — ${zsVraag}</label>
+        <div class="zelfscore-schaal">
+          ${[1,2,3,4,5].map(n=>`
+            <div class="zs-opt">
+              <input type="radio" name="zs-${bsId}" id="zs-${bsId}-${n}" value="${n}"
+                     ${zelfscore[bsId]===n?'checked':''} onchange="zelfscore['${bsId}']=${n}">
+              <label for="zs-${bsId}-${n}" class="zs-${n}">
+                <div class="zs-dot"></div>${n}
+              </label>
+            </div>`).join('')}
+          <span style="font-size:10px;color:var(--muted);align-self:center;margin-left:8px;">Gemiddelde inschatting van het team</span>
+        </div>
+      </div>`;
+
+    if(tK && vd.klas.length){
+      html+=`<div style="padding:.5rem 1rem .25rem;"><span class="niveau-badge badge-klas">🏫 Klaspraktijk</span></div>`;
+      vd.klas.forEach(v=>{ html+=vraagBlok(v); });
+    }
+    if(tO && vd.opl.length){
+      html+=`<div style="padding:.5rem 1rem .25rem;"><span class="niveau-badge badge-opl">📋 Opleidingspraktijk</span></div>`;
+      vd.opl.forEach(v=>{ html+=vraagBlok(v); });
+    }
+    html+=`</div>`;
+  });
+  document.getElementById('dialoog-content').innerHTML=html;
+}
+
+function vraagBlok(v){
+  return `<div class="vraag-blok">
+    <div class="vraag-tekst">${v.vraag}</div>
+    <div class="vraag-ind">${v.ind}</div>
+    <div class="verdieping"><strong>Verdiepende vragen:</strong> ${v.verdieping}</div>
+    <span class="notatie-label">Notaties — inzichten en uitspraken</span>
+    <textarea class="notatie-area" id="not-${v.id}" placeholder="Noteer inzichten, uitspraken en observaties..." rows="3" onchange="notaties['${v.id}']=this.value">${notaties[v.id]||''}</textarea>
+  </div>`;
+}
+
+/* STAP 3 */
+function buildSynthese(){
+  gekozenBS.forEach(bsId=>{
+    const vd=VRAGEN[bsId];
+    const alle=[...(niveau!=='opl'?vd.klas:[]),...(niveau!=='klas'?vd.opl:[])];
+    alle.forEach(v=>{ const el=document.getElementById('not-'+v.id); if(el) notaties[v.id]=el.value; });
+  });
+
+  let html='';
+  const tK=niveau==='klas'||niveau==='beide';
+  const tO=niveau==='opl'||niveau==='beide';
+
+  gekozenBS.forEach(bsId=>{
+    const b=BS.find(x=>x.id===bsId);
+    const sig=signalen[bsId]||'';
+    const zs=zelfscore[bsId]||'—';
+    const zsKleur=!zelfscore[bsId]?'#888780':zs>=4?'#4A8A70':zs===3?'#8A8330':'#B84A4A';
+
+    html+=`<div class="syn-blok">
+      <div class="syn-header" style="background:${b.bg};border-bottom-color:${b.c}40;">
+        ${hexSVG(b.c,30)}
+        <h3 style="color:${b.dk}">${b.naam}</h3>
+        <span style="margin-left:auto;font-size:13px;font-weight:700;color:${zsKleur};">Zelfscore: ${zs}/5</span>
+      </div>
+      <div class="signaal-keuze">
+        <label>Dominant signaal voor ${b.naam}</label>
+        <button class="sig-btn${sig==='sterk'?' sel-sterk':''}" onclick="setSig('${bsId}','sterk',this)">✅ Sterk</button>
+        <button class="sig-btn${sig==='neutraal'?' sel-neutraal':''}" onclick="setSig('${bsId}','neutraal',this)">➡️ Neutraal</button>
+        <button class="sig-btn${sig==='aandacht'?' sel-aandacht':''}" onclick="setSig('${bsId}','aandacht',this)">⚠️ Aandachtspunt</button>
+      </div>`;
+
+    if(tK){
+      html+=`<div class="syn-veld syn-apart">
+        <label>🏫 Kernuitspraken klaspraktijk (2–3 quotes of inzichten)</label>
+        <textarea id="cit-${bsId}-klas" placeholder="Noteer de meest treffende uitspraken van het team..." rows="3" onchange="citaten['${bsId}-klas']=this.value">${citaten[bsId+'-klas']||''}</textarea>
+      </div>`;
+    }
+    if(tO){
+      html+=`<div class="syn-veld syn-apart">
+        <label>📋 Kernuitspraken opleidingspraktijk (2–3 quotes of inzichten)</label>
+        <textarea id="cit-${bsId}-opl" placeholder="Noteer de meest treffende uitspraken van het team..." rows="3" onchange="citaten['${bsId}-opl']=this.value">${citaten[bsId+'-opl']||''}</textarea>
+      </div>`;
+    }
+    html+=`<div class="syn-veld">
+        <label>Conclusie in één zin — wat vertelt deze dialoog ons over ${b.naam}?</label>
+        <textarea id="con-${bsId}" placeholder="Formuleer het dominante inzicht bondig en niet-oordelend..." rows="2" onchange="conclusies['${bsId}']=this.value">${conclusies[bsId]||''}</textarea>
+      </div>
+    </div>`;
+  });
+  document.getElementById('synthese-content').innerHTML=html;
+}
+
+function setSig(bsId,sig,btn){
+  signalen[bsId]=sig;
+  btn.closest('.signaal-keuze').querySelectorAll('.sig-btn').forEach(b=>b.classList.remove('sel-sterk','sel-neutraal','sel-aandacht'));
+  btn.classList.add('sel-'+sig);
+}
+
+/* DOWNLOAD */
+function downloadDoc(){
+  if(huidigStap>=2){
+    gekozenBS.forEach(bsId=>{
+      const vd=VRAGEN[bsId];
+      const alle=[...(niveau!=='opl'?vd.klas:[]),...(niveau!=='klas'?vd.opl:[])];
+      alle.forEach(v=>{const el=document.getElementById('not-'+v.id);if(el)notaties[v.id]=el.value;});
+    });
+  }
+  if(huidigStap>=3){
+    gekozenBS.forEach(bsId=>{
+      const ck=document.getElementById('cit-'+bsId+'-klas');
+      const co=document.getElementById('cit-'+bsId+'-opl');
+      const cn=document.getElementById('con-'+bsId);
+      if(ck)citaten[bsId+'-klas']=ck.value;
+      if(co)citaten[bsId+'-opl']=co.value;
+      if(cn)conclusies[bsId]=cn.value;
+    });
+  }
+
+  const opl=document.getElementById('ctx-opleiding').value;
+  const tK=niveau==='klas'||niveau==='beide';
+  const tO=niveau==='opl'||niveau==='beide';
+  const niveauLabel=niveau==='klas'?'Klaspraktijk':niveau==='opl'?'Opleidingspraktijk':'Klas- en opleidingspraktijk';
+  const SIGICO={'sterk':'✅ Sterk','neutraal':'➡️ Neutraal','aandacht':'⚠️ Aandachtspunt'};
+  const SIGKL={'sterk':'#EAF3DE,#3B6D11','neutraal':'#F5F3D8,#8A8330','aandacht':'#FAEAEA,#B84A4A'};
+  const ZS_C=[,'#B84A4A','#856404','#8A8330','#5A8880','#3B6D11'];
+
+  let body='';
+  gekozenBS.forEach(bsId=>{
+    const b=BS.find(x=>x.id===bsId);
+    const vd=VRAGEN[bsId];
+    const zs=zelfscore[bsId]||null;
+    body+='<div class="bs-blok"><div class="bs-titel" style="background:'+b.bg+';border-left:4px solid '+b.c+'"><strong style="color:'+b.dk+'">'+b.naam+'</strong>'+(zs?'<span class="zs-badge" style="color:'+ZS_C[zs]+'">Zelfscore: '+zs+'/5</span>':'')+'</div>';
+
+    const zsVraag=tK&&tO?vd.zelfscore_klas+' / '+vd.zelfscore_opl:tK?vd.zelfscore_klas:vd.zelfscore_opl;
+    body+='<div class="zs-blok"><div class="zs-vraag">'+zsVraag+'</div><div class="zs-val">'+(zs?zs+' / 5':'Niet ingevuld')+'</div></div>';
+
+    if(tK&&vd.klas.length){
+      body+='<div class="niv-head klas">🏫 Klaspraktijk</div>';
+      vd.klas.forEach(v=>{body+='<div class="v-blok"><div class="v-tekst">'+v.vraag+'</div><div class="v-ind">'+v.ind+'</div><div class="v-verdieping"><strong>Verdiepende vragen:</strong> '+v.verdieping+'</div><div class="not-label">Notaties</div><div class="not-val">'+(notaties[v.id]||'—')+'</div></div>';});
+    }
+    if(tO&&vd.opl.length){
+      body+='<div class="niv-head opl">📋 Opleidingspraktijk</div>';
+      vd.opl.forEach(v=>{body+='<div class="v-blok"><div class="v-tekst">'+v.vraag+'</div><div class="v-ind">'+v.ind+'</div><div class="v-verdieping"><strong>Verdiepende vragen:</strong> '+v.verdieping+'</div><div class="not-label">Notaties</div><div class="not-val">'+(notaties[v.id]||'—')+'</div></div>';});
+    }
+
+    const sig=signalen[bsId];
+    const [sigBg,sigC]=(SIGKL[sig]||'#f1efe8,#888780').split(',');
+    body+='<div class="syn-sec"><div class="syn-sig" style="background:'+sigBg+';color:'+sigC+';">'+(SIGICO[sig]||'— Niet ingevuld')+'</div>';
+    if(tK)body+='<div class="syn-cit-label">🏫 Kernuitspraken klaspraktijk</div><div class="syn-cit">'+(citaten[bsId+'-klas']||'—')+'</div>';
+    if(tO)body+='<div class="syn-cit-label">📋 Kernuitspraken opleidingspraktijk</div><div class="syn-cit">'+(citaten[bsId+'-opl']||'—')+'</div>';
+    body+='<div class="syn-con-label">Conclusie</div><div class="syn-con">'+(conclusies[bsId]||'—')+'</div></div></div>';
+  });
+
+  const sg=document.getElementById('slot-goed')?.value||'';
+  const sp=document.getElementById('slot-prio')?.value||'';
+  const so=document.getElementById('slot-ondersteuning')?.value||'';
+  const sa=document.getElementById('slot-actie')?.value||'';
+  body+='<div class="slot-sec"><strong>Slotvragen — prioritering en borging</strong>'
+    +'<div class="slot-v"><div class="slot-q">Wat loopt er al goed?</div><div class="slot-a">'+(sg||'—')+'</div></div>'
+    +'<div class="slot-v"><div class="slot-q">Als het team één ding zou verbeteren:</div><div class="slot-a">'+(sp||'—')+'</div></div>'
+    +'<div class="slot-v"><div class="slot-q">Welke ondersteuning of professionalisering:</div><div class="slot-a">'+(so||'—')+'</div></div>'
+    +'<div class="slot-v"><div class="slot-q">Afgesproken experiment / actie:</div><div class="slot-a">'+(sa||'—')+'</div></div></div>';
+
+  const si=document.getElementById('syn-inzicht')?.value||'';
+  const san=document.getElementById('syn-aandacht')?.value||'';
+  const sac=document.getElementById('syn-actie')?.value||'';
+  const slp=document.getElementById('syn-leerpad')?.value||'';
+  const sop=document.getElementById('syn-opvolging')?.value||'';
+  body+='<div class="asyn-sec"><strong>Algemene conclusie dialoog</strong>'
+    +'<div class="asyn-r"><span class="asyn-l">Sterkste inzicht:</span><span>'+(si||'—')+'</span></div>'
+    +'<div class="asyn-r"><span class="asyn-l">Aandachtspunt:</span><span>'+(san||'—')+'</span></div>'
+    +'<div class="asyn-r"><span class="asyn-l">Actie(s) / eigenaar(s):</span><span>'+(sac||'—')+'</span></div>'
+    +'<div class="asyn-r"><span class="asyn-l">Leerpad:</span><span>'+(slp||'—')+'</span></div>'
+    +'<div class="asyn-r"><span class="asyn-l">Opvolgmoment:</span><span>'+(sop||'—')+'</span></div></div>';
+
+  const css=`*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,sans-serif;font-size:11px;color:#1a1a18;padding:2rem;max-width:920px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;}.sub{font-size:11px;color:#5f5e5a;margin-top:.2rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.5rem;}.bs-titel{padding:.5rem .875rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:8px;}.zs-badge{margin-left:auto;font-weight:700;font-size:12px;}.zs-blok{background:#f4f3f0;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:.375rem;font-size:11px;}.zs-vraag{color:#5f5e5a;font-style:italic;margin-bottom:.2rem;}.zs-val{font-weight:600;}.niv-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.375rem .75rem;margin:.25rem 0;border-radius:4px;}.niv-head.klas{background:#E8F4FF;color:#1A5F9A;}.niv-head.opl{background:#EDF6EC;color:#2D6B27;}.v-blok{border:1px solid #E2DFD7;border-radius:6px;margin-bottom:.5rem;overflow:hidden;}.v-tekst{font-size:11.5px;font-weight:500;padding:.5rem .75rem .2rem;line-height:1.4;}.v-ind{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .2rem;}.v-verdieping{font-size:10.5px;color:#5f5e5a;padding:0 .75rem .375rem;line-height:1.5;}.not-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;padding:.375rem .75rem .1rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.not-val{font-size:11px;padding:.25rem .75rem .5rem;background:#f8f7f4;min-height:24px;white-space:pre-wrap;}.syn-sec{background:#f4f3f0;border:1px solid #E2DFD7;border-radius:6px;padding:.75rem 1rem;margin-top:.375rem;}.syn-sig{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;margin-bottom:.5rem;}.syn-cit-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-top:.375rem;margin-bottom:2px;}.syn-cit{font-size:11px;font-style:italic;white-space:pre-wrap;margin-bottom:.375rem;}.syn-con-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-top:.375rem;margin-bottom:2px;}.syn-con{font-size:12px;font-weight:500;}.slot-sec{margin-top:1.5rem;padding:.875rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.slot-sec strong{font-size:12px;display:block;margin-bottom:.5rem;}.slot-v{margin-bottom:.5rem;}.slot-q{font-size:11.5px;font-weight:500;margin-bottom:.2rem;}.slot-a{font-size:11px;white-space:pre-wrap;}.asyn-sec{margin-top:1.5rem;padding:.875rem 1rem;background:#1a1a18;color:#fff;border-radius:6px;}.asyn-sec strong{font-size:12px;display:block;margin-bottom:.5rem;color:#fff;}.asyn-r{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.asyn-l{font-weight:600;min-width:160px;color:#b4b2a9;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok{break-inside:avoid;}}`;
+
+  const ctx='<div class="ctx-info"><span>Opleiding/vakgroep: <strong>'+(opl||'—')+'</strong></span><span>Periode: <strong>'+(document.getElementById('ctx-periode').value||'—')+'</strong></span><span>Begeleider: <strong>'+(document.getElementById('ctx-begeleider').value||'—')+'</strong></span><span>Datum: <strong>'+(document.getElementById('ctx-datum').value||'—')+'</strong></span><span>Aanwezigen: <strong>'+(document.getElementById('ctx-aanwezigen').value||'—')+'</strong></span><span>Niveau: <strong>'+niveauLabel+'</strong></span></div>';
+
+  const doc='<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Teamdialoog Onderwijsmatrix — '+(opl||'Crescendo CVO')+'</title><style>'+css+'</style></head><body>'
+    +'<div class="doc-header"><h1>Teamdialoog — Onderwijsmatrix</h1><div class="sub">Crescendo CVO · Team kwaliteit + vakgroep + lesgevers + coördinatoren · Kwaliteitsloop 2026–2030</div>'+ctx+'<div style="margin-top:.5rem;font-size:11px;color:#5f5e5a;">Doel: '+(document.getElementById('ctx-doel').value||'—')+'</div></div>'
+    +'<div class="principe"><strong>Gespreksprincipe:</strong> Dit gesprek is geen beoordeling — het is een gezamenlijk leermoment. We zoeken patronen, sterktes en groeikansen vanuit gedeelde verantwoordelijkheid.</div>'
+    +body
+    +'<div class="doc-footer"><span>Crescendo CVO · Teamdialoog Onderwijsmatrix · '+niveauLabel+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
+    +'</body></html>';
+
+  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='teamdialoog-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.html';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+/* OPSLAAN */
+function saveDoc(){
+  gekozenBS.forEach(bsId=>{
+    const ck=document.getElementById('cit-'+bsId+'-klas');
+    const co=document.getElementById('cit-'+bsId+'-opl');
+    const cn=document.getElementById('con-'+bsId);
+    if(ck)citaten[bsId+'-klas']=ck.value;
+    if(co)citaten[bsId+'-opl']=co.value;
+    if(cn)conclusies[bsId]=cn.value;
+  });
+  const payload={
+    instrument:'teamdialoog',
+    opleiding:   document.getElementById('ctx-opleiding').value,
+    periode:     document.getElementById('ctx-periode').value,
+    begeleider:  document.getElementById('ctx-begeleider').value,
+    datum:       document.getElementById('ctx-datum').value,
+    aanwezigen:  document.getElementById('ctx-aanwezigen').value,
+    profiel:     document.getElementById('ctx-profiel').value,
+    doel:        document.getElementById('ctx-doel').value,
+    gekozenBS, niveau, zelfscore, notaties, signalen, citaten, conclusies,
+    slotvragen:{
+      goed:          document.getElementById('slot-goed')?.value||'',
+      prioriteit:    document.getElementById('slot-prio')?.value||'',
+      ondersteuning: document.getElementById('slot-ondersteuning')?.value||'',
+      actie:         document.getElementById('slot-actie')?.value||'',
+    },
+    syn_inzicht:  document.getElementById('syn-inzicht')?.value||'',
+    syn_aandacht: document.getElementById('syn-aandacht')?.value||'',
+    syn_actie:    document.getElementById('syn-actie')?.value||'',
+    syn_leerpad:  document.getElementById('syn-leerpad')?.value||'',
+    syn_opvolging:document.getElementById('syn-opvolging')?.value||'',
+    timestamp:    new Date().toISOString(),
+  };
+  console.log('SharePoint payload:',JSON.stringify(payload,null,2));
+  if(navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  document.getElementById('save-status').textContent='Opgeslagen om '+new Date().toLocaleTimeString('nl-BE')+' — klaar voor SharePoint';
+  const btn=document.getElementById('btn-opslaan');
+  btn.textContent='✓ Opgeslagen'; setTimeout(()=>{btn.textContent='Opslaan';},2000);
+}
+
+init();
+</script>
+</body>
+</html>
