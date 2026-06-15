@@ -88,7 +88,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .crit-indicator { font-size:10px; color:var(--muted); margin-bottom:.5rem; font-style:italic; }
 
 /* ── 4-PUNTSSCHAAL (Expert links → Start rechts) ── */
-.schaal { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
 .schaal-opt { position:relative; }
 .schaal-opt input { position:absolute; opacity:0; width:0; height:0; }
 .schaal-opt label {
@@ -111,10 +110,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .schaal-opt:nth-child(4) label .sdot { background:#E07272; }
 
 .sdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.rubric-niv { display:flex; align-items:center; gap:5px; font-weight:700; font-size:10px; white-space:nowrap; }
+.rubric-desc { font-size:10px; color:var(--muted); line-height:1.5; margin-top:2px; }
+.schaal-opt input:checked + label .rubric-desc { color:var(--ac-dk); }
+.schaal { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; align-items:stretch; }
 
 /* beschrijvingen */
-.desc-toggle { margin-top:.4rem; font-size:10px; color:var(--muted); cursor:pointer; text-decoration:underline; text-underline-offset:2px; background:none; border:none; font-family:inherit; padding:0; }
-.desc-box { display:none; margin-top:.4rem; background:var(--bg); border-radius:6px; padding:.625rem; border:1px solid var(--border); }
+.desc-toggle { display:none; }
+.desc-box { display:none; }
 .desc-box.open { display:block; }
 .desc-box table { width:100%; border-collapse:collapse; font-size:11px; }
 .desc-box td { padding:4px 7px; border:1px solid var(--border); vertical-align:top; line-height:1.5; }
@@ -1141,8 +1144,8 @@ function renderContent(){
                 <input type="radio" name="${cr.id}_${ronde}" id="${cr.id}_${ronde}_${n}" value="${n}"
                        ${val===n?'checked':''} onchange="setAntw('${cr.id}',${n})">
                 <label for="${cr.id}_${ronde}_${n}">
-                  <div class="sdot"></div>
-                  ${['','Start','Beginner','Gevorderd','Expert'][n]}
+                  <div class="rubric-niv"><div class="sdot"></div>${(['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Expert'])[n]}</div>
+                  <div class="rubric-desc">${cr.niveaus[4-n]}</div>
                 </label>
               </div>`).join('')}
           </div>
