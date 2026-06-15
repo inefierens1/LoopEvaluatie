@@ -30,6 +30,19 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 .ctx-field label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
 .ctx-field input, .ctx-field select { border:1px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); min-width:130px; }
 
+/* CURSISTENPROFIEL DROPDOWN PER SEM */
+.profiel-bar { background:#fff; border-bottom:1px solid var(--border); padding:.5rem 1.5rem; display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+.profiel-bar label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.profiel-bar select { border:1px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); min-width:180px; }
+
+/* WERKRUIMTE */
+.werkruimte-wrap { background:#FFFBF0; border:1.5px dashed #E8B84B; border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:.875rem; }
+.werkruimte-wrap label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#856404; display:flex; align-items:center; gap:6px; margin-bottom:.4rem; }
+.werkruimte-badge { background:#FEF3CD; color:#856404; font-size:9px; padding:1px 6px; border-radius:99px; font-weight:600; border:1px solid #E8B84B; }
+.werkruimte-wrap textarea { width:100%; min-height:140px; border:1px solid #E8B84B; border-radius:5px; padding:.625rem .75rem; font-size:12.5px; font-family:inherit; resize:vertical; background:#fff; color:var(--text); line-height:1.6; }
+.werkruimte-wrap textarea:focus { outline:none; border-color:#B07800; }
+.werkruimte-hint { font-size:10px; color:#856404; margin-top:.3rem; font-style:italic; }
+
 /* OBSERVATIEDOEL */
 .obs-doel { background:#f8f7f4; border-bottom:1px solid var(--border); padding:.5rem 1.5rem; font-size:11.5px; color:var(--muted); }
 .obs-doel strong { color:var(--text); }
@@ -130,14 +143,26 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
       <option value="">— kies —</option>
       <option>Aanvangsbegeleiding</option>
       <option>Coaching</option>
-      <option>Kwaliteitssignaal</option>
+      <option>Kwaliteitsloop</option>
       <option>Reflectiegesprek</option>
+      <option>Evaluatie</option>
     </select>
   </div>
 </div>
 
 <div class="obs-doel">
   <strong>Observatieprincipe:</strong> We observeren niet de lesgever als persoon, maar <em>wat zichtbaar gebeurt in het leren van cursisten</em> en welke keuzes dit ondersteunen of belemmeren.
+</div>
+
+<div class="profiel-bar">
+  <span id="profiel-bar-label" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">Cursistenprofiel</span>
+  <select id="ctx-cursistenprofiel" onchange="document.getElementById('ctx-profiel-display').textContent=this.value">
+    <option value="">— kies cursistenprofiel —</option>
+    <option>Persoonlijke ontwikkeling (PO)</option>
+    <option>Beroepsopleiding / DSBO</option>
+    <option>NT2</option>
+  </select>
+  <span id="ctx-profiel-display" style="font-size:11px;color:var(--muted);font-style:italic;"></span>
 </div>
 
 <!-- PROGRESS -->
@@ -675,7 +700,16 @@ function setSem(sem, btn){
 ══════════════════════════════════════════════════ */
 function renderContent(){
   const data = DATA[huidigSem];
+
+  // Update profiel bar label
+  document.getElementById('profiel-bar-label').textContent = 'Cursistenprofiel — ' + data.titel;
+
   let html = `
+    <div class="werkruimte-wrap">
+      <label>✏️ Werkruimte observator <span class="werkruimte-badge">Niet opgenomen in download</span></label>
+      <textarea id="werkruimte-notities" placeholder="Noteer hier vrij wat je ziet en hoort tijdens de observatie. Gebruik deze ruimte als kladblok — dit wordt niet meegenomen in het downloadformulier." rows="7"></textarea>
+      <div class="werkruimte-hint">💡 Vanuit deze notities doe je nadien de inschaling van de bouwstenen hieronder.</div>
+    </div>
     <div class="sem-intro">
       <h2>${data.titel}</h2>
       <p>${data.beschrijving}</p>
@@ -820,7 +854,8 @@ function downloadDoc(){
     +'<span>Lesgever: <strong>'+(document.getElementById('ctx-lesgever').value||'—')+'</strong></span>'
     +'<span>Observator: <strong>'+(document.getElementById('ctx-observator').value||'—')+'</strong></span>'
     +'<span>Datum: <strong>'+(document.getElementById('ctx-datum').value||'—')+'</strong></span>'
-    +'<span>Type: <strong>'+(document.getElementById('ctx-type').value||'—')+'</strong></span></div>';
+    +'<span>Type: <strong>'+(document.getElementById('ctx-type').value||'—')+'</strong></span>'
+    +'<span>Cursistenprofiel: <strong>'+(document.getElementById('ctx-cursistenprofiel').value||'—')+'</strong></span></div>';
 
   const css = `*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;background:#fff;padding:2rem;max-width:960px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}.doc-header .sub{font-size:11px;color:#5f5e5a;}.doc-header .sem{font-size:12px;font-weight:600;margin-top:.4rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.obs-principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.25rem;}.bs-titel{padding:.5rem .75rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.cr-rij{border:1px solid #E2DFD7;border-radius:6px;overflow:hidden;margin-bottom:.5rem;}.cr-alt{}.cr-vraag{font-size:11.5px;font-weight:500;padding:.5rem .75rem .25rem;line-height:1.4;}.cr-focus{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .375rem;}.rubric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #E2DFD7;}.rub-col{padding:.4rem .5rem;border-right:1px solid #E2DFD7;font-size:9.5px;}.rub-col:last-child{border-right:none;}.rub-lbl{font-weight:700;font-size:9px;margin-bottom:2px;}.rub-tekst{color:#888780;line-height:1.45;}.rub-tekst-sel{color:#1a1a18;font-weight:500;}.chk{font-weight:700;}.op-blok{padding:.375rem .75rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.op-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;}.op-tekst{font-size:11px;}.op-lijn{border-bottom:1px dashed #c8c6be;padding-top:.5rem;}.samen-blok{margin-top:1.5rem;padding:.75rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.samen-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}.samen-rij{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.samen-lbl{font-weight:600;min-width:180px;color:#5f5e5a;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok,.cr-rij{break-inside:avoid;}}`;
 
@@ -852,6 +887,7 @@ function saveDoc(){
     observator:  document.getElementById('ctx-observator').value,
     datum:       document.getElementById('ctx-datum').value,
     type:        document.getElementById('ctx-type').value,
+    cursistenprofiel: document.getElementById('ctx-cursistenprofiel').value,
     scores, opmerkingen,
     sterktes:    document.getElementById('sterktes')?.value||'',
     groei:       document.getElementById('groei')?.value||'',
