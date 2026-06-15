@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nabespreking Lesobservatie — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#F7F6F2; --border:#E2DFD7; --text:#2C2C2A; --muted:#6B6A65;
+  --groen:#8FA563; --groen-bg:#EAF0DE; --groen-dk:#3B6D11;
+  --radius:8px;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+.app-header { background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1 { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.app-header p  { font-size:11px; color:var(--muted); margin-top:1px; }
+
+.context-bar { background:#fff; border-bottom:1px solid var(--border); padding:.75rem 1.5rem; display:flex; gap:1.25rem; flex-wrap:wrap; align-items:center; }
+.ctx-item { font-size:12px; color:var(--muted); }
+.ctx-item strong { color:var(--text); font-weight:600; }
+.sem-badge { background:#f4f3f0; border:1px solid var(--border); border-radius:99px; padding:3px 10px; font-size:11px; font-weight:600; color:var(--text); }
+
+.intro-card { background:#fff; border:1.5px solid var(--groen); border-radius:var(--radius); padding:1.25rem 1.5rem; margin:1rem 1.5rem .875rem; }
+.intro-card h2 { font-size:14px; font-weight:600; color:var(--groen-dk); margin-bottom:.375rem; }
+.intro-card p  { font-size:12px; color:var(--muted); line-height:1.65; }
+
+.main { padding:0 1.5rem 5rem; max-width:720px; }
+
+.vraag-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.125rem 1.25rem; margin-bottom:.875rem; }
+.vraag-card h3 { font-size:13px; font-weight:600; margin-bottom:.25rem; }
+.vraag-card .sub { font-size:11.5px; color:var(--muted); margin-bottom:.625rem; line-height:1.55; }
+.vraag-card textarea { width:100%; border:1px solid var(--border); border-radius:5px; padding:7px 9px; font-size:12.5px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); line-height:1.6; }
+.vraag-card textarea:focus { outline:none; border-color:var(--groen); background:#fff; }
+.vraag-card input[type=text] { width:100%; border:1px solid var(--border); border-radius:5px; padding:6px 9px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); }
+.vraag-card input[type=text]:focus { outline:none; border-color:var(--groen); }
+
+/* Schaal zelfinschatting */
+.zelfinschatting { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin-top:.5rem; }
+.zi-opt { position:relative; }
+.zi-opt input { position:absolute; opacity:0; width:0; height:0; }
+.zi-opt label { display:flex; flex-direction:column; align-items:center; gap:3px; padding:7px 4px; border-radius:6px; border:1.5px solid var(--border); cursor:pointer; font-size:10px; font-weight:600; color:var(--muted); background:var(--bg); font-family:inherit; text-align:center; line-height:1.3; transition:all .12s; }
+.zi-opt label:hover { border-color:var(--groen); background:var(--groen-bg); }
+.zi-opt input:checked + label { border-color:var(--groen); background:var(--groen-bg); color:var(--groen-dk); }
+.zi-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.zi-1 .zi-dot { background:#E07272; }
+.zi-2 .zi-dot { background:#E8B84B; }
+.zi-3 .zi-dot { background:#CFC87A; }
+.zi-4 .zi-dot { background:#8FB5AE; }
+.zi-5 .zi-dot { background:#4A8A70; }
+
+.bstn-vraag { margin-bottom:1rem; }
+.bstn-label { display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; margin-bottom:.375rem; }
+.bstn-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* ACTIONS */
+.actions-bar { position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; z-index:10; }
+.btn { padding:6px 16px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
+.btn-primary { background:var(--groen); color:#fff; border-color:var(--groen); }
+.btn-primary:hover { filter:brightness(1.08); }
+.btn-secondary { background:var(--bg); color:var(--text); }
+.save-status { font-size:11px; color:var(--muted); font-style:italic; }
+
+/* PRINT */
+@media print {
+  .app-header, .actions-bar { display:none !important; }
+  .main { padding:0 !important; }
+  .intro-card { margin:0 0 1rem !important; }
+  body { background:#fff !important; }
+  .vraag-card textarea { border:1px solid #E2DFD7 !important; background:#f8f7f4 !important; }
+  .vraag-card { break-inside:avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Nabespreking Lesobservatie — Reflectie lesgever</h1>
+    <p>Crescendo CVO · Aanvangsbegeleiding &amp; kwaliteitsloop · 2026–2030</p>
+  </div>
+  <span id="sem-badge-header" class="sem-badge"></span>
+</div>
+
+<div class="context-bar" id="context-bar">
+  <!-- Ingevuld via URL-parameters -->
+</div>
+
+<div class="intro-card">
+  <h2>💬 Jouw reflectie na de lesobservatie</h2>
+  <p>De observator heeft een lesobservatie gedaan. Dit formulier is voor jou als lesgever — om na de nabespreking jouw eigen inzichten, vragen en volgende stappen te noteren. Er zijn geen juiste of foute antwoorden. Jouw perspectief is waardevol.</p>
+</div>
+
+<div class="main">
+
+  <!-- ALGEMENE ZELFINSCHATTING -->
+  <div class="vraag-card">
+    <h3>Hoe voelde de les voor jou?</h3>
+    <div class="sub">Geef een eerste, spontane indruk — hoe liep de les volgens jou?</div>
+    <div class="zelfinschatting">
+      <div class="zi-opt zi-1"><input type="radio" name="gevoel" id="g1" value="1"><label for="g1"><div class="zi-dot"></div>Veel moeilijker dan verwacht</label></div>
+      <div class="zi-opt zi-2"><input type="radio" name="gevoel" id="g2" value="2"><label for="g2"><div class="zi-dot"></div>Iets minder vlot</label></div>
+      <div class="zi-opt zi-3"><input type="radio" name="gevoel" id="g3" value="3"><label for="g3"><div class="zi-dot"></div>Zoals verwacht</label></div>
+      <div class="zi-opt zi-4"><input type="radio" name="gevoel" id="g4" value="4"><label for="g4"><div class="zi-dot"></div>Goed verlopen</label></div>
+      <div class="zi-opt zi-5"><input type="radio" name="gevoel" id="g5" value="5"><label for="g5"><div class="zi-dot"></div>Beter dan verwacht</label></div>
+    </div>
+  </div>
+
+  <!-- STERKTES -->
+  <div class="vraag-card">
+    <h3>Wat liep er goed — en waarom?</h3>
+    <div class="sub">Wat deed je bewust of intuïtief goed? Welk moment in de les gaf jou energie?</div>
+    <textarea id="sterktes" rows="5" placeholder="Beschrijf wat je goed vond gaan in de les. Wees concreet — wat deed je precies, en wat was het effect op de cursisten?"></textarea>
+  </div>
+
+  <!-- AANDACHTSPUNTEN -->
+  <div class="vraag-card">
+    <h3>Wat wilde je anders doen — maar lukte niet?</h3>
+    <div class="sub">Geen zelfkritiek, maar eerlijke reflectie: waar liep je vast, wat verraste je, wat wil je anders aanpakken?</div>
+    <textarea id="aandacht" rows="5" placeholder="Beschrijf een moment dat minder liep dan gepland. Wat was de oorzaak? Wat zou je een volgende keer anders doen?"></textarea>
+  </div>
+
+  <!-- REACTIES CURSISTEN -->
+  <div class="vraag-card">
+    <h3>Hoe ervaarden cursisten de les — wat viel jou op?</h3>
+    <div class="sub">Kijk door de ogen van je cursisten: wat zag je, hoorde je, voelde je? Wie was betrokken, wie haakte af?</div>
+    <textarea id="cursisten" rows="4" placeholder="Noteer wat je opviel bij cursisten: betrokkenheid, vragen, signalen van moeilijkheid of verveling, reacties op werkvormen..."></textarea>
+  </div>
+
+  <!-- ZELFINSCHATTING PER BOUWSTEEN -->
+  <div class="vraag-card">
+    <h3>Zelfinschatting per bouwsteen</h3>
+    <div class="sub">Hoe schat jij jezelf in voor elk van de 6 bouwstenen in deze les? (1 = Nog veel te leren · 5 = Dit zit al goed)</div>
+
+    <div id="bstn-schalen"></div>
+  </div>
+
+  <!-- INZICHTEN UIT NABESPREKING -->
+  <div class="vraag-card">
+    <h3>Wat neem je mee uit de nabespreking?</h3>
+    <div class="sub">Welke inzichten uit het gesprek met de observator raakten je? Wat wil je onthouden?</div>
+    <textarea id="nabespreking-inzicht" rows="4" placeholder="Noteer de inzichten die jou het meest aanspraken. Wat verraste je? Wat herkende je?"></textarea>
+  </div>
+
+  <!-- VRAGEN -->
+  <div class="vraag-card">
+    <h3>Welke vragen heb je nog?</h3>
+    <div class="sub">Na een observatie en nabespreking blijven er soms vragen hangen. Noteer ze hier — als aanleiding voor een volgend gesprek of voor je eigen professionalisering.</div>
+    <textarea id="vragen" rows="3" placeholder="Vragen over aanpak, didactiek, specifieke cursisten, of over je eigen professionele groei..."></textarea>
+  </div>
+
+  <!-- EXPERIMENT -->
+  <div class="vraag-card" style="border-color:var(--groen);background:var(--groen-bg)22;">
+    <h3 style="color:var(--groen-dk);">🧪 Mijn experiment voor de volgende les</h3>
+    <div class="sub">Kies één klein, concreet ding dat je de volgende les anders gaat doen. Klein genoeg om morgen al te proberen.</div>
+    <textarea id="experiment" rows="3" placeholder="Wat ga je uitproberen? Hoe zul je merken of het werkt?"></textarea>
+    <div style="margin-top:.625rem;">
+      <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:.25rem;">In welke les ga je dit uitproberen?</label>
+      <input type="text" id="experiment-les" placeholder="bv. Volgende week donderdag, module 3 — Veilig werken">
+    </div>
+  </div>
+
+  <!-- AANSLUITING LEERPADEN -->
+  <div class="vraag-card">
+    <h3>Aansluiting bij leerpaden of ondersteuningsnoden (optioneel)</h3>
+    <div class="sub">Zijn er thema's uit deze observatie waarbij je meer ondersteuning, coaching of een leerpad zou willen?</div>
+    <textarea id="leerpad" rows="2" placeholder="bv. Meer weten over differentiatie, feedback geven, digitale werkvormen, samenwerken in de klas..."></textarea>
+  </div>
+
+</div>
+
+<!-- ACTIONS -->
+<div class="actions-bar">
+  <span class="save-status" id="save-status">Vul je reflectie in</span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+    <button class="btn btn-secondary" onclick="printFormulier()">🖨️ Opslaan als PDF</button>
+    <button class="btn btn-primary" onclick="saveFormulier()">✓ Afronden</button>
+  </div>
+</div>
+
+<script>
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+
+const SEM_LABELS = {
+  's1': 'Semester 1 — Starter',
+  's2': 'Semester 2 — Verbreding',
+  's3': 'Semester 3 — Verdieping',
+  's4': 'Semester 4 / Volledig',
+};
+
+/* Lees URL-parameters */
+function getParam(name){ return new URLSearchParams(window.location.search).get(name)||''; }
+
+function init(){
+  const lesgever   = getParam('lesgever');
+  const opleiding  = getParam('opleiding');
+  const module     = getParam('module');
+  const datum      = getParam('datum');
+  const semester   = getParam('semester');
+  const observator = getParam('observator');
+  const profiel    = getParam('profiel');
+
+  // Context bar
+  const ctx = document.getElementById('context-bar');
+  const items = [
+    lesgever   && `<div class="ctx-item">Lesgever: <strong>${lesgever}</strong></div>`,
+    opleiding  && `<div class="ctx-item">Opleiding: <strong>${opleiding}</strong></div>`,
+    module     && `<div class="ctx-item">Module: <strong>${module}</strong></div>`,
+    datum      && `<div class="ctx-item">Datum observatie: <strong>${datum}</strong></div>`,
+    observator && `<div class="ctx-item">Observator: <strong>${observator}</strong></div>`,
+    profiel    && `<div class="ctx-item">Profiel: <strong>${profiel}</strong></div>`,
+  ].filter(Boolean);
+  ctx.innerHTML = items.join('') || '<div class="ctx-item" style="color:var(--muted);font-style:italic;">Geen contextgegevens meegegeven via de link</div>';
+
+  // Semester badge
+  const semLabel = SEM_LABELS[semester] || semester || '';
+  if(semLabel){
+    document.getElementById('sem-badge-header').textContent = semLabel;
+  }
+
+  // Update page title
+  document.title = `Nabespreking — ${lesgever||'Lesgever'} — ${opleiding||'Crescendo CVO'}`;
+
+  // Bouwsteen zelfinschatting schalen
+  const bsContainer = document.getElementById('bstn-schalen');
+  bsContainer.innerHTML = BS.map(b=>`
+    <div class="bstn-vraag" style="padding:.5rem 0;border-bottom:1px solid var(--border);">
+      <div class="bstn-label">
+        <div class="bstn-dot" style="background:${b.c}"></div>
+        <span style="color:${b.dk}">${b.naam}</span>
+      </div>
+      <div class="zelfinschatting">
+        ${[1,2,3,4,5].map(n=>`
+          <div class="zi-opt zi-${n}">
+            <input type="radio" name="bs_${b.id}" id="bs_${b.id}_${n}" value="${n}">
+            <label for="bs_${b.id}_${n}"><div class="zi-dot"></div>${n}</label>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function getZelfscore(){
+  const scores = {};
+  BS.forEach(b=>{
+    const el = document.querySelector(`input[name="bs_${b.id}"]:checked`);
+    scores[b.id] = el ? +el.value : null;
+  });
+  return scores;
+}
+
+function getGevoel(){
+  const el = document.querySelector('input[name="gevoel"]:checked');
+  return el ? +el.value : null;
+}
+
+function printFormulier(){
+  document.title = `Nabespreking — ${getParam('lesgever')||'Lesgever'} — ${getParam('opleiding')||'Crescendo CVO'}`;
+  window.print();
+}
+
+function saveFormulier(){
+  const payload = {
+    instrument:  'nabespreking-lesgever',
+    lesgever:    getParam('lesgever'),
+    opleiding:   getParam('opleiding'),
+    module:      getParam('module'),
+    datum:       getParam('datum'),
+    semester:    getParam('semester'),
+    observator:  getParam('observator'),
+    profiel:     getParam('profiel'),
+    gevoel:      getGevoel(),
+    zelfscore:   getZelfscore(),
+    sterktes:    document.getElementById('sterktes').value,
+    aandacht:    document.getElementById('aandacht').value,
+    cursisten:   document.getElementById('cursisten').value,
+    nabespreking_inzicht: document.getElementById('nabespreking-inzicht').value,
+    vragen:      document.getElementById('vragen').value,
+    experiment:  document.getElementById('experiment').value,
+    experiment_les: document.getElementById('experiment-les').value,
+    leerpad:     document.getElementById('leerpad').value,
+    timestamp:   new Date().toISOString(),
+  };
+  console.log('Payload:', JSON.stringify(payload, null, 2));
+  if(navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).catch(()=>{});
+  document.getElementById('save-status').textContent = 'Afgerond om ' + new Date().toLocaleTimeString('nl-BE');
+  const btn = document.querySelector('.btn-primary');
+  btn.textContent = '✓ Afgerond'; btn.style.background='#4A8A70';
+  setTimeout(()=>{ btn.textContent='✓ Afronden'; btn.style.background=''; }, 3000);
+}
+
+init();
+</script>
+</body>
+</html>
