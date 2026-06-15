@@ -788,6 +788,19 @@ function renderContent(){
       <input type="text" id="leerpad" placeholder="bv. Kwaliteitsvol leren, Feedback & evaluatie, Zorgzaam onderwijs..." style="width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:12px;font-family:inherit;background:var(--bg);margin-top:.3rem;">
     </div>`;
 
+  html+=`
+    <div class="samenvatting-card nabespreking-card" style="border:1.5px solid #8FA563;background:#EAF0DE22;">
+      <h3 style="display:flex;align-items:center;gap:8px;color:#3B6D11;">
+        💬 Nabespreking — feedback van de lesgever
+        <span style="font-size:10px;font-weight:500;background:#EAF0DE;color:#5A7238;padding:2px 8px;border-radius:99px;border:1px solid #8FA563;">Opgenomen in download</span>
+      </h3>
+      <p style="font-size:11.5px;color:var(--muted);margin:.375rem 0 .625rem;line-height:1.6;">Ruimte voor de lesgever om zelf notities, vragen of reflecties toe te voegen tijdens of na de nabespreking.</p>
+      <label>Notities en reflecties van de lesgever</label>
+      <textarea id="nabespreking-feedback" placeholder="Wat wil ik zelf onthouden uit dit gesprek? Welke inzichten neem ik mee? Welke vragen heb ik nog?" rows="5"></textarea>
+      <label style="margin-top:.5rem">Afgesproken experiment of volgende stap (vanuit de lesgever)</label>
+      <textarea id="nabespreking-actie" placeholder="Welk klein experiment of concrete actie ga ik uitproberen?" rows="3"></textarea>
+    </div>`;
+
   document.getElementById('main-content').innerHTML = html;
   updateProg();
 }
@@ -876,6 +889,13 @@ function downloadDoc_legacy(){
     +'<div class="samen-rij"><span class="samen-lbl">Leerpad:</span><span class="samen-val">'+(leerpad||'—')+'</span></div>'
     +'</div>';
 
+  const nbFeedback = document.getElementById('nabespreking-feedback')?.value||'';
+  const nbActie    = document.getElementById('nabespreking-actie')?.value||'';
+  body += '<div class="nabes-blok"><strong>💬 Nabespreking — feedback van de lesgever</strong>'
+    +'<div class="samen-rij"><span class="samen-lbl">Notities lesgever:</span><span class="samen-val">'+(nbFeedback||'—')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Experiment lesgever:</span><span class="samen-val">'+(nbActie||'—')+'</span></div>'
+    +'</div>';
+
   const ctx = '<div class="ctx-info"><span>Opleiding: <strong>'+(opl||'—')+'</strong></span>'
     +'<span>Module: <strong>'+(document.getElementById('ctx-module').value||'—')+'</strong></span>'
     +'<span>Lesgever: <strong>'+(document.getElementById('ctx-lesgever').value||'—')+'</strong></span>'
@@ -884,7 +904,7 @@ function downloadDoc_legacy(){
     +'<span>Type: <strong>'+(document.getElementById('ctx-type').value||'—')+'</strong></span>'
     +'<span>Cursistenprofiel: <strong>'+(document.getElementById('ctx-cursistenprofiel').value||'—')+'</strong></span></div>';
 
-  const css = `*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;background:#fff;padding:2rem;max-width:960px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}.doc-header .sub{font-size:11px;color:#5f5e5a;}.doc-header .sem{font-size:12px;font-weight:600;margin-top:.4rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.obs-principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.25rem;}.bs-titel{padding:.5rem .75rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.cr-rij{border:1px solid #E2DFD7;border-radius:6px;overflow:hidden;margin-bottom:.5rem;}.cr-alt{}.cr-vraag{font-size:11.5px;font-weight:500;padding:.5rem .75rem .25rem;line-height:1.4;}.cr-focus{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .375rem;}.rubric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #E2DFD7;}.rub-col{padding:.4rem .5rem;border-right:1px solid #E2DFD7;font-size:9.5px;}.rub-col:last-child{border-right:none;}.rub-lbl{font-weight:700;font-size:9px;margin-bottom:2px;}.rub-tekst{color:#888780;line-height:1.45;}.rub-tekst-sel{color:#1a1a18;font-weight:500;}.chk{font-weight:700;}.op-blok{padding:.375rem .75rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.op-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;}.op-tekst{font-size:11px;}.op-lijn{border-bottom:1px dashed #c8c6be;padding-top:.5rem;}.samen-blok{margin-top:1.5rem;padding:.75rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.samen-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}.samen-rij{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.samen-lbl{font-weight:600;min-width:180px;color:#5f5e5a;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok,.cr-rij{break-inside:avoid;}}`;
+  const css = `*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;background:#fff;padding:2rem;max-width:960px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}.doc-header .sub{font-size:11px;color:#5f5e5a;}.doc-header .sem{font-size:12px;font-weight:600;margin-top:.4rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.obs-principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.25rem;}.bs-titel{padding:.5rem .75rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.cr-rij{border:1px solid #E2DFD7;border-radius:6px;overflow:hidden;margin-bottom:.5rem;}.cr-alt{}.cr-vraag{font-size:11.5px;font-weight:500;padding:.5rem .75rem .25rem;line-height:1.4;}.cr-focus{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .375rem;}.rubric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #E2DFD7;}.rub-col{padding:.4rem .5rem;border-right:1px solid #E2DFD7;font-size:9.5px;}.rub-col:last-child{border-right:none;}.rub-lbl{font-weight:700;font-size:9px;margin-bottom:2px;}.rub-tekst{color:#888780;line-height:1.45;}.rub-tekst-sel{color:#1a1a18;font-weight:500;}.chk{font-weight:700;}.op-blok{padding:.375rem .75rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.op-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;}.op-tekst{font-size:11px;}.op-lijn{border-bottom:1px dashed #c8c6be;padding-top:.5rem;}.samen-blok{margin-top:1.5rem;padding:.75rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.samen-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}.samen-rij{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.samen-lbl{font-weight:600;min-width:180px;color:#5f5e5a;}.samen-val{white-space:pre-wrap;}.nabes-blok{margin-top:1rem;padding:.75rem 1rem;background:#EAF0DE;border:1.5px solid #8FA563;border-radius:6px;}.nabes-blok strong{font-size:12px;display:block;margin-bottom:.4rem;color:#3B6D11;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok,.cr-rij{break-inside:avoid;}}`;
 
   const doc = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Observatieformulier — '+(opl||'Crescendo CVO')+'</title><style>'+css+'</style></head><body>'
     +'<div class="doc-header"><h1>Observatieformulier Lesobservatie</h1><div class="sub">Crescendo CVO · Aanvangsbegeleiding &amp; kwaliteitsloop · 2026–2030</div><div class="sem">'+data.titel+'</div>'+ctx+'</div>'
