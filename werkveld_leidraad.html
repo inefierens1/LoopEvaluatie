@@ -268,7 +268,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   <span class="save-status" id="save-status">Stap 1 van 3</span>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
     <button class="btn btn-secondary" id="btn-terug"   onclick="navigeer(-1)" style="display:none;">← Terug</button>
-    <button class="btn btn-secondary" onclick="downloadDoc()">⬇ Download</button>
+    <button class="btn btn-secondary" onclick="downloadDoc()">🖨️ Download als PDF</button>
     <button class="btn btn-primary"   id="btn-verder"  onclick="navigeer(1)">Gesprek starten →</button>
     <button class="btn btn-primary"   id="btn-opslaan" onclick="saveDoc()" style="display:none;">Opslaan</button>
   </div>
@@ -586,11 +586,11 @@ function downloadDoc(){
 
   const doc=`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Focusgesprek Werkveld — ${opl||'Crescendo CVO'}</title><style>${css}</style></head><body><div class="doc-header"><h1>Focusgesprek Werkveld &amp; Doorstroompartners</h1><div class="sub">Crescendo CVO · NT2 · Kwaliteitsloop 2026–2030</div>${ctx}<div style="margin-top:.5rem;font-size:11px;color:#5f5e5a;">Doel: ${document.getElementById('ctx-doel').value||'—'}</div></div><div class="principe"><strong>Gesprekshouding:</strong> Dit gesprek heeft geen defensief karakter. We zoeken oprecht naar hoe wij onze NT2-opleiding beter kunnen afstemmen op de realiteit bij jullie. Jullie perspectief is waardevolle data.</div>${body}<div class="doc-footer"><span>Crescendo CVO · Focusgesprek Werkveld · NT2</span><span>${new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})}</span></div></body></html>`;
 
-  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='werkveld-'+huidigProfiel+'-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.html';
-  a.click(); URL.revokeObjectURL(url);
+  const w=window.open('','_blank');
+  if(!w){ alert('Sta pop-ups toe om het document te kunnen opslaan als PDF.'); return; }
+  w.document.write(doc);
+  w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
 }
 
 function saveDoc(){

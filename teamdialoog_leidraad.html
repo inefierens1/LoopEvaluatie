@@ -258,7 +258,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   <span class="save-status" id="save-status">Stap 1 van 3</span>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
     <button class="btn btn-secondary" id="btn-terug"   onclick="navigeer(-1)" style="display:none;">← Terug</button>
-    <button class="btn btn-secondary" onclick="downloadDoc()">⬇ Download</button>
+    <button class="btn btn-secondary" onclick="downloadDoc()">🖨️ Download als PDF</button>
     <button class="btn btn-primary"   id="btn-verder"  onclick="navigeer(1)">Dialoog starten →</button>
     <button class="btn btn-primary"   id="btn-opslaan" onclick="saveDoc()" style="display:none;">Opslaan</button>
   </div>
@@ -682,11 +682,11 @@ function downloadDoc(){
     +'<div class="doc-footer"><span>Crescendo CVO · Teamdialoog Onderwijsmatrix · '+niveauLabel+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
     +'</body></html>';
 
-  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download='teamdialoog-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.html';
-  a.click(); URL.revokeObjectURL(url);
+  const w=window.open('','_blank');
+  if(!w){ alert('Sta pop-ups toe om het document te kunnen opslaan als PDF.'); return; }
+  w.document.write(doc);
+  w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
 }
 
 /* OPSLAAN */
