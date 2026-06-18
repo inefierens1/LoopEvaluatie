@@ -208,8 +208,8 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 <div class="actions-bar">
   <span class="save-status" id="save-status">Nog niet opgeslagen</span>
   <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-    <button class="btn btn-secondary" onclick="downloadDoc('klas')">⬇ Klaspraktijk</button>
-    <button class="btn btn-secondary" onclick="downloadDoc('opleiding')">⬇ Opleidingspraktijk</button>
+    <button class="btn btn-secondary" onclick="downloadDoc('klas')">🖨️ PDF klaspraktijk</button>
+    <button class="btn btn-secondary" onclick="downloadDoc('opleiding')">🖨️ PDF opleidingspraktijk</button>
     <button class="btn btn-secondary" onclick="showResult()">Toon overzicht</button>
     <button class="btn btn-primary" id="save-btn" onclick="saveToSharePoint()">Opslaan</button>
   </div>
@@ -1254,11 +1254,11 @@ function downloadDoc(ctx){
 
   const doc=`<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Kijkwijzer Leermateriaal — ${ctxLabel} — ${opl||'Crescendo CVO'}</title><style>${css}</style></head><body><div class="doc-header"><h1>Kijkwijzer Kwaliteitsvol Leermateriaal</h1><div class="sub">Crescendo CVO · Bouwsteenteam Kwaliteitsvol · 2026–2027</div><div class="ctx-info"><span class="ctx-badge ${ctx==='klas'?'ctx-klas':'ctx-opl'}">${ctxIcon} ${ctxLabel}</span>&nbsp;·&nbsp;<strong>${modusLabel}</strong>${redenVal?` &nbsp;·&nbsp; Reden: <strong>${redenVal}</strong>`:''}</div><div class="ctx-info"><span>Opleiding: <strong>${opl||'—'}</strong></span>${extra}</div></div>${body}<div class="doc-footer"><span>Crescendo CVO · Kijkwijzer Kwaliteitsvol Leermateriaal · ${ctxLabel}</span><span>Gegenereerd op ${new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})}</span></div></body></html>`;
 
-  const blob=new Blob([doc],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.download=`kijkwijzer-leermateriaal-${ctx}-${(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.html`;
-  a.click(); URL.revokeObjectURL(url);
+  const w=window.open('','_blank');
+  if(!w){ alert('Sta pop-ups toe om het document te kunnen opslaan als PDF.'); return; }
+  w.document.write(doc);
+  w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
 }
 
 /* ══════════════════════════════════════════════════
