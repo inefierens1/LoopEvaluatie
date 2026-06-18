@@ -196,7 +196,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   <span class="save-status" id="save-status">Nog niet opgeslagen</span>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
     <button class="btn btn-secondary" onclick="kopieerLinkLesgever()" id="btn-link">🔗 Link voor lesgever</button>
-    <button class="btn btn-secondary" onclick="printDoc()">🖨️ Download als PDF</button>
+    <button class="btn btn-secondary" onclick="printObsDoc()">🖨️ Download als PDF</button>
     <button class="btn btn-primary" id="save-btn" onclick="saveDoc()">Opslaan</button>
   </div>
 </div>
@@ -847,7 +847,75 @@ function printDoc(){
   window.print();
 }
 
-// (PDF-export verwijderd — download verloopt via printDoc / printvenster)
+function printObsDoc(){
+  const data = DATA[huidigSem];
+  const opl  = document.getElementById('ctx-opleiding').value;
+  const COLS = ['','#E07272','#E8B84B','#8FB5AE','#4A8A70'];
+  const LBLS = ['','Start','Beginner','Gevorderd','Sterk'];
+
+  let body = '';
+  data.bouwstenen.forEach(sectie=>{
+    const b = BS.find(x=>x.id===sectie.bs);
+    body += '<div class="bs-blok"><div class="bs-titel" style="background:'+b.bg+';border-left:4px solid '+b.c+'"><strong style="color:'+b.dk+'">'+b.naam+'</strong><span style="font-size:10px;color:'+b.dk+';margin-left:8px;">'+sectie.focus+'</span></div>';
+    sectie.criteria.forEach((cr,ci)=>{
+      const score = scores[cr.id]||0;
+      body += '<div class="cr-rij'+(ci%2===1?' cr-alt':'')+'"><div class="cr-vraag">'+cr.vraag+'<div class="cr-focus">'+cr.focus+'</div></div>';
+      body += '<div class="rubric-grid">';
+      [4,3,2,1].forEach(n=>{
+        const sel = score===n;
+        body += '<div class="rub-col'+(sel?' rub-sel':'') +'" style="'+(sel?'background:'+COLS[n]+'22;border-color:'+COLS[n]+';':'')+'">'
+          + '<div class="rub-lbl" style="color:'+COLS[n]+'">'+hexSVG(COLS[n],12)+'<span>'+LBLS[n]+'</span></div>'
+          + '<div class="rub-tekst'+(sel?' rub-tekst-sel':'')+'">'+cr.niveaus[4-n]+(sel?'<span class="chk"> \u2713</span>':'')+'</div>'
+          + '</div>';
+      });
+      body += '</div>';
+      const op = opmerkingen[cr.id]||'';
+      body += '<div class="op-blok"><div class="op-label">Opmerkingen / observaties</div>'+(op?'<div class="op-tekst">'+op+'</div>':'<div class="op-lijn"></div>')+'</div>';
+      body += '</div>';
+    });
+    body += '</div>';
+  });
+
+  const sterktes   = document.getElementById('sterktes')?.value||'';
+  const groei      = document.getElementById('groei')?.value||'';
+  const experiment = document.getElementById('experiment')?.value||'';
+  const leerpad    = document.getElementById('leerpad')?.value||'';
+  body += '<div class="samen-blok"><strong>Samenvatting &amp; reflectiegesprek</strong>'
+    +'<div class="samen-rij"><span class="samen-lbl">Sterktes:</span><span class="samen-val">'+(sterktes||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Groeikansen:</span><span class="samen-val">'+(groei||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Experiment / volgende stap:</span><span class="samen-val">'+(experiment||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Leerpad:</span><span class="samen-val">'+(leerpad||'\u2014')+'</span></div>'
+    +'</div>';
+  const nbFeedback = document.getElementById('nabespreking-feedback')?.value||'';
+  const nbActie    = document.getElementById('nabespreking-actie')?.value||'';
+  body += '<div class="nabes-blok"><strong>Nabespreking \u2014 feedback van de lesgever</strong>'
+    +'<div class="samen-rij"><span class="samen-lbl">Notities lesgever:</span><span class="samen-val">'+(nbFeedback||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Experiment lesgever:</span><span class="samen-val">'+(nbActie||'\u2014')+'</span></div>'
+    +'</div>';
+
+  const ctx = '<div class="ctx-info"><span>Opleiding: <strong>'+(opl||'\u2014')+'</strong></span>'
+    +'<span>Module: <strong>'+(document.getElementById('ctx-module').value||'\u2014')+'</strong></span>'
+    +'<span>Lesgever: <strong>'+(document.getElementById('ctx-lesgever').value||'\u2014')+'</strong></span>'
+    +'<span>Observator: <strong>'+(document.getElementById('ctx-observator').value||'\u2014')+'</strong></span>'
+    +'<span>Datum: <strong>'+(document.getElementById('ctx-datum').value||'\u2014')+'</strong></span>'
+    +'<span>Reden: <strong>'+(document.getElementById('ctx-type').value||'\u2014')+'</strong></span>'
+    +'<span>Cursistenprofiel: <strong>'+(document.getElementById('ctx-cursistenprofiel').value||'\u2014')+'</strong></span></div>';
+
+  const css = `*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;background:#fff;padding:2rem;max-width:960px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}.doc-header .sub{font-size:11px;color:#5f5e5a;}.doc-header .sem{font-size:12px;font-weight:600;margin-top:.4rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.obs-principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.25rem;}.bs-titel{padding:.5rem .75rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.cr-rij{border:1px solid #E2DFD7;border-radius:6px;overflow:hidden;margin-bottom:.5rem;}.cr-vraag{font-size:11.5px;font-weight:500;padding:.5rem .75rem .25rem;line-height:1.4;}.cr-focus{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .375rem;}.rubric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #E2DFD7;}.rub-col{padding:.4rem .5rem;border-right:1px solid #E2DFD7;font-size:9.5px;}.rub-col:last-child{border-right:none;}.rub-lbl{font-weight:700;font-size:9px;margin-bottom:2px;display:flex;align-items:center;gap:4px;}.rub-tekst{color:#888780;line-height:1.45;}.rub-tekst-sel{color:#1a1a18;font-weight:500;}.chk{font-weight:700;}.op-blok{padding:.375rem .75rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.op-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;}.op-tekst{font-size:11px;}.op-lijn{border-bottom:1px dashed #c8c6be;padding-top:.5rem;}.samen-blok{margin-top:1.5rem;padding:.75rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.samen-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}.samen-rij{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.samen-lbl{font-weight:600;min-width:180px;color:#5f5e5a;}.samen-val{white-space:pre-wrap;}.nabes-blok{margin-top:1rem;padding:.75rem 1rem;background:#EAF0DE;border:1.5px solid #8FA563;border-radius:6px;}.nabes-blok strong{font-size:12px;display:block;margin-bottom:.4rem;color:#3B6D11;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok,.cr-rij{break-inside:avoid;}}`;
+
+  const doc = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Observatieformulier \u2014 '+(opl||'Crescendo CVO')+' \u2014 '+data.titel+'</title><style>'+css+'</style></head><body>'
+    +'<div class="doc-header"><h1>Observatieformulier Lesobservatie</h1><div class="sub">Crescendo CVO \u00b7 Aanvangsbegeleiding &amp; kwaliteitsloop \u00b7 2026\u20132030</div><div class="sem">'+data.titel+'</div>'+ctx+'</div>'
+    +'<div class="obs-principe"><strong>Observatieprincipe:</strong> We observeren niet de lesgever als persoon, maar wat zichtbaar gebeurt in het leren van cursisten en welke keuzes dit ondersteunen of belemmeren.</div>'
+    +body
+    +'<div class="doc-footer"><span>Crescendo CVO \u00b7 Observatieformulier \u00b7 '+data.titel+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
+    +'</body></html>';
+
+  const w=window.open('','_blank');
+  if(!w){ alert('Sta pop-ups toe om het document te kunnen opslaan als PDF.'); return; }
+  w.document.write(doc);
+  w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
+}
 
 /* ══════════════════════════════════════════════════
    LINK VOOR LESGEVER
