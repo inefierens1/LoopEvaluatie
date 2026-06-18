@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uitgebreide scan Evaluatie — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F7F6F2; --surface: #fff; --border: #E2DFD7;
+  --text: #2C2C2A; --muted: #6B6A65;
+  --radius: 8px; --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --ac: #8FB5AE; --ac-bg: #EBF3F2; --ac-dk: #5A8880;
+}
+
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── HEADER ── */
+.app-header { background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1 { font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.app-header p  { font-size:11px; color:var(--muted); margin-top:1px; }
+.mode-toggle { display:flex; gap:3px; background:var(--bg); border-radius:6px; padding:3px; border:1px solid var(--border); }
+.mode-btn { padding:5px 12px; border-radius:4px; border:none; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; background:transparent; color:var(--muted); transition:all .15s; }
+.mode-btn.active { background:#fff; color:var(--text); box-shadow:var(--shadow); }
+
+/* ── CONTEXT ── */
+.ctx-bar { background:#fff; border-bottom:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:.875rem; flex-wrap:wrap; align-items:flex-end; }
+.ctx-field { display:flex; flex-direction:column; gap:2px; }
+.ctx-field label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field input, .ctx-field select { border:1px solid var(--border); border-radius:5px; padding:4px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); min-width:130px; }
+
+/* ── BOUWSTEEN NAV ── */
+.bstn-nav { padding:.875rem 1.5rem .5rem; display:flex; gap:6px; flex-wrap:wrap; }
+.bstn-chip { display:flex; align-items:center; gap:6px; padding:5px 11px 5px 7px; border-radius:99px; border:1.5px solid var(--border); cursor:pointer; font-size:12px; font-weight:600; transition:all .15s; background:#fff; color:var(--muted); font-family:inherit; }
+.bstn-chip:hover { border-color:var(--chip-c,#aaa); }
+.bstn-chip.active { background:var(--chip-c); border-color:var(--chip-c); color:#fff; }
+
+/* ── PROGRESS ── */
+.progress-wrap { padding:0 1.5rem .625rem; }
+.progress-label { font-size:11px; color:var(--muted); margin-bottom:3px; display:flex; justify-content:space-between; }
+.progress-bar { height:4px; background:var(--border); border-radius:99px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--ac); border-radius:99px; transition:width .3s,background .3s; }
+
+/* ── MAIN ── */
+.main { padding:0 1.5rem 5rem; }
+
+/* ── BOUWSTEEN HEADER ── */
+.bs-header { display:flex; align-items:center; gap:12px; padding:1rem 1.25rem; border-radius:var(--radius); border:1px solid var(--border); background:#fff; margin-bottom:.875rem; }
+.bs-header h2 { font-size:15px; font-weight:600; }
+.bs-header p  { font-size:12px; color:var(--muted); margin-top:2px; line-height:1.5; }
+
+/* ── NIVEAU-CONTEXT BADGE ── */
+.niveau-context {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 7px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: .625rem;
+  letter-spacing: .01em;
+}
+.niveau-context.klas {
+  background: #E8F4FF;
+  color: #1A5F9A;
+  border: 1px solid #B8D8F5;
+}
+.niveau-context.opleiding {
+  background: #EDF6EC;
+  color: #2D6B27;
+  border: 1px solid #B5D9B2;
+}
+.niveau-context .nc-icon { font-size: 13px; }
+
+/* ── DOMEIN CARD ── */
+.domein-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; }
+.domein-header { padding:.625rem 1rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+.domein-code { width:22px; height:22px; border-radius:5px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; background:var(--ac); }
+.domein-header h3 { font-size:13px; font-weight:600; }
+.domein-header p  { font-size:11px; color:var(--muted); margin-top:1px; font-style:italic; }
+
+/* ── CRITERIUM ── */
+.criterium { padding:.75rem 1rem; border-bottom:1px solid var(--border); }
+.criterium:last-of-type { border-bottom:none; }
+.crit-label { font-size:13px; font-weight:500; margin-bottom:.375rem; line-height:1.5; }
+.crit-indicator { font-size:10px; color:var(--muted); margin-bottom:.5rem; font-style:italic; }
+
+/* ── 4-PUNTSSCHAAL (Expert links → Start rechts) ── */
+.schaal-opt { position:relative; }
+.schaal-opt input { position:absolute; opacity:0; width:0; height:0; }
+.schaal-opt label {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:7px 3px; border-radius:6px; border:1.5px solid var(--border);
+  cursor:pointer; transition:all .15s; text-align:center;
+  font-size:10px; line-height:1.3; color:var(--muted);
+  background:var(--bg); font-family:inherit;
+}
+.schaal-opt label:hover { border-color:#aaa; background:#fff; }
+.schaal-opt input:checked + label { border-color:var(--ac); background:var(--ac-bg); color:var(--ac-dk); font-weight:600; }
+
+/* Niveau 4 = Expert = links = donkergroen */
+.schaal-opt:nth-child(1) label .sdot { background:#4A8A70; }
+/* Niveau 3 = Gevorderd */
+.schaal-opt:nth-child(2) label .sdot { background:#8FB5AE; }
+/* Niveau 2 = Beginner */
+.schaal-opt:nth-child(3) label .sdot { background:#E8B84B; }
+/* Niveau 1 = Start = rechts = rood */
+.schaal-opt:nth-child(4) label .sdot { background:#E07272; }
+
+.sdot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.rubric-niv { display:flex; align-items:center; gap:5px; font-weight:700; font-size:10px; white-space:nowrap; }
+.rubric-desc { font-size:10px; color:var(--muted); line-height:1.5; margin-top:2px; }
+.schaal-opt input:checked + label .rubric-desc { color:var(--ac-dk); }
+.schaal { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; align-items:stretch; }
+
+/* beschrijvingen */
+.desc-toggle { display:none; }
+.desc-box { display:none; }
+.desc-box.open { display:block; }
+.desc-box table { width:100%; border-collapse:collapse; font-size:11px; }
+.desc-box td { padding:4px 7px; border:1px solid var(--border); vertical-align:top; line-height:1.5; }
+.desc-box td:first-child { font-weight:600; white-space:nowrap; width:90px; }
+/* Expert eerst in tabel ook */
+.lv-4 { color:#4A8A70; }
+.lv-3 { color:#5A8880; }
+.lv-2 { color:#B07800; }
+.lv-1 { color:#B84A4A; }
+
+/* ── REFLECTIE ── */
+.reflectie-wrap { padding:.625rem 1rem; background:var(--bg); border-top:1px solid var(--border); }
+.reflectie-wrap label { font-size:10px; font-weight:600; color:var(--muted); display:block; margin-bottom:.3rem; text-transform:uppercase; letter-spacing:.04em; }
+.reflectie-wrap textarea { width:100%; min-height:52px; border:1px solid var(--border); border-radius:5px; padding:5px 7px; font-size:12px; font-family:inherit; resize:vertical; background:#fff; color:var(--text); }
+
+/* ── WERKPUNT ── */
+.werkpunt-card { background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1rem; margin-bottom:10px; }
+.werkpunt-card h3 { font-size:13px; font-weight:600; margin-bottom:.5rem; }
+.werkpunt-card textarea { width:100%; min-height:48px; border:1px solid var(--border); border-radius:5px; padding:5px 7px; font-size:12px; font-family:inherit; resize:vertical; background:var(--bg); color:var(--text); margin-top:.3rem; }
+.werkpunt-card label { font-size:12px; color:var(--muted); display:block; }
+
+/* ── RESULTATEN ── */
+.result-panel { display:none; background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:10px; }
+.result-panel.show { display:block; }
+.result-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:.875rem; }
+
+.ri-card { border-radius:8px; border:1px solid var(--border); padding:.875rem 1rem; display:flex; flex-direction:column; gap:5px; }
+.ri-top { display:flex; align-items:center; gap:7px; }
+.ri-naam { font-size:13px; font-weight:600; }
+.ri-signal { font-size:10px; font-weight:600; padding:2px 8px; border-radius:99px; margin-left:auto; white-space:nowrap; }
+.sig-sterk    { background:#EAF3DE; color:#3B6D11; }
+.sig-ontwikk  { background:#FEF3CD; color:#856404; }
+.sig-aandacht { background:#FAEAEA; color:#B84A4A; }
+.sig-leeg     { background:#f1efe8; color:#888780; }
+.ri-balk-wrap { display:flex; gap:2px; height:8px; }
+.ri-balk-seg  { flex:1; border-radius:3px; }
+.seg-4 { background:#4A8A70; }
+.seg-3 { background:#8FB5AE; }
+.seg-2 { background:#E8B84B; }
+.seg-1 { background:#E07272; }
+.seg-0 { background:#E2DFD7; }
+.ri-tels { display:flex; gap:8px; }
+.ri-tel { display:flex; align-items:center; gap:3px; font-size:10px; color:var(--muted); }
+.ri-tel-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.ri-progress { font-size:10px; color:var(--muted); }
+@media(max-width:440px){ .result-grid { grid-template-columns:1fr; } }
+
+/* ── ACTIES ── */
+.actions-bar { position:sticky; bottom:0; background:#fff; border-top:1px solid var(--border); padding:.625rem 1.5rem; display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; z-index:10; }
+.btn { padding:6px 15px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; transition:all .15s; }
+.btn-primary { background:var(--ac); color:#fff; border-color:var(--ac); }
+.btn-primary:hover { filter:brightness(1.08); }
+.btn-secondary { background:var(--bg); color:var(--text); }
+.save-status { font-size:11px; color:var(--muted); font-style:italic; }
+
+/* ── RONDE KNOPPEN ── */
+.ronde-btn {
+  padding:5px 13px; border-radius:6px; border:1.5px solid var(--border);
+  font-size:12px; font-weight:500; cursor:pointer; font-family:inherit;
+  background:#fff; color:var(--muted); transition:all .15s;
+}
+.ronde-btn.active.klas-active {
+  background:#E8F4FF; color:#1A5F9A; border-color:#85B7EB;
+}
+.ronde-btn.active.opl-active {
+  background:#EDF6EC; color:#2D6B27; border-color:#8FA563;
+}
+
+@media(max-width:500px){
+  .schaal { grid-template-columns:repeat(2,1fr); }
+  .result-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Uitgebreide scan · Kwaliteitsvolle Evaluatie</h1>
+    <p>Crescendo CVO · Verdiepende meting loop jaar 1 · Bouwsteenteam Kwaliteitsvol</p>
+  </div>
+  <div style="font-size:12px;font-weight:600;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 14px;white-space:nowrap;">Uitgebreide scan · loop jaar 1</div>
+</div>
+
+<!-- RONDE SELECTOR -->
+<div id="ronde-bar" style="background:#fff;border-bottom:1px solid var(--border);padding:.625rem 1.5rem;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+  <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:4px;">Ronde</span>
+  <button class="ronde-btn active" id="rbtn-klas" onclick="setRonde('klas',this)">
+    🏫 Ronde 1 — Klaspraktijk
+  </button>
+  <button class="ronde-btn" id="rbtn-opleiding" onclick="setRonde('opleiding',this)">
+    📋 Ronde 2 — Opleidingspraktijk
+  </button>
+  <span id="ronde-hint" style="font-size:11px;color:var(--muted);margin-left:8px;font-style:italic;">
+    Lesobservatie · per module / les
+  </span>
+</div>
+
+<!-- CONTEXT KLAS -->
+<div class="ctx-bar" id="ctx-klas">
+  <div class="ctx-field"><label>Opleiding</label><input type="text" id="ctx-opleiding" placeholder="bv. Engels"></div>
+  <div class="ctx-field"><label>Module / les</label><input type="text" id="ctx-module" placeholder="bv. Module 3 — schrijfvaardigheid"></div>
+  <div class="ctx-field"><label>Lesgever</label><input type="text" id="ctx-lesgever" placeholder="naam"></div>
+  <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum"></div>
+  <div class="ctx-field">
+    <label>Profiel</label>
+    <select id="ctx-profiel">
+      <option value="">— kies —</option>
+      <option>Persoonlijke ontwikkeling</option>
+      <option>Beroepsopleiding / DSBO</option>
+      <option>NT2</option>
+    </select>
+  </div>
+  <div class="ctx-field"><label>Reden</label>
+    <select id="ctx-reden">
+      <option value="">— kies —</option>
+      <option>Aanvangsbegeleiding</option>
+      <option>Kwaliteitsloop</option>
+      <option>Reflectiegesprek</option>
+      <option>Evaluatie</option>
+    </select>
+  </div>
+</div>
+
+<!-- CONTEXT OPLEIDING -->
+<div class="ctx-bar" id="ctx-opleiding-bar" style="display:none;">
+  <div class="ctx-field"><label>Opleiding</label><input type="text" id="ctx-opleiding2" placeholder="bv. Engels"></div>
+  <div class="ctx-field"><label>Schooljaar</label><input type="text" id="ctx-schooljaar" placeholder="bv. 2025–2026"></div>
+  <div class="ctx-field"><label>Coördinator</label><input type="text" id="ctx-coord" placeholder="naam"></div>
+  <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum2"></div>
+  <div class="ctx-field">
+    <label>Profiel</label>
+    <select id="ctx-profiel2">
+      <option value="">— kies —</option>
+      <option>Persoonlijke ontwikkeling</option>
+      <option>Beroepsopleiding / DSBO</option>
+      <option>NT2</option>
+    </select>
+  </div>
+  <div class="ctx-field"><label>Reden</label>
+    <select id="ctx-reden2">
+      <option value="">— kies —</option>
+      <option>Aanvangsbegeleiding</option>
+      <option>Kwaliteitsloop</option>
+      <option>Reflectiegesprek</option>
+      <option>Evaluatie</option>
+    </select>
+  </div>
+</div>
+
+<div class="bstn-nav" id="bstn-nav"></div>
+
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span id="prog-label">0 van 0 criteria ingevuld</span>
+    <span id="prog-pct">0%</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<div class="main" id="main-content"></div>
+<div class="main" style="padding-top:0">
+  <div class="result-panel" id="result-panel">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:.25rem" id="result-title">Overzicht klaspraktijk</h3>
+    <p style="font-size:12px;color:var(--muted)">De balk toont de verdeling van scores per criterium (🔵 Expert → 🔴 Start). Het signaallabel geeft aan waar sterktes en aandachtspunten zitten.</p>
+    <div class="result-grid" id="result-grid"></div>
+  </div>
+</div>
+
+<div class="actions-bar">
+  <span class="save-status" id="save-status">Nog niet opgeslagen</span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+    <button class="btn btn-secondary" onclick="downloadDoc('klas')" title="Download instrument klaspraktijk als HTML/PDF">⬇ Klaspraktijk</button>
+    <button class="btn btn-secondary" onclick="downloadDoc('opleiding')" title="Download instrument opleidingspraktijk als HTML/PDF">⬇ Opleidingspraktijk</button>
+    <button class="btn btn-secondary" onclick="showResult()">Toon overzicht</button>
+    <button class="btn btn-primary" id="save-btn" onclick="saveToSharePoint()">Opslaan</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   BOUWSTENEN CONFIG
+══════════════════════════════════════════════════ */
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+
+/* ══════════════════════════════════════════════════
+   SVG HEX ICON
+══════════════════════════════════════════════════ */
+function hexSVG(kleur, sz=26) {
+  const c=sz/2, r=sz*0.41, pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6; pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  const p=pts.join(' ');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">
+    <polygon points="${p}" fill="${kleur}" opacity="0.2"/>
+    <polygon points="${p}" fill="${kleur}" transform="scale(0.77) translate(${sz*0.115},${sz*0.115})"/>
+  </svg>`;
+}
+
+/* ══════════════════════════════════════════════════
+   DATA STRUCTUUR
+   niveau: per criterium array van 4 strings
+   VOLGORDE IN ARRAY: index 0 = niveau 4 (Expert), index 3 = niveau 1 (Start)
+   Schaal rendered: Expert (links) → Start (rechts)
+   context: 'klas' | 'opleiding'
+══════════════════════════════════════════════════ */
+
+const DATA_SCAN = {
+  kwal: {
+    intro: 'Evalueert de opleiding wat cursisten écht moeten kunnen, op een transparante en groeigerichte manier?',
+    domeinen: [
+      {
+        code:'A', context:'klas',
+        titel:'Evaluatie sluit aan bij leerdoelen',
+        sub:'Afstemming · meerdere kansen · kennis + vaardigheden + houding',
+        criteria: [
+          { id:'sA1', label:'Evaluatieopdrachten sluiten aan bij wat cursisten geoefend hebben',
+            indicator:'Procesindicator: constructieve afstemming leerdoelen ↔ evaluatie',
+            niveaus:['Wat cursisten op de evaluatie moeten doen, herkennen ze van de lessen. Geen verrassingen.',
+                     'Het sluit grotendeels aan, maar af en toe een onderdeel dat cursisten niet echt geoefend hadden.',
+                     'Er zijn regelmatig momenten waarop cursisten zeggen "dat hebben we nooit gezien".',
+                     'Evaluatie staat los van wat in de lessen aan bod kwam. Cursisten zijn verrast.'] },
+          { id:'sA2', label:'De manier van evalueren past bij wat cursisten moeten kunnen',
+            indicator:'Procesindicator: evaluatievorm ↔ leerdoel',
+            niveaus:['Ik kies bewust: wie moet lassen, wordt geobserveerd. Elk leerdoel heeft de bijpassende evaluatievorm.',
+                     'In de meeste gevallen past de evaluatievorm. Soms gebruik ik een gemakkelijkere vorm.',
+                     'Ik gebruik soms een evaluatievorm die niet echt past bij wat ik wil meten.',
+                     'Ik kies een evaluatievorm zonder stil te staan bij de vraag of die past bij het leerdoel.'] },
+        ]
+      },
+      {
+        code:'B', context:'klas',
+        titel:'Transparantie: geen verrassingen',
+        sub:'Cursisten weten vooraf wat verwacht wordt',
+        criteria: [
+          { id:'sB1', label:'Cursisten weten op voorhand waarop ze beoordeeld worden',
+            indicator:'Procesindicator: transparantie evaluatiecriteria',
+            niveaus:['Cursisten kennen de beoordelingscriteria voor de evaluatie begint. Er is een rubric die ze kunnen raadplegen.',
+                     'Criteria zijn gedeeld maar het verwachte niveau is niet altijd even duidelijk.',
+                     'Criteria worden vermeld maar cursisten begrijpen ze niet altijd.',
+                     'Cursisten weten niet waarop ze beoordeeld worden. De beoordeling voelt willekeurig aan.'] },
+        ]
+      },
+      {
+        code:'C', context:'klas',
+        titel:'Feedback als leerproces',
+        sub:'Cursisten weten waar ze staan én wat de volgende stap is · veilig klimaat',
+        criteria: [
+          { id:'sC1', label:'Ik geef feedback die cursisten helpt verbeteren — niet alleen een cijfer',
+            indicator:'Procesindicator: feedbackkwaliteit',
+            niveaus:['Mijn feedback zegt wat goed was, wat beter kan en hoe. Ik kijk niet alleen terug, maar ook vooruit.',
+                     'Mijn feedback is bruikbaar maar varieert. Soms gaat het enkel over het eindresultaat.',
+                     'Feedback is sporadisch of gaat enkel over punten. Cursisten weten niet concreet wat goed ging.',
+                     'Feedback beperkt zich tot een cijfer of een algemene opmerking. Cursisten leren er niets van.'] },
+          { id:'sC2', label:'Cursisten voelen zich veilig om fouten te tonen',
+            indicator:'Procesindicator: psychologische veiligheid',
+            niveaus:['Cursisten stellen vragen, maken fouten openlijk en reflecteren eerlijk. Feedback is om beter te worden.',
+                     'De sfeer is over het algemeen veilig, maar een deel is terughoudend om fouten toe te geven.',
+                     'Cursisten houden fouten liever voor zich. De sfeer is meer prestatiegericht.',
+                     'Cursisten ervaren feedback als een beoordeling. Fouten worden vermeden of verborgen.'] },
+        ]
+      },
+      {
+        code:'E', context:'opleiding',
+        titel:'Evaluatiegegevens als teaminstrument',
+        sub:'Leerresultaten bespreken · samen bijsturen · coherent beleid',
+        criteria: [
+          { id:'sE1', label:'Evaluatieafspraken zijn consistent doorheen de opleiding',
+            indicator:'Procesindicator: coherent evaluatiebeleid op opleidingsniveau',
+            niveaus:['Er is een gedeeld en gedragen evaluatiebeleid. Lesgevers stemmen hun aanpak op elkaar af.',
+                     'Afspraken zijn er en worden grotendeels gevolgd, maar niet altijd bewust bewaakt.',
+                     'Er zijn afspraken maar die worden niet consequent toegepast.',
+                     'Lesgevers doen elk iets anders. Er zijn geen gedeelde afspraken over evaluatie.'] },
+          { id:'sE2', label:'Het team bespreekt leerresultaten en stuurt samen bij',
+            indicator:'Procesindicator: teamreflectie op evaluatiedata',
+            niveaus:['Inzichten uit evaluatieresultaten worden met het team gedeeld. Opvolging is een gedeelde taak.',
+                     'Resultaten worden soms besproken, maar niet systematisch en niet altijd met conclusies.',
+                     'Opvolging van resultaten gebeurt individueel. Er is geen gestructureerd teamoverleg.',
+                     'Er zijn geen teamafspraken over opvolging van leerresultaten.'] },
+        ],
+        reflectievraag:'Hoe sterk is de gedeelde evaluatiecultuur in dit opleidingsteam? Wat kan beter?'
+      },
+    ],
+    reflectievraag:'Wat is het sterkste signaal dat de evaluatiepraktijk bijdraagt aan het leren van cursisten?'
+  },
+
+  zorg: {
+    intro: 'Is de evaluatieaanpak haalbaar en ondersteunend voor alle cursisten — ook de kwetsbaarste?',
+    domeinen: [
+      {
+        code:'D', context:'klas',
+        titel:'De weg aanpassen, niet de lat',
+        sub:'Zelfde doelen voor iedereen · andere aanpak waar nodig · inclusieve evaluatie',
+        criteria: [
+          { id:'sD1', label:'Wie meer hulp nodig heeft, krijgt die ook — zonder de lat te verlagen',
+            indicator:'Procesindicator: zorgzaam differentiëren in evaluatie',
+            niveaus:['Ik geef bewust meer houvast aan cursisten die dat nodig hebben. De eindverwachting is voor iedereen gelijk.',
+                     'Ik bied extra hulp aan, maar niet altijd proactief. Cursisten moeten er soms zelf om vragen.',
+                     'Iedereen krijgt dezelfde aanpak, ook als dat duidelijk niet werkt voor een deel van de groep.',
+                     'Er is geen aanpassing in ondersteuning. Wie het niet begrijpt, valt uit de boot.'] },
+          { id:'sD2', label:'De taal van opdrachten is begrijpelijk voor iedereen',
+            indicator:'Procesindicator: taalaccessibiliteit evaluatieopdrachten',
+            niveaus:['Ik schrijf in taal die past bij mijn cursisten. Ik toets de vakinhoud, niet het taalbegrip.',
+                     'De meeste opdrachten zijn goed leesbaar, maar ik denk er niet altijd bewust over na.',
+                     'Sommige cursisten mislukken omdat ze de vraag niet begrijpen, niet omdat ze de vaardigheid missen.',
+                     'Moeilijke taal in opdrachten is een terugkerend probleem dat ik niet aanpak.'] },
+        ]
+      },
+      {
+        code:'G', context:'opleiding',
+        titel:'Evaluatie goed georganiseerd op opleidingsniveau',
+        sub:'Informatie tijdig · resultaten veilig · plan B bij technische problemen',
+        criteria: [
+          { id:'sG1', label:'Cursisten vinden alle evaluatie-informatie makkelijk terug',
+            indicator:'Procesindicator: informatieverstrekking over evaluatie',
+            niveaus:['Cursisten ontvangen alle evaluatie-informatie tijdig via één duidelijk kanaal (Teams/SharePoint) en kunnen die altijd raadplegen.',
+                     'Informatie is beschikbaar maar niet altijd tijdig of op één centrale plek. Cursisten moeten soms zoeken.',
+                     'Informatie is verspreid over meerdere plaatsen of wordt te laat gedeeld.',
+                     'Cursisten worden niet proactief geïnformeerd over evaluatie.'] },
+        ],
+        reflectievraag:'Waar voelt de evaluatieaanpak het meest ondersteunend aan voor kwetsbare cursisten?'
+      },
+    ],
+    reflectievraag:'Waar schuurt de evaluatieaanpak voor cursisten die het moeilijk hebben? Wat kan beter?'
+  },
+
+  leven: {
+    intro: 'Toetst de evaluatie of cursisten leerstof kunnen toepassen in echte situaties — niet alleen reproduceren?',
+    domeinen: [
+      {
+        code:'L', context:'klas',
+        titel:'Levensechte evaluatieopdrachten',
+        sub:'Toepassing i.p.v. reproductie · herkenbare contexten · zinvolle opdrachten',
+        criteria: [
+          { id:'sL1', label:'Evaluatieopdrachten zijn herkenbaar en zinvol voor de cursist',
+            indicator:'Procesindicator: relevantie en authenticiteit evaluatieopdrachten',
+            niveaus:['Opdrachten vertrekken vanuit situaties die cursisten kennen uit hun werk of dagelijks leven.',
+                     'De meeste opdrachten zijn zinvol en herkenbaar, maar af en toe is een opdracht kunstmatig of ver van de praktijk.',
+                     'Opdrachten zijn functioneel maar hebben weinig te maken met de echte wereld van de cursist.',
+                     'Opdrachten staan los van enige praktijk. Cursisten begrijpen niet waarvoor ze dit leren.'] },
+          { id:'sL2', label:'Evaluatie toetst toepassing — niet alleen kennis reproduceren',
+            indicator:'Procesindicator: diepte evaluatie (kennis vs. toepassing)',
+            niveaus:['Een evaluatie gaat over kennis, vaardigheden én houding samen — zoals dat ook in een echte werksituatie het geval is.',
+                     'Ik probeer de drie te combineren, maar kennis weegt toch vaak zwaarder.',
+                     'Ik toets voornamelijk wat cursisten kennen of onthouden. Vaardigheden en houding worden zelden mee beoordeeld.',
+                     'Evaluaties gaan uitsluitend over kennis. Vaardigheden en houding zijn nergens zichtbaar.'] },
+        ]
+      },
+      {
+        code:'L2', context:'opleiding',
+        titel:'Levensechtheid geborgd op opleidingsniveau',
+        sub:'Afstemming met werkveld · coherente opbouw naar toepassing',
+        criteria: [
+          { id:'sL3', label:'De opleiding stemt regelmatig af met het werkveld over relevantie',
+            indicator:'Procesindicator: werkveldgerichtheid evaluatiebeleid',
+            niveaus:['Het team heeft structureel contact met het werkveld en gebruikt die input om evaluaties te actualiseren.',
+                     'Afstemming met het werkveld gebeurt maar niet systematisch of regelmatig.',
+                     'Werkveldcontact is eerder toevallig dan doelgericht ingepland.',
+                     'Er is geen of nauwelijks contact met het werkveld over de relevantie van evaluaties.'] },
+        ],
+        reflectievraag:'Waar laat onze evaluatie zien wat cursisten écht kunnen in de praktijk?'
+      },
+    ],
+    reflectievraag:'Waar laat onze evaluatie zien wat cursisten écht kunnen? Waar blijft het te abstract?'
+  },
+
+  betrok: {
+    intro: 'Zijn cursisten actieve deelnemers in hun eigen evaluatieproces?',
+    domeinen: [
+      {
+        code:'BE', context:'klas',
+        titel:'Cursisten als actieve deelnemers in evaluatie',
+        sub:'Zelf- en peerbeoordeling · eigenaarschap · formatief vs. summatief',
+        criteria: [
+          { id:'sBE1', label:'Cursisten denken mee over hun eigen evaluatie',
+            indicator:'Procesindicator: actieve betrokkenheid bij evaluatieproces',
+            niveaus:['Cursisten beoordelen zichzelf of geven feedback aan elkaar. Ze zijn actieve deelnemers, geen passieve ontvangers.',
+                     'Zelf- of peerbeoordeling komt voor maar is niet in elke module of elk moment ingebouwd.',
+                     'Het komt incidenteel voor maar is niet structureel deel van de aanpak.',
+                     'Cursisten ontvangen een beoordeling maar zijn nooit betrokken bij het evalueren zelf.'] },
+          { id:'sBE2', label:'Cursisten weten welke momenten oefening zijn en welke tellen',
+            indicator:'Procesindicator: duidelijkheid formatief vs. summatief',
+            niveaus:['Cursisten begrijpen het verschil: oefenmomenten zijn er om te leren zonder druk, beoordelingsmomenten om te beslissen.',
+                     'Het onderscheid is er maar niet altijd even expliciet. Cursisten zijn soms onzeker of iets "telt".',
+                     'Oefenen en beoordelen lopen door elkaar. Cursisten ervaren elk moment als een beoordeling.',
+                     'Er is geen onderscheid. Cursisten staan voortdurend in de verdediging.'] },
+        ]
+      },
+      {
+        code:'BE2', context:'opleiding',
+        titel:'Betrokkenheid geborgd op opleidingsniveau',
+        sub:'Gedeelde verwachtingen · afstemming lesgevers · opvolging signalen',
+        criteria: [
+          { id:'sBE3', label:'Het team hanteert gedeelde verwachtingen rond betrokkenheid bij evaluatie',
+            indicator:'Procesindicator: consistentie verwachtingen evaluatiebetrokkenheid',
+            niveaus:['Er zijn gedeelde afspraken over hoe cursisten worden betrokken bij evaluatie, consistent doorheen modules.',
+                     'Afspraken bestaan maar worden niet altijd consequent toegepast door alle lesgevers.',
+                     'Individuele lesgevers maken eigen keuzes. Er is geen teamafstemming.',
+                     'Betrokkenheid van cursisten bij evaluatie is nergens verankerd in afspraken.'] },
+        ],
+        reflectievraag:'In welke mate voelen cursisten eigenaarschap over hun evaluatieproces in deze opleiding?'
+      },
+    ],
+    reflectievraag:'Wat helpt cursisten om zich actief betrokken te voelen bij hun eigen evaluatieproces?'
+  },
+
+  samen: {
+    intro: 'Hoe sterk is de gedeelde evaluatiecultuur in het team? Leren we samen van evaluatiegegevens?',
+    domeinen: [
+      {
+        code:'S', context:'opleiding',
+        titel:'Evaluatie als gedeelde teampraktijk',
+        sub:'Teamreflectie · consistentie · uitwisseling goede praktijken',
+        criteria: [
+          { id:'sS1', label:'Het team bespreekt leerresultaten en stuurt samen bij',
+            indicator:'Procesindicator: teamreflectie op evaluatiegegevens',
+            niveaus:['Inzichten uit evaluatieresultaten worden gedeeld met het team. Opvolging is een gedeelde verantwoordelijkheid.',
+                     'Resultaten worden soms besproken maar niet systematisch en niet altijd met concrete conclusies.',
+                     'Elke lesgever volgt zijn eigen resultaten op. Er is geen gestructureerd teamoverleg.',
+                     'Er zijn geen teamafspraken over opvolging van leerresultaten.'] },
+          { id:'sS2', label:'Evaluatieafspraken zijn consistent doorheen de opleiding',
+            indicator:'Procesindicator: coherent evaluatiebeleid op opleidingsniveau',
+            niveaus:['Er is een gedeeld en gedragen evaluatiebeleid. Lesgevers stemmen hun aanpak op elkaar af.',
+                     'Afspraken zijn er en worden grotendeels gevolgd, maar bewaking is niet systematisch.',
+                     'Er zijn afspraken maar die worden niet consequent toegepast door alle lesgevers.',
+                     'Lesgevers doen elk iets anders. Er zijn geen gedeelde afspraken.'] },
+          { id:'sS3', label:'Goede evaluatiepraktijken worden gedeeld binnen het team',
+            indicator:'Procesindicator: professionele uitwisseling evaluatie',
+            niveaus:['Er is een structureel moment (vakgroep, bouwsteenteam) waar goede evaluatiepraktijken worden gedeeld.',
+                     'Uitwisseling van goede praktijken gebeurt maar is afhankelijk van toeval of initiatief van enkelen.',
+                     'Lesgevers werken individueel. Uitwisseling over evaluatie is zeldzaam.',
+                     'Er is geen uitwisseling van ervaringen of goede praktijken over evaluatie.'] },
+        ]
+      },
+    ],
+    reflectievraag:'Wat maakt evaluatie in onze opleiding een gedeelde verantwoordelijkheid? Wat kan sterker?'
+  },
+
+  innov: {
+    intro: 'Worden digitale evaluatiemiddelen doordacht en inclusief ingezet?',
+    domeinen: [
+      {
+        code:'H', context:'klas',
+        titel:'Digitale evaluatie in de klaspraktijk',
+        sub:'Doordacht gebruik van digitale tools · inclusie · AI-herkenning',
+        criteria: [
+          { id:'sI1', label:'Digitale evaluatietools worden doordacht en doelgericht ingezet',
+            indicator:'Procesindicator: digitale evaluatievaardigheid lesgever',
+            niveaus:['Ik gebruik digitale evaluatietools bewust en weet hoe ik AI-gebruik bij cursisten kan herkennen. Ik heb daar een aanpak voor.',
+                     'Ik ken de basistools en gebruik ze. AI-herkenning is in opbouw.',
+                     'Ik gebruik digitale tools maar beheer ze onvoldoende. AI-herkenning is onbekend.',
+                     'Weinig kennis van digitale evaluatietools of AI-gebruik bij cursisten.'] },
+          { id:'sI2', label:'Digitale evaluatie is haalbaar voor alle cursisten — ook minder digitaal vaardige',
+            indicator:'Procesindicator: digitale inclusie in evaluatie',
+            niveaus:['Digitale evaluatie is toegankelijk voor alle cursisten. Er is altijd een plan B voor wie het moeilijk heeft met technologie.',
+                     'De meeste cursisten kunnen vlot aan de slag maar er is niet altijd een plan B.',
+                     'Digitale tools zijn toegankelijk voor sommige cursisten maar niet voor iedereen.',
+                     'Digitale evaluatie sluit een deel van de cursisten uit door gebrek aan vaardigheid of toegang.'] },
+        ]
+      },
+      {
+        code:'H2', context:'opleiding',
+        titel:'Digitale evaluatiecultuur op opleidingsniveau',
+        sub:'Gedeelde aanpak · consistentie tools · groeien als team',
+        criteria: [
+          { id:'sI3', label:'Het team maakt gezamenlijke keuzes over digitale evaluatietools',
+            indicator:'Procesindicator: coherentie digitale evaluatieaanpak opleiding',
+            niveaus:['Het team maakt bewuste, gezamenlijke keuzes over welke digitale tools worden ingezet voor evaluatie. Cursisten herkennen de aanpak doorheen modules.',
+                     'Er zijn afspraken maar die worden niet altijd consequent toegepast.',
+                     'Individuele lesgevers maken eigen keuzes. Cursisten moeten telkens zoeken naar nieuwe platformen.',
+                     'Er zijn geen gedeelde afspraken over digitale evaluatietools. Elk doet iets anders.'] },
+        ],
+        reflectievraag:'Waar brengt digitale innovatie de evaluatiepraktijk écht vooruit? Wat mag vereenvoudigd?'
+      },
+    ],
+    reflectievraag:'Hoe zorgen we dat digitale evaluatie het leren versterkt in plaats van een drempel te zijn?'
+  },
+};
+
+/* ══════════════════════════════════════════════════
+   DATA ZELFSCAN — alle domeinen A t/m H
+   met expliciete context klas / opleiding
+══════════════════════════════════════════════════ */
+const DATA_ZELFSCAN = {
+  kwal: {
+    intro: 'Breng in kaart hoe de evaluatiepraktijk scoort vanuit kwaliteitsvol leren — als externe kijk op het materiaal en de aanpak.',
+    domeinen: [
+      {
+        code:'A', context:'klas',
+        titel:'Ik evalueer breed, onderbouwd en gericht op wat cursisten écht kunnen',
+        sub:'Meerdere kansen · evaluatie past bij leerdoel · kennis + vaardigheden + houding',
+        criteria: [
+          { id:'zA1', label:'Cursisten krijgen genoeg kansen om te laten zien wat ze kunnen',
+            indicator:'Procesindicator: spreiding evaluatiemomenten',
+            niveaus:['In elke module zijn er minstens twee aparte momenten waarop cursisten hun kennis of vaardigheden kunnen aantonen. De lesgever beslist niet op basis van één moment.',
+                     'In de meeste modules zijn er meerdere kansen, maar soms zijn die te dicht bij elkaar of is er slechts één echt beoordelingsmoment.',
+                     'Cursisten hebben doorgaans maar één kans. Als dat moment slecht gaat, hebben ze pech.',
+                     'Er is maar één evaluatiemoment, of het moment is willekeurig gekozen.'] },
+          { id:'zA2', label:'De manier van evalueren past bij wat cursisten moeten kunnen',
+            indicator:'Procesindicator: evaluatievorm ↔ leerdoel',
+            niveaus:['Ik kies de manier van evalueren bewust: wie moet lassen, wordt geobserveerd. Elk leerdoel heeft de bijpassende evaluatievorm.',
+                     'In de meeste gevallen past de evaluatievorm bij het leerdoel. Soms wordt een gemakkelijkere of goedkopere vorm gekozen.',
+                     'Er wordt soms een evaluatievorm ingezet die niet echt past bij het leerdoel. Dat is eerder een gewoonte.',
+                     'Er wordt een evaluatievorm gekozen zonder stil te staan bij de vraag of die past bij het leerdoel.'] },
+          { id:'zA3', label:'Evaluatie omvat kennis, vaardigheden én houding samen',
+            indicator:'Procesindicator: breedte evaluatie',
+            niveaus:['Een evaluatie gaat niet enkel over wat cursisten weten, maar ook over wat ze kunnen doen en hoe ze zich opstellen. Die drie dingen komen samen terug.',
+                     'Er wordt geprobeerd de drie te combineren, maar kennis weegt toch vaak zwaarder.',
+                     'Evaluatie richt zich voornamelijk op kennis en onthouden. Vaardigheden en houding worden zelden mee beoordeeld.',
+                     'Evaluaties gaan uitsluitend over kennis (bv. multiple choice, invulvragen). Vaardigheden en houding zijn nergens zichtbaar.'] },
+          { id:'zA4', label:'Evaluatieopdrachten zijn herkenbaar en zinvol voor de cursist',
+            indicator:'Procesindicator: relevantie evaluatieopdrachten',
+            niveaus:['Opdrachten vertrekken vanuit situaties die cursisten kennen uit hun werk of dagelijks leven. Ze snappen waarom ze dit moeten kunnen.',
+                     'De meeste opdrachten zijn zinvol en herkenbaar, maar af en toe is een opdracht kunstmatig of ver van de praktijk.',
+                     'Opdrachten zijn functioneel maar hebben weinig te maken met de echte wereld van de cursist.',
+                     'Opdrachten staan los van enige praktijk. Cursisten begrijpen niet waarvoor ze dit leren.'] },
+          { id:'zA5', label:'De taal van opdrachten is begrijpelijk voor iedereen',
+            indicator:'Procesindicator: taalaccessibiliteit',
+            niveaus:['Opdrachten zijn geschreven in taal die past bij de cursisten. Bij groepen met anderstaligen is de opdracht niet moeilijker dan nodig. De vakinhoud wordt getoetst, niet het taalbegrip.',
+                     'De meeste opdrachten zijn goed leesbaar, maar er wordt niet altijd bewust gescreend op taaldrempels.',
+                     'Sommige cursisten mislukken omdat ze de vraag niet begrijpen, niet omdat ze de vaardigheid missen.',
+                     'Moeilijke taal in opdrachten is een terugkerend probleem dat niet aangepakt wordt.'] },
+          { id:'zA6', label:'Beslissingen zijn gebaseerd op het volledige beeld, niet één moment',
+            indicator:'Procesindicator: holistische beoordeling',
+            niveaus:['Mijn eindbeoordeling kijkt naar alles wat een cursist gedurende de module liet zien, met extra aandacht voor recente prestaties. Er worden niet puur gemiddelden berekend.',
+                     'Er wordt naar meerdere momenten gekeken, maar het cijfer of gemiddelde speelt toch vaak de hoofdrol.',
+                     'De beslissing hangt sterk af van één moment of één toets. Het totaalbeeld speelt een kleine rol.',
+                     'Beslissingen worden genomen op basis van een gemiddelde of de laatste score, zonder naar het geheel te kijken.'] },
+        ]
+      },
+      {
+        code:'B', context:'klas',
+        titel:'Evaluatie is transparant: geen verrassingen',
+        sub:'Cursisten weten vooraf wat verwacht wordt · duidelijke instructies · criteria zijn gekend',
+        criteria: [
+          { id:'zB1', label:'Cursisten worden bij de start van de module geïnformeerd over de evaluatie',
+            indicator:'Procesindicator: evaluatiecommunicatie bij aanvang',
+            niveaus:['Bij de start van elke module wordt uitgelegd: wat cursisten moeten kunnen, hoe er geëvalueerd wordt, wanneer, waarop beoordeeld wordt, hoe zwaar het weegt en wat er gebeurt als iemand niet slaagt.',
+                     'De meeste informatie wordt gedeeld, maar de weging of de procedure bij niet-slagen ontbreekt soms of komt pas later.',
+                     'Er wordt deels informatie gegeven over de evaluatie, maar cursisten moeten actief vragen om duidelijkheid.',
+                     'Cursisten weten niet op voorhand hoe ze beoordeeld worden of waarop.'] },
+          { id:'zB2', label:'Evaluatie-instructies zijn helder en raadpleegbaar',
+            indicator:'Procesindicator: duidelijkheid evaluatie-instructies',
+            niveaus:['Elke evaluatie heeft duidelijke instructies: wat moeten ze doen, hoeveel tijd hebben ze, wat mag wel en niet, en is er aangepaste begeleiding voor wie dat nodig heeft.',
+                     'Instructies zijn meestal helder, maar bij complexere opdrachten ontbreekt soms een detail.',
+                     'Instructies zijn vaag of worden mondeling gegeven zonder dat cursisten ze later kunnen raadplegen.',
+                     'Cursisten ontdekken wat er van hen verwacht wordt pas tijdens de evaluatie zelf.'] },
+          { id:'zB3', label:'Cursisten weten op voorhand waarop ze beoordeeld worden',
+            indicator:'Procesindicator: transparantie beoordelingscriteria',
+            niveaus:['Cursisten kennen de beoordelingscriteria voor de evaluatie begint. Ze weten welk niveau goed is. Er is een rubric die ze kunnen raadplegen.',
+                     'Criteria zijn gedeeld maar het verwachte niveau is niet altijd even duidelijk.',
+                     'Criteria worden vermeld maar niet uitgelegd. Cursisten begrijpen de rubric niet altijd.',
+                     'Cursisten weten niet waarop ze beoordeeld worden. De beoordeling voelt willekeurig aan.'] },
+          { id:'zB4', label:'Wat getoetst wordt, sluit aan bij wat geoefend werd',
+            indicator:'Procesindicator: constructieve afstemming',
+            niveaus:['Wat cursisten op de evaluatie moeten doen, herkennen ze van de lessen. Er zijn geen verrassingen in de manier van vragen of het niveau.',
+                     'Het sluit grotendeels aan, maar af en toe een onderdeel dat cursisten niet echt geoefend hadden.',
+                     'Er zijn regelmatig momenten waarop cursisten zeggen "dat hebben we nooit gezien".',
+                     'Evaluatie staat los van wat in de lessen aan bod kwam. Cursisten zijn verrast.'] },
+        ]
+      },
+      {
+        code:'C', context:'klas',
+        titel:'Feedback helpt cursisten groeien',
+        sub:'Concreet · vooruitkijkend · veilig klimaat · oefening vs. beoordeling',
+        criteria: [
+          { id:'zC1', label:'Cursisten voelen zich veilig om fouten te tonen',
+            indicator:'Procesindicator: psychologische veiligheid',
+            niveaus:['Cursisten stellen vragen, maken fouten openlijk en reflecteren eerlijk. Ze weten dat feedback bedoeld is om beter te worden.',
+                     'De sfeer is over het algemeen veilig, maar een deel is terughoudend om fouten toe te geven.',
+                     'Cursisten houden fouten liever voor zich. De sfeer is meer prestatiegericht.',
+                     'Cursisten ervaren feedback als een beoordeling. Fouten worden vermeden of verborgen.'] },
+          { id:'zC2', label:'Cursisten krijgen concrete feedback over waar ze staan',
+            indicator:'Procesindicator: feedbackkwaliteit en concreetheid',
+            niveaus:['Mijn feedback zegt niet alleen "goed" of "fout", maar legt uit wát goed was, wát beter kan en hoe. Ik geef feedback op het werk, de aanpak én op hoe de cursist met het leren omgaat.',
+                     'Mijn feedback is bruikbaar maar varieert. Soms gaat het enkel over het eindresultaat, minder over aanpak of leerproces.',
+                     'Feedback is sporadisch of gaat enkel over punten. Cursisten weten niet concreet wat goed ging.',
+                     'Feedback beperkt zich tot een cijfer of een algemene opmerking. Cursisten leren er niets van.'] },
+          { id:'zC3', label:'Feedback wijst ook vooruit: wat is de volgende stap?',
+            indicator:'Procesindicator: feedforward — vooruitkijkende feedback',
+            niveaus:['Na elke feedbackronde weet de cursist niet alleen wat fout was, maar ook wat hij concreet anders moet doen. Ik kijk niet alleen terug, maar ook vooruit.',
+                     'Ik geef soms een volgende stap mee, maar niet altijd. Feedback kijkt meer achteruit dan vooruit.',
+                     'Ik wijs op wat fout ging maar zeg zelden wat de cursist nu concreet moet doen.',
+                     'Na mijn feedback weet de cursist niet wat hij anders moet doen. Er is geen richting.'] },
+          { id:'zC4', label:'Het onderscheid tussen oefenmomenten en beoordelingsmomenten is duidelijk',
+            indicator:'Procesindicator: duidelijkheid formatief vs. summatief',
+            niveaus:['Cursisten begrijpen het verschil: oefenmomenten zijn er om te leren zonder druk, beoordelingsmomenten zijn er om te beslissen. Beide hebben een duidelijke functie.',
+                     'Het onderscheid is er maar niet altijd even expliciet. Cursisten zijn soms onzeker of iets "telt".',
+                     'Oefenen en beoordelen lopen door elkaar. Cursisten ervaren elk moment als een beoordeling.',
+                     'Er is geen onderscheid. Alles telt of niets is duidelijk. Cursisten staan voortdurend in de verdediging.'] },
+          { id:'zC5', label:'De aanpak wordt bijgestuurd op basis van wat feedback vertelt',
+            indicator:'Procesindicator: data-geïnformeerde lespraktijk',
+            niveaus:['Wanneer feedback aantoont dat een groep iets niet begrijpt, wordt de les of de ondersteuning aangepast. Feedback is informatie om van te leren.',
+                     'Bijsturing gebeurt soms, maar eerder als reactie op een probleem dan als systematische gewoonte.',
+                     'Er wordt feedback gegeven maar de les gaat daarna gewoon verder zoals gepland.',
+                     'Feedback heeft geen gevolgen voor hoe ik lesgeef.'] },
+        ]
+      },
+      {
+        code:'E', context:'opleiding',
+        titel:'Evaluatiegegevens worden gebruikt om bij te sturen — samen als team',
+        sub:'Leren van resultaten · aanpak bijsturen · teamreflectie',
+        criteria: [
+          { id:'zE1', label:'Evaluatie is verweven in het leerproces, niet alleen een afsluiting',
+            indicator:'Procesindicator: formatief evalueren doorheen het traject',
+            niveaus:['Tussentijdse momenten worden gebruikt om te zien hoe ver cursisten staan en de aanpak wordt bijgestuurd waar nodig. Evaluatie is niet enkel een afsluitend moment.',
+                     'Er zijn oefenmomenten naast beoordelingsmomenten, maar ik koppel ze niet altijd bewust aan bijsturing.',
+                     'Evaluatie is vrijwel altijd afsluitend. Tussentijdse checks komen nauwelijks voor.',
+                     'Evaluatie is uitsluitend een afsluiting. Er is geen gebruik van evaluatie om het leerproces te sturen.'] },
+          { id:'zE2', label:'Evaluatieresultaten leiden tot bijsturing van de aanpak',
+            indicator:'Procesindicator: reflectieve en adaptieve lespraktijk',
+            niveaus:['Evaluatieresultaten worden bekeken en er worden conclusies getrokken. De aanpak wordt systematisch bijgestuurd op basis van wat de data toont.',
+                     'Bijsturing gebeurt maar pas als er een probleem is. Ik doe het niet altijd systematisch.',
+                     'Resultaten worden bekeken maar er verandert weinig aan de aanpak. De volgende les gaat gewoon verder.',
+                     'Resultaten worden niet gebruikt om lessen of aanpak te verbeteren.'] },
+          { id:'zE3', label:'Leerresultaten worden besproken met collega\'s',
+            indicator:'Procesindicator: teamreflectie op evaluatiegegevens',
+            niveaus:['Inzichten uit evaluatieresultaten worden gedeeld met het team. Er wordt samen bekeken wat goed gaat en wat beter kan. Opvolging is een gedeelde taak.',
+                     'Resultaten worden soms besproken met collega\'s maar niet systematisch.',
+                     'Resultaten worden individueel opgevolgd maar niet gedeeld met het team.',
+                     'Er zijn geen teamafspraken over opvolging van leerresultaten.'] },
+          { id:'zE4', label:'Zowel cijfers als gesprekken en signalen worden ingezet voor kwaliteitsbewaking',
+            indicator:'Procesindicator: mixed-method kwaliteitsbewaking',
+            niveaus:['Er wordt niet enkel naar cijfers gekeken, maar ook naar gesprekken met cursisten, observaties en signalen. Beide soorten informatie sturen de aanpak.',
+                     'Er wordt gebruik gemaakt van een van beide: cijfers óf gesprekken, maar zelden allebei bewust.',
+                     'Er wordt vooral naar cijfers gekeken. Andere signalen worden niet systematisch meegenomen.',
+                     'Er is geen systematisch gebruik van informatie om de kwaliteit van evaluatie te bewaken.'] },
+        ]
+      },
+      {
+        code:'F', context:'opleiding',
+        titel:'Beslissingen en rapportering zijn eerlijk en correct',
+        sub:'Beslissing goed onderbouwd · cursist krijgt uitleg · alles correct bijgehouden',
+        criteria: [
+          { id:'zF1', label:'Beoordelingsbeslissingen zijn goed onderbouwd',
+            indicator:'Procesindicator: onderbouwing beoordelingsbeslissing',
+            niveaus:['Enkel wie alle basisvaardigheden echt beheerst, slaagt. Afwijkingen van de standaard procedure zijn tijdig besproken en goed gemotiveerd.',
+                     'Beslissingen zijn grotendeels goed onderbouwd, maar uitzonderingen zijn soms laat of weinig gedocumenteerd.',
+                     'De onderbouwing is onvolledig. Er wordt soms afgeweken van de procedure zonder dat goed vast te leggen.',
+                     'Beslissingen zijn niet transparant of goed onderbouwd. Er is geen duidelijke procedure bij uitzonderingen.'] },
+          { id:'zF2', label:'De beslissing wordt met de cursist besproken',
+            indicator:'Procesindicator: communicatie beoordelingsbeslissing',
+            niveaus:['De beslissing wordt mondeling besproken met de cursist: wat heeft die gehaald, wat niet, en wat is de volgende stap? Het is geen eenzijdige mededeling.',
+                     'De beslissing wordt gecommuniceerd maar niet altijd met voldoende uitleg. Soms is het enkel een cijfer.',
+                     'Communicatie beperkt zich tot een cijfer of een schriftelijke melding.',
+                     'Cursisten krijgen een beslissing zonder enige toelichting.'] },
+          { id:'zF3', label:'Alles wordt correct geregistreerd en bewaard (Athenasoft, GDPR)',
+            indicator:'Procesindicator: registratie en privacyconformiteit',
+            niveaus:['Resultaten staan correct ingegeven in Athenasoft, met toelichting waar nodig. Alle documenten zijn opgeslagen op de juiste plek en voldoen aan de privacyregels.',
+                     'Registratie en archivering zijn grotendeels correct. Soms kleine vertragingen of hiaten.',
+                     'Registratie heeft regelmatig hiaten. Archivering is onvolledig of inconsistent.',
+                     'Fouten in registratie of archivering. Privacyregels worden niet consequent gevolgd.'] },
+        ]
+      },
+    ],
+    reflectievraag:'Wat is het prioritair werkpunt voor deze opleiding? Welke concrete actie volgt daaruit?'
+  },
+  zorg: {
+    intro: 'Is de evaluatieaanpak haalbaar en ondersteunend voor alle cursisten — ook de kwetsbaarste?',
+    domeinen: [
+      {
+        code:'D', context:'klas',
+        titel:'De weg wordt aangepast, niet de lat',
+        sub:'Zelfde doelen voor iedereen · andere aanpak waar nodig · keuzes in ondersteuning en vorm',
+        criteria: [
+          { id:'zD1', label:'Cursisten die meer hulp nodig hebben, krijgen die ook',
+            indicator:'Procesindicator: zorgzaam differentiëren in evaluatie',
+            niveaus:['Cursisten die meer houvast nodig hebben, krijgen dat bewust: een opdracht wordt opgesplitst in stappen, er wordt een extra voorbeeldvraag gegeven. Anderen krijgen minder sturing. De eindverwachting is voor iedereen gelijk.',
+                     'Extra hulp wordt aangeboden, maar niet altijd proactief. Cursisten die het nodig hebben, moeten er soms zelf om vragen.',
+                     'Iedereen krijgt dezelfde aanpak, ook als dat duidelijk niet werkt voor een deel van de groep.',
+                     'Er is geen aanpassing in ondersteuning. Wie het niet begrijpt, valt uit de boot.'] },
+          { id:'zD2', label:'De moeilijkheidsgraad wordt bijgesteld waar nodig',
+            indicator:'Procesindicator: adaptieve opbouw evaluatie',
+            niveaus:['Beginners starten in een vertrouwde context en bouwen dat geleidelijk op. Wie al verder is, krijgt meer uitdaging. De eindlat blijft voor iedereen even hoog.',
+                     'Er is enige variatie maar niet altijd bewust ingepland.',
+                     'Alle cursisten werken aan dezelfde opgaven op hetzelfde niveau. Geen opbouw of variatie.',
+                     'Geen verschil in moeilijkheid. Wie al ver staat, verveelt zich. Wie achterop is, haalt het nooit.'] },
+          { id:'zD3', label:'De evaluatievorm wordt aangepast waar de situatie dat vraagt',
+            indicator:'Procesindicator: flexibiliteit evaluatievorm',
+            niveaus:['Wanneer de situatie dat vraagt, kan een cursist mondeling in plaats van schriftelijk antwoorden — maar steeds hetzelfde leerdoel op hetzelfde niveau.',
+                     'Aanpassingen zijn mogelijk maar worden niet altijd benut.',
+                     'Iedereen doet altijd dezelfde evaluatie op dezelfde manier. Aanpassingen worden niet overwogen.',
+                     'Er is geen flexibiliteit. Wie een andere aanpak nodig heeft, heeft pech.'] },
+          { id:'zD4', label:'Cursisten denken mee over hun eigen evaluatie',
+            indicator:'Procesindicator: actieve betrokkenheid bij evaluatieproces',
+            niveaus:['Cursisten beoordelen zichzelf of geven feedback aan elkaar. Ze zijn actieve deelnemers aan het evaluatieproces, geen passieve ontvangers van een score.',
+                     'Zelf- of peerbeoordeling komt voor maar is niet in elke module of elk moment ingebouwd.',
+                     'Het komt incidenteel voor maar is niet structureel deel van de aanpak.',
+                     'Cursisten ontvangen een beoordeling maar zijn nooit betrokken bij het evalueren zelf.'] },
+          { id:'zD5', label:'Het beoordelingsschema wordt als groeihulp ingezet voor cursisten',
+            indicator:'Procesindicator: rubric als leermiddel (niet alleen als beoordelingsinstrument)',
+            niveaus:['Cursisten gebruiken het beoordelingsschema (rubric) voor én na de evaluatie. Ze zien niet alleen of ze geslaagd zijn, maar ook waar ze staan en wat de volgende groeistap is.',
+                     'Het schema bestaat en wordt gedeeld, maar cursisten gebruiken het zelden actief als groeimiddel.',
+                     'Het schema bestaat maar wordt enkel door de lesgever gebruikt om te beoordelen. Cursisten kennen het nauwelijks.',
+                     'Er is geen beoordelingsschema. Beoordeling is impliciet of ondoorzichtig.'] },
+        ]
+      },
+      {
+        code:'G', context:'opleiding',
+        titel:'Alles rond evaluatie is goed georganiseerd op opleidingsniveau',
+        sub:'Informatie tijdig beschikbaar · resultaten veilig bewaard · plan B bij problemen',
+        criteria: [
+          { id:'zG1', label:'Cursisten vinden alle evaluatie-informatie makkelijk terug',
+            indicator:'Procesindicator: informatieverstrekking via SharePoint/Teams',
+            niveaus:['Cursisten ontvangen alle evaluatie- en feedbackinformatie tijdig via één duidelijk kanaal (Teams of de cursuspagina) en kunnen die altijd raadplegen.',
+                     'Informatie is beschikbaar maar niet altijd tijdig of op één centrale plek. Cursisten moeten soms zoeken.',
+                     'Informatie is verspreid over meerdere plaatsen of wordt te laat gedeeld.',
+                     'Cursisten worden niet proactief geïnformeerd over evaluatie.'] },
+          { id:'zG2', label:'Resultaten worden veilig bewaard (GDPR)',
+            indicator:'Procesindicator: privacy en veilige opslag evaluatiegegevens',
+            niveaus:['Evaluatieresultaten zijn veilig opgeslagen met de juiste toegangsrechten, op een centrale plek, conform de privacyregels.',
+                     'Opslag is geregeld en grotendeels conform, maar toegangsrechten zijn niet altijd volledig geverifieerd.',
+                     'Opslag is versnipperd of niet conform de privacyregels. Afspraken bestaan maar worden niet consequent gevolgd.',
+                     'Geen centrale opslag of afspraken over privacy.'] },
+          { id:'zG3', label:'Er is een plan als de technologie uitvalt',
+            indicator:'Procesindicator: continuïteitsplan digitale evaluatie',
+            niveaus:['Er is een geteste procedure voor als iets technisch misloopt. Zowel ik als de cursisten weten wat we dan doen.',
+                     'Er is een back-upplan maar dat is niet getest of niet bij iedereen bekend.',
+                     'Bij technische problemen zoek ik ad hoc een oplossing. Er is geen afgesproken procedure.',
+                     'Geen plan B. Bij uitval is er chaos of gaan evaluatiegegevens verloren.'] },
+        ]
+      },
+    ],
+    reflectievraag:'Waar voelt de evaluatieaanpak het meest ondersteunend aan voor cursisten die het moeilijk hebben?'
+  },
+  leven: {
+    intro: 'Toetst mijn evaluatie wat cursisten écht kunnen toepassen in de praktijk?',
+    domeinen: [
+      {
+        code:'AL', context:'klas',
+        titel:'Evaluatieopdrachten zijn levensecht',
+        sub:'Herkenbare contexten · toepassing i.p.v. reproductie · zinvolle opdrachten',
+        criteria: [
+          { id:'zL1', label:'Evaluatieopdrachten zijn herkenbaar en zinvol voor de cursist',
+            indicator:'Procesindicator: authenticiteit en relevantie evaluatieopdrachten',
+            niveaus:['Opdrachten vertrekken vanuit situaties die cursisten kennen uit hun werk of dagelijks leven. Ze snappen waarom ze dit moeten kunnen.',
+                     'De meeste opdrachten zijn zinvol en herkenbaar, maar af en toe is een opdracht kunstmatig of ver van de praktijk.',
+                     'Opdrachten zijn functioneel maar hebben weinig te maken met de echte wereld van de cursist.',
+                     'Opdrachten staan los van enige praktijk. Cursisten begrijpen niet waarvoor ze dit leren.'] },
+          { id:'zL2', label:'Evaluatie toetst toepassing, niet enkel reproductie',
+            indicator:'Procesindicator: diepte evaluatie (Bloom niveau)',
+            niveaus:['Een evaluatie gaat over kennis, vaardigheden én houding samen — zoals in een echte werksituatie. Cursisten moeten iets doen met wat ze leerden.',
+                     'Er wordt geprobeerd de drie te combineren, maar kennis weegt toch vaak zwaarder.',
+                     'Evaluatie richt zich voornamelijk op kennis en onthouden. Vaardigheden en houding worden zelden mee beoordeeld.',
+                     'Evaluaties gaan uitsluitend over kennis. Vaardigheden en houding zijn nergens zichtbaar.'] },
+          { id:'zL3', label:'Cursisten begrijpen waarvoor ze de evaluatie doen',
+            indicator:'Procesindicator: betekenisgeving aan evaluatie',
+            niveaus:['Cursisten weten niet enkel wát ze leren, maar ook waarvoor. De verbinding met leven, werk of vervolg is bewust ingebouwd in evaluaties.',
+                     'Het nut wordt benoemd maar niet altijd systematisch. Cursisten zien de link niet altijd.',
+                     'Cursisten snappen de koppeling met de praktijk niet altijd. Evaluatie voelt abstract aan.',
+                     'Cursisten begrijpen niet waarvoor ze dit leren of geëvalueerd worden.'] },
+        ]
+      },
+    ],
+    reflectievraag:'Waar laat mijn evaluatie zien wat cursisten écht kunnen in de praktijk? Waar blijft het te abstract?'
+  },
+  betrok: {
+    intro: 'In welke mate zijn cursisten actief betrokken bij hun eigen evaluatieproces?',
+    domeinen: [
+      {
+        code:'BK', context:'klas',
+        titel:'Cursisten als actieve deelnemers in evaluatie',
+        sub:'Zelf- en peerbeoordeling · eigenaarschap · formatief vs. summatief',
+        criteria: [
+          { id:'zBK1', label:'Cursisten denken mee over hun eigen evaluatie',
+            indicator:'Procesindicator: actieve betrokkenheid bij evaluatieproces',
+            niveaus:['Cursisten beoordelen zichzelf of geven feedback aan elkaar. Ze zijn actieve deelnemers, geen passieve ontvangers van een score.',
+                     'Zelf- of peerbeoordeling komt voor maar is niet in elke module ingebouwd.',
+                     'Het komt incidenteel voor maar is niet structureel deel van de aanpak.',
+                     'Cursisten ontvangen een beoordeling maar zijn nooit betrokken bij het evalueren zelf.'] },
+          { id:'zBK2', label:'Het onderscheid tussen oefenmomenten en beoordelingsmomenten is duidelijk',
+            indicator:'Procesindicator: duidelijkheid formatief vs. summatief',
+            niveaus:['Cursisten begrijpen het verschil: oefenmomenten zijn er om te leren zonder druk, beoordelingsmomenten zijn er om te beslissen. Beide hebben een duidelijke functie.',
+                     'Het onderscheid is er maar niet altijd even expliciet. Cursisten zijn soms onzeker of iets "telt".',
+                     'Oefenen en beoordelen lopen door elkaar. Cursisten ervaren elk moment als een beoordeling.',
+                     'Er is geen onderscheid. Alles telt of niets is duidelijk. Cursisten staan voortdurend in de verdediging.'] },
+        ]
+      },
+      {
+        code:'BK2', context:'opleiding',
+        titel:'Betrokkenheid bij evaluatie geborgd op opleidingsniveau',
+        sub:'Gedeelde verwachtingen · afspraken lesgevers · systematische aanpak',
+        criteria: [
+          { id:'zBK3', label:'Het team hanteert gedeelde verwachtingen rond de betrokkenheid van cursisten bij evaluatie',
+            indicator:'Procesindicator: teamafspraken over betrokkenheid bij evaluatieproces',
+            niveaus:['Er zijn gedeelde afspraken over hoe cursisten worden betrokken bij evaluatie. Dit is consistent doorheen modules en lesgevers.',
+                     'Afspraken bestaan maar worden niet altijd consequent toegepast door alle lesgevers.',
+                     'Individuele lesgevers maken eigen keuzes. Er is geen teamafstemming.',
+                     'Betrokkenheid van cursisten bij evaluatie is nergens verankerd in afspraken.'] },
+        ]
+      },
+    ],
+    reflectievraag:'In welke mate voelen cursisten eigenaarschap over hun eigen evaluatieproces?'
+  },
+  samen: {
+    intro: 'Hoe sterk is de gedeelde evaluatiecultuur in het team van deze opleiding?',
+    domeinen: [
+      {
+        code:'ES', context:'opleiding',
+        titel:'Evaluatie als gedeelde teampraktijk',
+        sub:'Teamreflectie · consistentie doorheen modules · uitwisseling goede praktijken',
+        criteria: [
+          { id:'zSM1', label:'Het team bespreekt leerresultaten en stuurt samen bij',
+            indicator:'Procesindicator: teamreflectie op evaluatiegegevens',
+            niveaus:['Inzichten uit evaluatieresultaten worden gedeeld met het team. We bekijken samen wat goed gaat en wat beter kan. Opvolging is een gedeelde taak.',
+                     'Resultaten worden soms besproken maar niet systematisch en niet altijd met concrete conclusies.',
+                     'Elke lesgever volgt zijn eigen resultaten op. Er is geen gestructureerd teamoverleg.',
+                     'Er zijn geen teamafspraken over opvolging van leerresultaten.'] },
+          { id:'zSM2', label:'Evaluatieafspraken zijn consistent doorheen de opleiding',
+            indicator:'Procesindicator: coherent evaluatiebeleid',
+            niveaus:['Er is een gedeeld en gedragen evaluatiebeleid. Lesgevers stemmen hun aanpak op elkaar af zodat gelijke prestaties gelijk beoordeeld worden.',
+                     'Afspraken zijn er en worden grotendeels gevolgd, maar niet altijd bewust bewaakt.',
+                     'Er zijn afspraken maar die worden niet consequent toegepast door alle lesgevers.',
+                     'Lesgevers doen elk iets anders. Er zijn geen gedeelde afspraken.'] },
+          { id:'zSM3', label:'Goede evaluatiepraktijken worden gedeeld binnen het team',
+            indicator:'Procesindicator: professionele uitwisseling evaluatie',
+            niveaus:['Ik deel regelmatig wat goed werkt in mijn evaluatiepraktijk met collega\'s, ook met collega\'s van andere opleidingen. Dat doen we structureel via vakgroep of bouwsteenteam.',
+                     'Ik deel soms goede praktijken maar niet structureel. Het is afhankelijk van toeval of initiatief van enkelen.',
+                     'Er wordt individueel gewerkt. Uitwisseling over evaluatie is zeldzaam.',
+                     'Geen uitwisseling van ervaringen of goede praktijken over evaluatie.'] },
+          { id:'zSM4', label:'Ik gebruik zowel kwantitatieve als kwalitatieve informatie om kwaliteit te bewaken',
+            indicator:'Procesindicator: mixed-method kwaliteitsbewaking',
+            niveaus:['Ik kijk niet enkel naar cijfers, maar ook naar gesprekken met cursisten, observaties in de klas en signalen over wat goed of moeilijk liep.',
+                     'Er wordt gebruik gemaakt van een van beide: cijfers óf gesprekken, maar zelden allebei bewust.',
+                     'Er wordt vooral naar cijfers gekeken. Andere signalen worden niet systematisch meegenomen.',
+                     'Er is geen systematisch gebruik van informatie om de kwaliteit van evaluatie te bewaken.'] },
+        ]
+      },
+    ],
+    reflectievraag:'Wat maakt evaluatie in onze opleiding een gedeelde verantwoordelijkheid? Wat kan sterker?'
+  },
+  innov: {
+    intro: 'Worden digitale evaluatietools doordacht en inclusief ingezet? Groeit het team als beoordelaar?',
+    domeinen: [
+      {
+        code:'HK', context:'klas',
+        titel:'Digitale evaluatie in de klaspraktijk',
+        sub:'Doordacht gebruik van digitale tools · AI-herkenning · digitale inclusie',
+        criteria: [
+          { id:'zIN1', label:'De juiste beoordelingsinstrumenten worden bekwaam ingezet',
+            indicator:'Procesindicator: methodische vaardigheid als beoordelaar',
+            niveaus:['Beoordelingsschema\'s (rubrics) en sleutels worden vlot en bewust toegepast. De beoordeling wordt afgestemd met collega\'s zodat gelijke prestaties gelijk beoordeeld worden.',
+                     'Rubrics worden ingezet en er wordt soms afgestemd met collega\'s, maar niet altijd systematisch.',
+                     'Rubrics worden onregelmatig ingezet. Afstemming met collega\'s is zeldzaam.',
+                     'Geen rubrics, geen afstemming. Beoordeling is persoonlijk en willekeurig.'] },
+          { id:'zIN2', label:'Digitale evaluatietools worden doordacht ingezet en AI-gebruik bij cursisten is herkenbaar',
+            indicator:'Procesindicator: digitale evaluatievaardigheid en AI-herkenning',
+            niveaus:['Digitale evaluatietools worden goed ingezet en er is een aanpak om te herkennen of een cursist AI heeft gebruikt bij zijn werk.',
+                     'De basistools zijn gekend. AI-herkenning is in opbouw.',
+                     'Digitale tools worden ingezet maar onvoldoende beheerd. AI-herkenning is onbekend.',
+                     'Weinig kennis van digitale evaluatietools of AI-gebruik bij cursisten.'] },
+          { id:'zIN3', label:'Digitale evaluatie is haalbaar voor alle cursisten',
+            indicator:'Procesindicator: digitale inclusie in evaluatie',
+            niveaus:['Digitale evaluatie is toegankelijk voor alle cursisten. Er is altijd een plan B voor wie het moeilijk heeft met technologie.',
+                     'De meeste cursisten kunnen vlot aan de slag maar er is niet altijd een alternatief voorzien.',
+                     'Digitale tools zijn toegankelijk voor de meeste cursisten maar niet voor iedereen.',
+                     'Digitale evaluatie sluit een deel van de cursisten uit door gebrek aan vaardigheid of toegang.'] },
+          { id:'zIN4', label:'Er wordt actief ingezet op groei als beoordelaar',
+            indicator:'Procesindicator: professionele groei als beoordelaar',
+            niveaus:['Er is een duidelijke leervraag over de evaluatiepraktijk en er wordt actief ondersteuning gezocht: via een collega, het bouwsteenteam of een vorming.',
+                     'Er wordt soms bijscholing gevolgd of hulp gevraagd, maar niet altijd vanuit een duidelijke leervraag.',
+                     'Hulp wordt pas gezocht als er een probleem is, niet proactief.',
+                     'Er wordt niet geïnvesteerd in groei als beoordelaar.'] },
+        ]
+      },
+      {
+        code:'HO', context:'opleiding',
+        titel:'Digitale evaluatiecultuur op opleidingsniveau',
+        sub:'Gedeelde aanpak · coherentie in tools · uitwisseling binnen het team',
+        criteria: [
+          { id:'zIN5', label:'Het team maakt gezamenlijke keuzes over digitale evaluatietools',
+            indicator:'Procesindicator: coherentie digitale evaluatieaanpak',
+            niveaus:['Het team maakt bewuste, gezamenlijke keuzes over digitale tools voor evaluatie. Cursisten herkennen de aanpak doorheen modules.',
+                     'Er zijn afspraken maar die worden niet altijd consequent toegepast.',
+                     'Individuele lesgevers maken eigen keuzes. Cursisten moeten telkens zoeken.',
+                     'Er zijn geen gedeelde afspraken over digitale evaluatietools. Elk doet iets anders.'] },
+          { id:'zIN6', label:'Goede evaluatiepraktijken worden gedeeld met collega\'s',
+            indicator:'Procesindicator: professionele uitwisseling',
+            niveaus:['Ik deel regelmatig wat goed werkt in mijn evaluatiepraktijk met collega\'s, ook van andere opleidingen. Dat doen we structureel via vakgroep of bouwsteenteam.',
+                     'Ik deel soms goede praktijken maar dat is niet structureel.',
+                     'Er wordt individueel gewerkt. Uitwisseling over evaluatie is zeldzaam.',
+                     'Geen uitwisseling van ervaringen of goede praktijken.'] },
+        ]
+      },
+    ],
+    reflectievraag:'Waar is groei als beoordelaar het meest nodig in dit team? Welke ondersteuning past daarbij?'
+  },
+};
+
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+let modus = 'zelfscan';
+let hBS     = 'kwal';
+let ronde   = 'klas';
+let antw    = { klas:{}, opleiding:{} };
+
+/* ══════════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════════ */
+function getBs(id){ return BS.find(b=>b.id===id); }
+function getData(){ return modus==='scan' ? DATA_SCAN : DATA_ZELFSCAN; }
+function getAllCrit(bsId, ctx){
+  const d = getData()[bsId];
+  if(!d) return [];
+  return d.domeinen.filter(dom=>dom.context===ctx).flatMap(dom=>dom.criteria);
+}
+function ctxBadge(ctx){
+  if(ctx==='klas') return `<span class="niveau-context klas"><span class="nc-icon">🏫</span>Klaspraktijk</span>`;
+  return `<span class="niveau-context opleiding"><span class="nc-icon">📋</span>Opleidingspraktijk</span>`;
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+function init(){
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('ctx-datum').value  = today;
+  document.getElementById('ctx-datum2').value = today;
+  renderNav();
+  selectBS('kwal');
+  applyRondeStyle();
+}
+
+function renderNav(){
+  document.getElementById('bstn-nav').innerHTML = BS.map(b=>`
+    <button class="bstn-chip${b.id===hBS?' active':''}"
+            style="--chip-c:${b.c}"
+            onclick="selectBS('${b.id}')">
+      ${hexSVG(b.c,20)}
+      ${b.naam}
+    </button>`).join('');
+}
+
+function selectBS(id){
+  hBS=id;
+  renderNav();
+  renderContent();
+  updateProg();
+  applyAccent();
+}
+
+function applyAccent(){
+  const b=getBs(hBS);
+  document.documentElement.style.setProperty('--ac', b.c);
+  document.documentElement.style.setProperty('--ac-bg', b.bg);
+  document.documentElement.style.setProperty('--ac-dk', b.dk);
+  document.getElementById('prog-fill').style.background = b.c;
+  const sb = document.getElementById('save-btn');
+  sb.style.background  = b.c;
+  sb.style.borderColor = b.c;
+}
+
+function setMode(m,btn){
+  modus=m;
+  antw={ klas:{}, opleiding:{} };
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderContent();
+  updateProg();
+}
+
+function setRonde(r, btn){
+  ronde = r;
+  applyRondeStyle();
+  document.getElementById('ctx-klas').style.display          = r==='klas'      ? '' : 'none';
+  document.getElementById('ctx-opleiding-bar').style.display = r==='opleiding' ? '' : 'none';
+  document.getElementById('ronde-hint').textContent =
+    r==='klas' ? 'Lesobservatie · per module / les' : 'Teamdialoog / opleidingsanalyse · per opleiding';
+  document.getElementById('result-title').textContent =
+    r==='klas' ? 'Overzicht klaspraktijk' : 'Overzicht opleidingspraktijk';
+  renderContent();
+  updateProg();
+  document.getElementById('result-panel').classList.remove('show');
+}
+
+function applyRondeStyle(){
+  const kb = document.getElementById('rbtn-klas');
+  const ob = document.getElementById('rbtn-opleiding');
+  kb.classList.remove('active','klas-active','opl-active');
+  ob.classList.remove('active','klas-active','opl-active');
+  if(ronde==='klas'){ kb.classList.add('active','klas-active'); }
+  else              { ob.classList.add('active','opl-active'); }
+}
+
+/* ══════════════════════════════════════════════════
+   RENDER CONTENT — toont enkel criteria van huidige ronde
+══════════════════════════════════════════════════ */
+function renderContent(){
+  const data  = getData()[hBS];
+  const b     = getBs(hBS);
+  if(!data){ document.getElementById('main-content').innerHTML='<p style="padding:1rem;color:var(--muted);font-size:13px">Geen data beschikbaar.</p>'; return; }
+
+  const rondeLabel  = ronde==='klas' ? 'klaspraktijk' : 'opleidingspraktijk';
+  const domsDezRonde = data.domeinen.filter(d=>d.context===ronde);
+
+  let html = `
+    <div class="bs-header">
+      ${hexSVG(b.c,44)}
+      <div>
+        <h2 style="color:${b.dk}">${b.naam} — ${ronde==='klas' ? 'Klaspraktijk' : 'Opleidingspraktijk'}</h2>
+        <p>${data.intro}</p>
+      </div>
+    </div>`;
+
+  if(!domsDezRonde.length){
+    html += `<div style="padding:1rem;background:#fff;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--muted);">
+      Geen criteria voor de ${rondeLabel} bij deze bouwsteen in de huidige scanmodus.
+    </div>`;
+    document.getElementById('main-content').innerHTML = html;
+    return;
+  }
+
+  html += `<div style="margin-bottom:.5rem">${ctxBadge(ronde)}</div>`;
+
+  domsDezRonde.forEach(dom=>{
+    html += `
+      <div class="domein-card">
+        <div class="domein-header">
+          <div class="domein-code" style="background:${b.c}">${dom.code}</div>
+          <div><h3>${dom.titel}</h3><p>${dom.sub}</p></div>
+        </div>`;
+
+    dom.criteria.forEach(cr=>{
+      const val = antw[ronde][cr.id]||0;
+      html += `
+        <div class="criterium">
+          <div class="crit-label">${cr.label}</div>
+          <div class="crit-indicator">${cr.indicator}</div>
+          <div class="schaal" style="--ac:${b.c};--ac-bg:${b.bg};--ac-dk:${b.dk}">
+            ${[4,3,2,1].map(n=>`
+              <div class="schaal-opt">
+                <input type="radio" name="${cr.id}_${ronde}" id="${cr.id}_${ronde}_${n}" value="${n}"
+                       ${val===n?'checked':''} onchange="setAntw('${cr.id}',${n})">
+                <label for="${cr.id}_${ronde}_${n}">
+                  <div class="rubric-niv">${hexSVG((['','#E07272','#E8B84B','#8FB5AE','#4A8A70'])[n],14)}<span>${(['','Start','Beginner','Gevorderd','Expert'])[n]}</span></div>
+                  <div class="rubric-desc">${cr.niveaus[4-n]}</div>
+                </label>
+              </div>`).join('')}
+          </div>
+          <button class="desc-toggle" onclick="toggleDesc('d_${cr.id}_${ronde}')">▸ Toon beschrijvingen</button>
+          <div class="desc-box" id="d_${cr.id}_${ronde}">
+            <table>
+              ${[4,3,2,1].map(n=>`
+                <tr>
+                  <td class="lv-${n}">${['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Expert'][n]}</td>
+                  <td>${cr.niveaus[4-n]}</td>
+                </tr>`).join('')}
+            </table>
+          </div>
+        </div>`;
+    });
+
+    if(dom.reflectievraag){
+      html += `
+        <div class="reflectie-wrap">
+          <label>Reflectievraag domein ${dom.code}</label>
+          <textarea placeholder="${dom.reflectievraag}" rows="2"></textarea>
+        </div>`;
+    }
+    html += `</div>`;
+  });
+
+  html += `
+    <div class="werkpunt-card">
+      <h3>Reflectie &amp; werkpunt — ${rondeLabel}</h3>
+      <label>Reflectievraag:</label>
+      <textarea id="rf-main" placeholder="${data.reflectievraag}" rows="2"></textarea>
+      <label style="margin-top:.5rem">Prioritair werkpunt voor deze ${rondeLabel}:</label>
+      <textarea id="werkpunt" placeholder="Beschrijf het prioritair werkpunt..." rows="2"></textarea>
+      <label style="margin-top:.5rem">Concrete actie die volgt:</label>
+      <textarea id="actie" placeholder="Beschrijf de concrete actie die volgt..." rows="2"></textarea>
+    </div>`;
+
+  document.getElementById('main-content').innerHTML = html;
+  document.getElementById('result-panel').classList.remove('show');
+}
+
+/* ══════════════════════════════════════════════════
+   INTERACTIE
+══════════════════════════════════════════════════ */
+function setAntw(id,score){
+  antw[ronde][id]=score;
+  updateProg();
+}
+
+function toggleDesc(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const btn=el.previousElementSibling;
+  el.classList.toggle('open');
+  btn.textContent = el.classList.contains('open')?'▾ Verberg beschrijvingen':'▸ Toon beschrijvingen';
+}
+
+function updateProg(){
+  const all   = getAllCrit(hBS, ronde);
+  const total = all.length;
+  const done  = all.filter(c=>antw[ronde][c.id]).length;
+  const pct   = total ? Math.round(done/total*100) : 0;
+  document.getElementById('prog-label').textContent=`${done} van ${total} criteria ingevuld (${ronde==='klas'?'klaspraktijk':'opleidingspraktijk'})`;
+  document.getElementById('prog-pct').textContent=`${pct}%`;
+  document.getElementById('prog-fill').style.width=`${pct}%`;
+}
+
+/* ══════════════════════════════════════════════════
+   RESULTAATPANEEL — enkel huidige ronde
+══════════════════════════════════════════════════ */
+function showResult(){
+  const data = getData();
+  const ctx  = ronde;
+
+  document.getElementById('result-grid').innerHTML = BS.map(b=>{
+    const bd = data[b.id];
+    if(!bd) return '';
+    const crit = bd.domeinen.filter(d=>d.context===ctx).flatMap(d=>d.criteria);
+    if(!crit.length) return '';
+
+    const total    = crit.length;
+    const ingevuld = crit.filter(c=>antw[ctx][c.id]).length;
+    const tel = {4:0,3:0,2:0,1:0};
+    crit.forEach(c=>{ if(antw[ctx][c.id]) tel[antw[ctx][c.id]]++; });
+
+    let signal='leeg', signalLabel='Niet ingevuld';
+    if(ingevuld>0){
+      const hoog=(tel[4]+tel[3])/ingevuld;
+      const laag=tel[1]/ingevuld;
+      if(hoog>=0.6)      { signal='sterk';    signalLabel='Sterk'; }
+      else if(laag>=0.3) { signal='aandacht'; signalLabel='Aandachtspunt'; }
+      else               { signal='ontwikk';  signalLabel='In ontwikkeling'; }
+    }
+
+    const segmenten = crit.map(c=>{
+      const s=antw[ctx][c.id]||0;
+      return `<div class="ri-balk-seg seg-${s}" title="${c.label}: ${s?['','Start','Beginner','Gevorderd','Expert'][s]:'—'}"></div>`;
+    }).join('');
+
+    const DOTS=['','#E07272','#E8B84B','#8FB5AE','#4A8A70'];
+    const LBLS=['','Start','Beginner','Gevorderd','Expert'];
+    const tels=[4,3,2,1].map(n=>
+      tel[n]>0?`<div class="ri-tel"><div class="ri-tel-dot" style="background:${DOTS[n]}"></div>${tel[n]}× ${LBLS[n]}</div>`:''
+    ).join('');
+
+    return `
+      <div class="ri-card" style="border-color:${b.c}40;background:${b.bg}">
+        <div class="ri-top">
+          ${hexSVG(b.c,20)}
+          <span class="ri-naam" style="color:${b.dk}">${b.naam}</span>
+          <span class="ri-signal sig-${signal}">${signalLabel}</span>
+        </div>
+        <div class="ri-balk-wrap">${segmenten}</div>
+        <div class="ri-tels">${tels||'<span class="ri-progress">Nog geen scores</span>'}</div>
+        <div class="ri-progress">${ingevuld} van ${total} criteria ingevuld</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('result-panel').classList.add('show');
+  document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ══════════════════════════════════════════════════
+   DOWNLOAD INSTRUMENT
+══════════════════════════════════════════════════ */
+function downloadDoc(ctx){
+  const data       = getData();
+  const modusLabel = modus==='scan' ? 'Korte scan' : 'Uitgebreide scan';
+  const ctxLabel   = ctx==='klas' ? 'Klaspraktijk' : 'Opleidingspraktijk';
+  const ctxIcon    = ctx==='klas' ? '🏫' : '📋';
+
+  const redenVal   = (ctx==='klas' ? document.getElementById('ctx-reden').value : document.getElementById('ctx-reden2').value) || '';
+  const opl   = ctx==='klas'
+    ? document.getElementById('ctx-opleiding').value
+    : document.getElementById('ctx-opleiding2').value;
+  const extra = ctx==='klas'
+    ? '<span>Module/les: <strong>' + (document.getElementById('ctx-module').value||'—') + '</strong></span> &nbsp;·&nbsp; <span>Lesgever: <strong>' + (document.getElementById('ctx-lesgever').value||'—') + '</strong></span> &nbsp;·&nbsp; <span>Datum: <strong>' + (document.getElementById('ctx-datum').value||'—') + '</strong></span>'
+    : '<span>Schooljaar: <strong>' + (document.getElementById('ctx-schooljaar').value||'—') + '</strong></span> &nbsp;·&nbsp; <span>Coördinator: <strong>' + (document.getElementById('ctx-coord').value||'—') + '</strong></span> &nbsp;·&nbsp; <span>Datum: <strong>' + (document.getElementById('ctx-datum2').value||'—') + '</strong></span>';
+
+  let body = '';
+  BS.forEach(b=>{
+    const bd = data[b.id];
+    if(!bd) return;
+    const doms = bd.domeinen.filter(d=>d.context===ctx);
+    if(!doms.length) return;
+
+    body += '<div class="bs-block">'
+          + '<div class="bs-title" style="background:' + b.c + '22;border-left:4px solid ' + b.c + '">'
+          + '<strong style="color:' + b.dk + '">' + b.naam + '</strong></div>';
+
+    doms.forEach(dom=>{
+      body += '<div class="dom-block">'
+            + '<div class="dom-header">'
+            + '<span class="dom-code" style="background:' + b.c + ';color:#fff">' + dom.code + '</span>'
+            + '<div><div class="dom-titel">' + dom.titel + '</div>'
+            + '<div class="dom-sub">' + dom.sub + '</div></div></div>';
+
+      dom.criteria.forEach((cr,ci)=>{
+        const score      = antw[ctx][cr.id] || 0;
+        const scoreLabel = score ? ['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Expert'][score] : '—';
+
+        body += '<div class="cr-row ' + (ci%2===0?'cr-even':'') + '">'
+              + '<div class="cr-label">' + cr.label
+              + '<div class="cr-ind">' + cr.indicator + '</div></div>'
+              + '<div class="cr-schaal">'
+              + [4,3,2,1].map(n=>{
+                  const sel = score===n ? ' sel' : '';
+                  const chk = score===n ? '<div class="check">✓</div>' : '';
+                  return '<div class="schaal-cel' + sel + '">'
+                    + '<div class="schaal-dot dot-' + n + '"></div>'
+                    + '<span>' + ['','Start','Beginner','Gevorderd','Expert'][n] + '</span>'
+                    + chk + '</div>';
+                }).join('')
+              + '</div>'
+              + '<div class="cr-niv">' + scoreLabel + '</div></div>';
+
+        body += '<div class="cr-desc">'
+              + [4,3,2,1].map(n=>{
+                  const sel = score===n ? ' desc-sel' : '';
+                  return '<div class="desc-row' + sel + '">'
+                    + '<span class="desc-niv">' + ['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Expert'][n] + '</span>'
+                    + '<span class="desc-txt">' + cr.niveaus[4-n] + '</span></div>';
+                }).join('')
+              + '</div>';
+      });
+
+      if(dom.reflectievraag){
+        body += '<div class="reflectie-blok">'
+              + '<div class="reflectie-label">Reflectievraag domein ' + dom.code + '</div>'
+              + '<div class="reflectie-vr">' + dom.reflectievraag + '</div>'
+              + '<div class="reflectie-lijn"></div></div>';
+      }
+      body += '</div>';
+    });
+    body += '</div>';
+  });
+
+  const wp = document.getElementById('werkpunt')?.value||'';
+  const ac = document.getElementById('actie')?.value||'';
+  body += '<div class="werkpunt-blok"><strong>Werkpunt &amp; actie</strong>'
+        + '<div class="wp-row"><span class="wp-lbl">Prioritair werkpunt:</span><span class="wp-val">' + (wp||'—') + '</span></div>'
+        + '<div class="wp-row"><span class="wp-lbl">Concrete actie:</span><span class="wp-val">' + (ac||'—') + '</span></div></div>';
+
+  const css = `* { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:11px; color:#1a1a18; background:#fff; padding:2rem; max-width:900px; margin:0 auto; }
+  .doc-header { border-bottom:2px solid #1a1a18; padding-bottom:1rem; margin-bottom:1.5rem; }
+  .doc-header h1 { font-size:17px; font-weight:700; margin-bottom:.25rem; }
+  .doc-header .sub { font-size:11px; color:#5f5e5a; }
+  .ctx-info { display:flex; gap:1rem; flex-wrap:wrap; margin-top:.5rem; font-size:11px; align-items:center; }
+  .ctx-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:99px; font-size:11px; font-weight:600; }
+  .ctx-klas { background:#E8F4FF; color:#1A5F9A; border:1px solid #B8D8F5; }
+  .ctx-opl  { background:#EDF6EC; color:#2D6B27; border:1px solid #B5D9B2; }
+  .bs-block { margin-bottom:1.5rem; }
+  .bs-title { display:flex; align-items:center; gap:10px; padding:.5rem .75rem; border-radius:6px; margin-bottom:.5rem; font-size:13px; }
+  .dom-block { margin-bottom:.875rem; border:1px solid #E2DFD7; border-radius:6px; overflow:hidden; }
+  .dom-header { display:flex; align-items:center; gap:8px; padding:.4rem .75rem; background:#f8f7f4; border-bottom:1px solid #E2DFD7; }
+  .dom-code { width:20px; height:20px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; flex-shrink:0; }
+  .dom-titel { font-size:12px; font-weight:600; }
+  .dom-sub { font-size:10px; color:#888780; font-style:italic; }
+  .cr-row { display:grid; grid-template-columns:1fr auto 90px; gap:.5rem; align-items:start; padding:.45rem .75rem; border-bottom:1px solid #f1efe8; }
+  .cr-even { background:#fdfcfb; }
+  .cr-label { font-size:11px; font-weight:500; line-height:1.4; }
+  .cr-ind { font-size:9.5px; color:#888780; font-style:italic; margin-top:1px; }
+  .cr-schaal { display:flex; gap:3px; }
+  .schaal-cel { display:flex; flex-direction:column; align-items:center; gap:2px; padding:3px 5px; border-radius:4px; border:1px solid #E2DFD7; font-size:9px; color:#888780; min-width:48px; position:relative; }
+  .schaal-cel.sel { background:#1a1a1808; border-color:#1a1a18; color:#1a1a18; font-weight:600; }
+  .schaal-dot { width:7px; height:7px; border-radius:50%; }
+  .dot-4{background:#4A8A70;} .dot-3{background:#8FB5AE;} .dot-2{background:#E8B84B;} .dot-1{background:#E07272;}
+  .check { position:absolute; top:-5px; right:-5px; background:#1a1a18; color:#fff; border-radius:99px; font-size:8px; width:13px; height:13px; display:flex; align-items:center; justify-content:center; }
+  .cr-niv { font-size:10px; color:#5f5e5a; align-self:center; }
+  .cr-desc { padding:.3rem .75rem .45rem; background:#f8f7f4; border-bottom:1px solid #e2dfd7; }
+  .desc-row { display:grid; grid-template-columns:95px 1fr; gap:.3rem; padding:1.5px 0; font-size:9.5px; line-height:1.45; color:#aaa; }
+  .desc-row.desc-sel { color:#1a1a18; font-weight:500; }
+  .desc-niv { font-weight:600; white-space:nowrap; }
+  .reflectie-blok { padding:.45rem .75rem; background:#f4f3f0; }
+  .reflectie-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#888780; margin-bottom:2px; }
+  .reflectie-vr { font-size:10.5px; font-style:italic; color:#2c2c2a; margin-bottom:.35rem; }
+  .reflectie-lijn { border-bottom:1px dashed #c8c6be; padding-top:.4rem; }
+  .werkpunt-blok { margin-top:1.5rem; padding:.75rem 1rem; background:#f8f7f4; border:1px solid #E2DFD7; border-radius:6px; }
+  .werkpunt-blok strong { font-size:12px; display:block; margin-bottom:.4rem; }
+  .wp-row { display:flex; gap:.5rem; margin-top:.3rem; font-size:11px; }
+  .wp-lbl { font-weight:600; min-width:140px; color:#5f5e5a; }
+  .doc-footer { margin-top:1.5rem; padding-top:.6rem; border-top:1px solid #E2DFD7; font-size:9.5px; color:#b4b2a9; display:flex; justify-content:space-between; }
+  @media print { body{padding:1cm;} .bs-block,.dom-block{break-inside:avoid;} }`;
+
+  const doc = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8">'
+    + '<title>Kijkwijzer Evaluatie — ' + ctxLabel + ' — ' + (opl||'Crescendo CVO') + '</title>'
+    + '<style>' + css + '</style></head><body>'
+    + '<div class="doc-header">'
+    + '<h1>Kijkwijzer Kwaliteitsvolle Evaluatie</h1>'
+    + '<div class="sub">Crescendo CVO · Bouwsteenteam Kwaliteitsvol · 2026–2027</div>'
+    + '<div class="ctx-info">'
+    + '<span class="ctx-badge ' + (ctx==='klas'?'ctx-klas':'ctx-opl') + '">' + ctxIcon + ' ' + ctxLabel + '</span>'
+    + '&nbsp;·&nbsp; <strong>' + modusLabel + '</strong>' + (redenVal ? ' &nbsp;·&nbsp; Reden: <strong>' + redenVal + '</strong>' : '')
+    + '</div>'
+    + '<div class="ctx-info"><span>Opleiding: <strong>' + (opl||'—') + '</strong></span>' + extra + '</div>'
+    + '</div>'
+    + body
+    + '<div class="doc-footer">'
+    + '<span>Crescendo CVO · Kijkwijzer Kwaliteitsvolle Evaluatie · ' + ctxLabel + '</span>'
+    + '<span>Gegenereerd op ' + new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'}) + '</span>'
+    + '</div></body></html>';
+
+  const blob = new Blob([doc], {type:'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'kijkwijzer-evaluatie-' + ctx + '-' + (opl||'crescendo').toLowerCase().replace(/\s+/g,'-') + '-' + new Date().toISOString().split('T')[0] + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ══════════════════════════════════════════════════
+   OPSLAAN
+══════════════════════════════════════════════════ */
+function saveToSharePoint(){
+  const isKlas = ronde==='klas';
+  const payload={
+    ronde,
+    niveau: isKlas ? 'klaspraktijk' : 'opleidingspraktijk',
+    opleiding:  isKlas
+      ? document.getElementById('ctx-opleiding').value
+      : document.getElementById('ctx-opleiding2').value,
+    module:     isKlas ? document.getElementById('ctx-module').value : '',
+    lesgever:   isKlas ? document.getElementById('ctx-lesgever').value : '',
+    coordinator: isKlas ? '' : document.getElementById('ctx-coord').value,
+    schooljaar: isKlas ? '' : document.getElementById('ctx-schooljaar').value,
+    datum:      isKlas
+      ? document.getElementById('ctx-datum').value
+      : document.getElementById('ctx-datum2').value,
+    profiel:    isKlas
+      ? document.getElementById('ctx-profiel').value
+      : document.getElementById('ctx-profiel2').value,
+    reden: isKlas
+      ? document.getElementById('ctx-reden').value
+      : document.getElementById('ctx-reden2').value,
+    modus,
+    antwoorden: antw[ronde],
+    werkpunt:   document.getElementById('werkpunt')?.value||'',
+    actie:      document.getElementById('actie')?.value||'',
+    timestamp:  new Date().toISOString(),
+  };
+  console.log('SharePoint payload:', JSON.stringify(payload,null,2));
+  if(navigator.clipboard) navigator.clipboard.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  document.getElementById('save-status').textContent=
+    `${ronde==='klas'?'Klaspraktijk':'Opleidingspraktijk'} opgeslagen om ${new Date().toLocaleTimeString('nl-BE')} — klaar voor SharePoint`;
+  const btn=document.getElementById('save-btn');
+  btn.textContent='✓ Opgeslagen';
+  setTimeout(()=>{ btn.textContent='Opslaan'; },2000);
+}
+
+
+init();
+</script>
+</body>
+</html>
