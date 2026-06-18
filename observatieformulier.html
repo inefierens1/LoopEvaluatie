@@ -131,6 +131,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   .ctx-bar input, .ctx-bar select { border:none; background:transparent; padding:0; font-weight:600; }
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -160,7 +161,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
     <select id="ctx-type">
       <option value="">— kies —</option>
       <option>Aanvangsbegeleiding</option>
-      <option>Coaching</option>
       <option>Kwaliteitsloop</option>
       <option>Reflectiegesprek</option>
       <option>Evaluatie</option>
@@ -197,7 +197,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   <span class="save-status" id="save-status">Nog niet opgeslagen</span>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
     <button class="btn btn-secondary" onclick="kopieerLinkLesgever()" id="btn-link">🔗 Link voor lesgever</button>
-    <button class="btn btn-secondary" onclick="printDoc()">🖨️ Download als PDF</button>
+    <button class="btn btn-secondary" id="pdf-btn" onclick="downloadPDF()">🖨️ Download als PDF</button>
     <button class="btn btn-primary" id="save-btn" onclick="saveDoc()">Opslaan</button>
   </div>
 </div>
@@ -759,8 +759,8 @@ function renderContent(){
                 <label class="rubric-col col-${n}${score===n?' geselecteerd':''}" onclick="setScore('${cr.id}',${n},this)">
                   <input type="radio" name="${cr.id}" value="${n}" ${score===n?'checked':''}>
                   <div class="rubric-label">
-                    <div class="rubric-dot dot-${n}"></div>
-                    <span class="lbl-${n}">${['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Sterk'][n]}</span>
+                    ${hexSVG((["","#E07272","#E8B84B","#8FB5AE","#4A8A70"])[n],14)}
+                    <span class="lbl-${n}">${["","Start","Beginner","Gevorderd","Sterk"][n]}</span>
                   </div>
                   <div class="rubric-tekst">${cr.niveaus[4-n]}</div>
                 </label>`).join('')}
@@ -848,17 +848,16 @@ function printDoc(){
   window.print();
 }
 
-function downloadDoc_legacy(){
+function buildObsContent(){
   const data = DATA[huidigSem];
   const opl  = document.getElementById('ctx-opleiding').value;
-  const LVLS = ['','🔴 Start','🟡 Beginner','🟢 Gevorderd','🔵 Sterk'];
   const COLS = ['','#E07272','#E8B84B','#8FB5AE','#4A8A70'];
+  const LBLS = ['','Start','Beginner','Gevorderd','Sterk'];
 
   let body = '';
   data.bouwstenen.forEach(sectie=>{
     const b = BS.find(x=>x.id===sectie.bs);
     body += '<div class="bs-blok"><div class="bs-titel" style="background:'+b.bg+';border-left:4px solid '+b.c+'"><strong style="color:'+b.dk+'">'+b.naam+'</strong><span style="font-size:10px;color:'+b.dk+';margin-left:8px;">'+sectie.focus+'</span></div>';
-
     sectie.criteria.forEach((cr,ci)=>{
       const score = scores[cr.id]||0;
       body += '<div class="cr-rij'+(ci%2===1?' cr-alt':'')+'"><div class="cr-vraag">'+cr.vraag+'<div class="cr-focus">'+cr.focus+'</div></div>';
@@ -866,8 +865,8 @@ function downloadDoc_legacy(){
       [4,3,2,1].forEach(n=>{
         const sel = score===n;
         body += '<div class="rub-col'+(sel?' rub-sel':'') +'" style="'+(sel?'background:'+COLS[n]+'22;border-color:'+COLS[n]+';':'')+'">'
-          + '<div class="rub-lbl" style="color:'+COLS[n]+'">'+LVLS[n]+'</div>'
-          + '<div class="rub-tekst'+(sel?' rub-tekst-sel':'')+'">'+cr.niveaus[4-n]+(sel?'<span class="chk"> ✓</span>':'')+'</div>'
+          + '<div class="rub-lbl" style="color:'+COLS[n]+';display:flex;align-items:center;gap:4px;">'+hexSVG(COLS[n],12)+'<span>'+LBLS[n]+'</span></div>'
+          + '<div class="rub-tekst'+(sel?' rub-tekst-sel':'')+'">'+cr.niveaus[4-n]+(sel?'<span class="chk"> \u2713</span>':'')+'</div>'
           + '</div>';
       });
       body += '</div>';
@@ -882,44 +881,65 @@ function downloadDoc_legacy(){
   const groei      = document.getElementById('groei')?.value||'';
   const experiment = document.getElementById('experiment')?.value||'';
   const leerpad    = document.getElementById('leerpad')?.value||'';
-
   body += '<div class="samen-blok"><strong>Samenvatting &amp; reflectiegesprek</strong>'
-    +'<div class="samen-rij"><span class="samen-lbl">Sterktes:</span><span class="samen-val">'+(sterktes||'—')+'</span></div>'
-    +'<div class="samen-rij"><span class="samen-lbl">Groeikansen:</span><span class="samen-val">'+(groei||'—')+'</span></div>'
-    +'<div class="samen-rij"><span class="samen-lbl">Experiment / volgende stap:</span><span class="samen-val">'+(experiment||'—')+'</span></div>'
-    +'<div class="samen-rij"><span class="samen-lbl">Leerpad:</span><span class="samen-val">'+(leerpad||'—')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Sterktes:</span><span class="samen-val">'+(sterktes||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Groeikansen:</span><span class="samen-val">'+(groei||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Experiment / volgende stap:</span><span class="samen-val">'+(experiment||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Leerpad:</span><span class="samen-val">'+(leerpad||'\u2014')+'</span></div>'
     +'</div>';
-
   const nbFeedback = document.getElementById('nabespreking-feedback')?.value||'';
   const nbActie    = document.getElementById('nabespreking-actie')?.value||'';
-  body += '<div class="nabes-blok"><strong>💬 Nabespreking — feedback van de lesgever</strong>'
-    +'<div class="samen-rij"><span class="samen-lbl">Notities lesgever:</span><span class="samen-val">'+(nbFeedback||'—')+'</span></div>'
-    +'<div class="samen-rij"><span class="samen-lbl">Experiment lesgever:</span><span class="samen-val">'+(nbActie||'—')+'</span></div>'
+  body += '<div class="nabes-blok"><strong>Nabespreking \u2014 feedback van de lesgever</strong>'
+    +'<div class="samen-rij"><span class="samen-lbl">Notities lesgever:</span><span class="samen-val">'+(nbFeedback||'\u2014')+'</span></div>'
+    +'<div class="samen-rij"><span class="samen-lbl">Experiment lesgever:</span><span class="samen-val">'+(nbActie||'\u2014')+'</span></div>'
     +'</div>';
 
-  const ctx = '<div class="ctx-info"><span>Opleiding: <strong>'+(opl||'—')+'</strong></span>'
-    +'<span>Module: <strong>'+(document.getElementById('ctx-module').value||'—')+'</strong></span>'
-    +'<span>Lesgever: <strong>'+(document.getElementById('ctx-lesgever').value||'—')+'</strong></span>'
-    +'<span>Observator: <strong>'+(document.getElementById('ctx-observator').value||'—')+'</strong></span>'
-    +'<span>Datum: <strong>'+(document.getElementById('ctx-datum').value||'—')+'</strong></span>'
-    +'<span>Type: <strong>'+(document.getElementById('ctx-type').value||'—')+'</strong></span>'
-    +'<span>Cursistenprofiel: <strong>'+(document.getElementById('ctx-cursistenprofiel').value||'—')+'</strong></span></div>';
+  const ctx = '<div class="ctx-info"><span>Opleiding: <strong>'+(opl||'\u2014')+'</strong></span>'
+    +'<span>Module: <strong>'+(document.getElementById('ctx-module').value||'\u2014')+'</strong></span>'
+    +'<span>Lesgever: <strong>'+(document.getElementById('ctx-lesgever').value||'\u2014')+'</strong></span>'
+    +'<span>Observator: <strong>'+(document.getElementById('ctx-observator').value||'\u2014')+'</strong></span>'
+    +'<span>Datum: <strong>'+(document.getElementById('ctx-datum').value||'\u2014')+'</strong></span>'
+    +'<span>Reden: <strong>'+(document.getElementById('ctx-type').value||'\u2014')+'</strong></span>'
+    +'<span>Cursistenprofiel: <strong>'+(document.getElementById('ctx-cursistenprofiel').value||'\u2014')+'</strong></span></div>';
 
-  const css = `*{box-sizing:border-box;margin:0;padding:0;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;background:#fff;padding:2rem;max-width:960px;margin:0 auto;}.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}.doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}.doc-header .sub{font-size:11px;color:#5f5e5a;}.doc-header .sem{font-size:12px;font-weight:600;margin-top:.4rem;}.ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}.obs-principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}.bs-blok{margin-bottom:1.25rem;}.bs-titel{padding:.5rem .75rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}.cr-rij{border:1px solid #E2DFD7;border-radius:6px;overflow:hidden;margin-bottom:.5rem;}.cr-alt{}.cr-vraag{font-size:11.5px;font-weight:500;padding:.5rem .75rem .25rem;line-height:1.4;}.cr-focus{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .375rem;}.rubric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #E2DFD7;}.rub-col{padding:.4rem .5rem;border-right:1px solid #E2DFD7;font-size:9.5px;}.rub-col:last-child{border-right:none;}.rub-lbl{font-weight:700;font-size:9px;margin-bottom:2px;}.rub-tekst{color:#888780;line-height:1.45;}.rub-tekst-sel{color:#1a1a18;font-weight:500;}.chk{font-weight:700;}.op-blok{padding:.375rem .75rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}.op-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;}.op-tekst{font-size:11px;}.op-lijn{border-bottom:1px dashed #c8c6be;padding-top:.5rem;}.samen-blok{margin-top:1.5rem;padding:.75rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}.samen-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}.samen-rij{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}.samen-lbl{font-weight:600;min-width:180px;color:#5f5e5a;}.samen-val{white-space:pre-wrap;}.nabes-blok{margin-top:1rem;padding:.75rem 1rem;background:#EAF0DE;border:1.5px solid #8FA563;border-radius:6px;}.nabes-blok strong{font-size:12px;display:block;margin-bottom:.4rem;color:#3B6D11;}.doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}@media print{body{padding:1cm;}.bs-blok,.cr-rij{break-inside:avoid;}}`;
-
-  const doc = '<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Observatieformulier — '+(opl||'Crescendo CVO')+'</title><style>'+css+'</style></head><body>'
-    +'<div class="doc-header"><h1>Observatieformulier Lesobservatie</h1><div class="sub">Crescendo CVO · Aanvangsbegeleiding &amp; kwaliteitsloop · 2026–2030</div><div class="sem">'+data.titel+'</div>'+ctx+'</div>'
+  const inner = '<div class="doc-header"><h1>Observatieformulier Lesobservatie</h1><div class="sub">Crescendo CVO \u00b7 Aanvangsbegeleiding &amp; kwaliteitsloop \u00b7 2026\u20132030</div><div class="sem">'+data.titel+'</div>'+ctx+'</div>'
     +'<div class="obs-principe"><strong>Observatieprincipe:</strong> We observeren niet de lesgever als persoon, maar wat zichtbaar gebeurt in het leren van cursisten en welke keuzes dit ondersteunen of belemmeren.</div>'
     +body
-    +'<div class="doc-footer"><span>Crescendo CVO · Observatieformulier · '+data.titel+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
-    +'</body></html>';
+    +'<div class="doc-footer"><span>Crescendo CVO \u00b7 Observatieformulier \u00b7 '+data.titel+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>';
 
-  const blob = new Blob([doc],{type:'text/html;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = 'observatieformulier-'+huidigSem+'-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.html';
-  a.click(); URL.revokeObjectURL(url);
+  const fname = 'observatieformulier-'+huidigSem+'-'+(opl||'crescendo').toLowerCase().replace(/\s+/g,'-')+'-'+new Date().toISOString().split('T')[0]+'.pdf';
+  return { inner, fname };
+}
+
+const OBS_PDF_CSS = `#obs-pdf *{box-sizing:border-box;margin:0;padding:0;}#obs-pdf{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;background:#fff;padding:2rem;max-width:960px;margin:0 auto;}#obs-pdf .doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.5rem;}#obs-pdf .doc-header h1{font-size:17px;font-weight:700;margin-bottom:.2rem;}#obs-pdf .doc-header .sub{font-size:11px;color:#5f5e5a;}#obs-pdf .doc-header .sem{font-size:12px;font-weight:600;margin-top:.4rem;}#obs-pdf .ctx-info{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.5rem;font-size:11px;}#obs-pdf .obs-principe{background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:11px;color:#5f5e5a;font-style:italic;}#obs-pdf .bs-blok{margin-bottom:1.25rem;}#obs-pdf .bs-titel{padding:.5rem .75rem;border-radius:6px;margin-bottom:.375rem;font-size:13px;display:flex;align-items:center;gap:6px;}#obs-pdf .cr-rij{border:1px solid #E2DFD7;border-radius:6px;overflow:hidden;margin-bottom:.5rem;}#obs-pdf .cr-alt{}#obs-pdf .cr-vraag{font-size:11.5px;font-weight:500;padding:.5rem .75rem .25rem;line-height:1.4;}#obs-pdf .cr-focus{font-size:9.5px;color:#888780;font-style:italic;padding:0 .75rem .375rem;}#obs-pdf .rubric-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #E2DFD7;}#obs-pdf .rub-col{padding:.4rem .5rem;border-right:1px solid #E2DFD7;font-size:9.5px;}#obs-pdf .rub-col:last-child{border-right:none;}#obs-pdf .rub-lbl{font-weight:700;font-size:9px;margin-bottom:2px;}#obs-pdf .rub-tekst{color:#888780;line-height:1.45;}#obs-pdf .rub-tekst-sel{color:#1a1a18;font-weight:500;}#obs-pdf .chk{font-weight:700;}#obs-pdf .op-blok{padding:.375rem .75rem;background:#f8f7f4;border-top:1px solid #E2DFD7;}#obs-pdf .op-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888780;margin-bottom:2px;}#obs-pdf .op-tekst{font-size:11px;}#obs-pdf .op-lijn{border-bottom:1px dashed #c8c6be;padding-top:.5rem;}#obs-pdf .samen-blok{margin-top:1.5rem;padding:.75rem 1rem;background:#f8f7f4;border:1px solid #E2DFD7;border-radius:6px;}#obs-pdf .samen-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}#obs-pdf .samen-rij{display:flex;gap:.5rem;margin-top:.3rem;font-size:11px;}#obs-pdf .samen-lbl{font-weight:600;min-width:180px;color:#5f5e5a;}#obs-pdf .samen-val{white-space:pre-wrap;}#obs-pdf .nabes-blok{margin-top:1rem;padding:.75rem 1rem;background:#EAF0DE;border:1.5px solid #8FA563;border-radius:6px;}#obs-pdf .nabes-blok strong{font-size:12px;display:block;margin-bottom:.4rem;color:#3B6D11;}#obs-pdf .doc-footer{margin-top:1.5rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}`;
+
+function downloadPDF(){
+  if(typeof html2pdf==='undefined'){ alert('De PDF-module is nog aan het laden. Probeer over enkele seconden opnieuw.'); return; }
+  const { inner, fname } = buildObsContent();
+  let styleEl = document.getElementById('obs-pdf-style');
+  if(!styleEl){ styleEl=document.createElement('style'); styleEl.id='obs-pdf-style'; styleEl.textContent=OBS_PDF_CSS; document.head.appendChild(styleEl); }
+  const cont = document.createElement('div');
+  cont.id='obs-pdf';
+  cont.style.cssText='position:fixed;left:0;top:0;width:960px;z-index:-1;background:#fff;';
+  cont.innerHTML=inner;
+  document.body.appendChild(cont);
+
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(247,246,242,.95);display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:14px;color:#4d5554;';
+  overlay.textContent='PDF wordt aangemaakt\u2026';
+  document.body.appendChild(overlay);
+
+  const btn=document.getElementById('pdf-btn'); const old=btn?btn.textContent:'';
+  if(btn){ btn.textContent='PDF aanmaken\u2026'; btn.disabled=true; }
+  const done=()=>{ cont.remove(); overlay.remove(); if(btn){ btn.textContent=old; btn.disabled=false; } };
+  const opt={ margin:[10,10,12,10], filename:fname,
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2, useCORS:true, backgroundColor:'#ffffff', scrollX:0, scrollY:0, windowWidth:1000},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['css','legacy'], avoid:['.bs-blok','.cr-rij','.samen-blok','.nabes-blok']} };
+  setTimeout(()=>{
+    html2pdf().set(opt).from(cont).save().then(done).catch(()=>{ done(); alert('Er ging iets mis bij het maken van de PDF.'); });
+  }, 100);
 }
 
 /* ══════════════════════════════════════════════════
