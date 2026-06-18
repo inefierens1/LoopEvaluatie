@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jaaractieplan (JAP) — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root{ --bg:#F7F6F2; --surface:#fff; --border:#E2DFD7; --text:#2C2C2A; --muted:#6B6A65; --radius:8px; }
+body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+.app-header{ background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1{ font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.app-header p{ font-size:11px; color:var(--muted); margin-top:1px; }
+.jap-badge{ display:inline-flex; align-items:center; gap:6px; background:#1a1a18; color:#fff; border-radius:99px; padding:5px 14px; font-size:12px; font-weight:600; }
+.jap-badge span#badge-jaar{ color:#9FE1CB; }
+
+.main{ padding:1rem 1.5rem 6rem; max-width:1000px; margin:0 auto; }
+
+.card{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+.card h2{ font-size:14px; font-weight:600; margin-bottom:.75rem; display:flex; align-items:center; gap:8px; }
+
+.kader{ background:#EBF3F2; border:1px solid #cfe2de; border-radius:var(--radius); padding:.75rem 1rem; margin-bottom:1rem; font-size:11.5px; color:#3f5b56; line-height:1.5; }
+.kader strong{ color:#2f4b46; }
+
+.ctx-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.75rem; }
+.ctx-field{ display:flex; flex-direction:column; gap:3px; }
+.ctx-field label{ font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field .opt{ font-weight:400; text-transform:none; letter-spacing:0; color:#a8a7a1; }
+.ctx-field input, .ctx-field select{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); }
+.ctx-field.full{ grid-column:1/-1; }
+
+/* doelstelling-kaart */
+.doel{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.doel-top{ display:flex; align-items:center; justify-content:space-between; padding:.625rem 1rem; background:#1a1a18; color:#fff; }
+.doel-top .nr{ font-size:13px; font-weight:700; }
+.doel-del{ background:transparent; border:1px solid #555; color:#ccc; border-radius:5px; padding:3px 10px; font-size:11px; cursor:pointer; font-family:inherit; }
+.doel-del:hover{ background:#b84a4a; border-color:#b84a4a; color:#fff; }
+
+.fase{ border-top:1px solid var(--border); }
+.fase:first-child{ border-top:none; }
+.fase-label{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:.45rem 1rem; }
+.fase.plan  .fase-label{ background:#EBF3F2; color:#5A8880; }
+.fase.do    .fase-label{ background:#E6EFF7; color:#3D6A91; }
+.fase.check .fase-label{ background:#F5F3D8; color:#8A8330; }
+.fase.act   .fase-label{ background:#F3E8E3; color:#7A4A35; }
+.fase-body{ padding:.75rem 1rem; }
+
+.f-row{ display:flex; flex-direction:column; gap:3px; margin-bottom:.75rem; }
+.f-row:last-child{ margin-bottom:0; }
+.f-row label{ font-size:11px; font-weight:600; color:var(--text); }
+.f-row .hint{ font-size:10px; color:var(--muted); font-style:italic; font-weight:400; }
+.f-row textarea, .f-row input[type=text]{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); resize:vertical; }
+.f-row textarea{ min-height:48px; }
+
+.rok-row{ display:grid; grid-template-columns:1fr; gap:.4rem; }
+.rok-row select{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:11.5px; font-family:inherit; background:var(--bg); color:var(--text); }
+
+.bs-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.bs-chip{ display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:99px; border:1.5px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; background:#fff; transition:all .15s; user-select:none; }
+.bs-chip.gekozen{ border-color:var(--bs-c); background:var(--bs-bg); color:var(--bs-dk); }
+
+.maanden{ display:flex; flex-wrap:wrap; gap:4px; }
+.maand{ display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:6px; border:1.5px solid var(--border); font-size:11px; color:var(--muted); cursor:pointer; background:#fff; user-select:none; }
+.maand input{ display:none; }
+.maand.aan{ border-color:#3D6A91; background:#E6EFF7; color:#3D6A91; font-weight:600; }
+
+.addbtn{ width:100%; padding:.75rem; border:1.5px dashed var(--border); border-radius:var(--radius); background:#fff; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+.addbtn:hover{ border-color:#8FB5AE; color:#5A8880; background:#EBF3F2; }
+
+.actionbar{ position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border); padding:.75rem 1.5rem; display:flex; gap:8px; justify-content:flex-end; }
+.btn{ padding:8px 18px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; border:1px solid var(--border); background:#fff; color:var(--text); }
+.btn-primary{ background:#1a1a18; color:#fff; border-color:#1a1a18; }
+.btn-secondary{ background:#fff; }
+
+.toast{ position:fixed; bottom:5rem; left:50%; transform:translateX(-50%); background:#1a1a18; color:#fff; padding:10px 20px; border-radius:8px; font-size:12px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:50; }
+.toast.show{ opacity:1; }
+
+@media(max-width:720px){ .ctx-grid,.rok-row{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Jaaractieplan (JAP) — sjabloon</h1>
+    <p>Crescendo CVO · Referentiekader onderwijsbeleid (ROK) + 6 bouwstenen · PLAN — DO — CHECK — ACT</p>
+  </div>
+  <div class="jap-badge">JAP <span id="badge-jaar">—</span></div>
+</div>
+
+<div class="main">
+
+  <div class="kader">
+    <strong>Over dit sjabloon.</strong> Formuleer de doelstellingen van je cluster of opleiding SMART(I). Elke doelstelling koppel je aan één of meer <strong>ROK-kwaliteitsverwachtingen</strong> (max. 3) en aan onze <strong>6 bouwstenen</strong>. Per doelstelling doorloop je de cyclus PLAN → DO → CHECK → ACT.
+  </div>
+
+  <div class="card">
+    <h2>Context van dit jaaractieplan</h2>
+    <div class="ctx-grid">
+      <div class="ctx-field">
+        <label>Cursistenprofiel</label>
+        <select id="ctx-profiel">
+          <option value="">— kies profiel —</option>
+          <option>Persoonlijke ontwikkeling</option>
+          <option>Beroepsopleiding &amp; DSBO</option>
+          <option>NT2</option>
+          <option>Centrumbreed / meerdere profielen</option>
+        </select>
+      </div>
+      <div class="ctx-field">
+        <label>Cluster <span class="opt">(optioneel)</span></label>
+        <input type="text" id="ctx-cluster" placeholder="bv. Talen, Techniek, Zorg">
+      </div>
+      <div class="ctx-field">
+        <label>Opleiding <span class="opt">(optioneel)</span></label>
+        <input type="text" id="ctx-opleiding" placeholder="bv. Fietshersteller">
+      </div>
+      <div class="ctx-field">
+        <label>Schooljaar van opmaak (JAP)</label>
+        <input type="text" id="ctx-schooljaar" placeholder="bv. 2026–2027" oninput="updateBadge()">
+      </div>
+      <div class="ctx-field">
+        <label>Trekker(s) JAP</label>
+        <input type="text" id="ctx-trekker" placeholder="bv. OC + adjunct">
+      </div>
+      <div class="ctx-field">
+        <label>Datum opmaak</label>
+        <input type="date" id="ctx-datum">
+      </div>
+    </div>
+  </div>
+
+  <div id="doelen"></div>
+
+  <button class="addbtn" onclick="addDoel()">+ Doelstelling toevoegen</button>
+
+</div>
+
+<div class="actionbar">
+  <button class="btn btn-secondary" onclick="printDoc()">🖨️ Afdrukken / PDF</button>
+  <button class="btn btn-primary" onclick="saveDoc()">💾 Opslaan</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+function hexSVG(kleur,sz=14){
+  const c=sz/2,r=sz*.41,pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  const p=pts.join(' ');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><polygon points="${p}" fill="${kleur}" opacity=".25"/><polygon points="${p}" fill="${kleur}" transform="scale(.77) translate(${sz*.115},${sz*.115})"/></svg>`;
+}
+
+/* ── ROK: 4 rubrieken, 37 kwaliteitsverwachtingen (cluster/opleidingsniveau) ── */
+const ROK = {
+  'Rubriek 1 — Beleid':[
+    ['ABL1','De cluster/opleiding ontwikkelt en voert een gedragen, geïntegreerd en samenhangend beleid'],
+    ['ABL2','De cluster/opleiding geeft haar organisatie vorm op het vlak van cultuur en structuur'],
+    ['ABL3','De cluster/opleiding werkt participatief en responsief'],
+    ['ABL4','In de cluster/opleiding heerst een innovatieve en lerende organisatiecultuur'],
+    ['ABL5','De cluster/opleiding bouwt samenwerkingsverbanden uit die het leren en onderwijzen ten goede komen'],
+    ['ABL6','De cluster/opleiding communiceert transparant over haar werking met alle betrokkenen'],
+    ['OBL7','De cluster/opleiding voert een doeltreffend beleid op het vlak van leren en onderwijzen'],
+    ['PBL8','De cluster/opleiding voert een doeltreffend, integraal en samenhangend personeelsbeleid'],
+    ['PBL9','De cluster/opleiding voert een doeltreffend professionaliseringsbeleid (m.a.v. beginnende lesgevers)'],
+    ['FBL10','De cluster/opleiding voert een doeltreffend financieel en materieel beleid'],
+    ['FBL11','De cluster/opleiding beheerst de kosten voor alle lerenden'],
+    ['VBL12','De cluster/opleiding voert een beleid gericht op fysieke en mentale veiligheid'],
+  ],
+  'Rubriek 2 — Ontwikkeling en stimuleren':[
+    ['D1','Het team realiseert doelgericht een brede en harmonische vorming die betekenisvol is'],
+    ['D2','Het team hanteert doelen die sporen met het gevalideerd doelenkader en zorgt voor samenhang'],
+    ['D3','Het team hanteert uitdagende en haalbare doelen'],
+    ['D4','Het team expliciteert de doelen en de beoordelingscriteria'],
+    ['L1','Het team en de lerenden creëren samen een positief en stimulerend klasklimaat'],
+    ['L2','Het team en de lerenden gaan positief om met diversiteit'],
+    ['L3','De leer- en leefomgeving en de onderwijsorganisatie ondersteunen het bereiken van de doelen'],
+    ['L4','Het team biedt een passend, actief en samenhangend onderwijsaanbod aan'],
+    ['B1','Het team geeft de begeleiding vorm vanuit een gedragen visie en volgt de effecten op'],
+    ['B2','Het team begeleidt op leren, leerloopbaan, sociaal-emotionele ontplooiing én fysiek welzijn'],
+    ['B3','Het team biedt elke lerende passende begeleiding met het oog op gelijke onderwijskansen'],
+    ['B4','Het team geeft begeleiding vorm samen met de lerende, de omgeving en relevante partners'],
+    ['E1','Het team geeft adequate feedback met het oog op voortgang in het leerproces'],
+    ['E2','Het team evalueert breed en onderbouwd het onderwijsleerproces en het behalen van de doelen'],
+    ['E3','Het team stuurt het onderwijsleerproces bij op basis van feedback- en evaluatiegegevens'],
+    ['E4','Het team beslist en rapporteert onderbouwd over het behalen van de doelen bij de lerende'],
+  ],
+  'Rubriek 3 — Kwaliteitsontwikkeling':[
+    ['K1','De cluster/opleiding ontwikkelt kwaliteit vanuit een gedragen visie, vertaald in de praktijk'],
+    ['K2','De cluster/opleiding evalueert cyclisch, systematisch en betrouwbaar vanuit resultaten en effecten'],
+    ['K3','De cluster/opleiding borgt en ontwikkelt de kwaliteit van de onderwijsleerpraktijk'],
+  ],
+  'Rubriek 4 — Resultaten en effecten':[
+    ['R1','De cluster/opleiding bereikt de minimaal gewenste output bij een zo groot mogelijke groep'],
+    ['R2','De cluster/opleiding streeft naar welbevinden, betrokkenheid en tevredenheid'],
+    ['R3','De cluster/opleiding streeft bij elke lerende naar zoveel mogelijk leerwinst'],
+    ['R4','De cluster/opleiding stimuleert de studievoortgang van elke lerende'],
+    ['R5','De cluster/opleiding waarborgt de toegang tot onderwijs voor elke lerende'],
+    ['R6','De cluster/opleiding streeft naar effecten op langere termijn bij alle lerenden'],
+  ],
+};
+function rokTekst(code){
+  for(const r in ROK){ for(const [c,t] of ROK[r]){ if(c===code) return t; } }
+  return '';
+}
+function rokOptions(){
+  let o='<option value="">— ROK-verwachting —</option>';
+  for(const r in ROK){
+    o+=`<optgroup label="${r}">`;
+    for(const [c,t] of ROK[r]) o+=`<option value="${c}">${c} — ${t}</option>`;
+    o+='</optgroup>';
+  }
+  return o;
+}
+
+const MAANDEN=[['sep','Sep'],['okt','Okt'],['nov','Nov'],['dec','Dec'],['jan','Jan'],['feb','Feb'],['mrt','Mrt'],['apr','Apr'],['mei','Mei'],['jun','Jun']];
+
+let teller=0;
+function addDoel(){
+  teller++;
+  const n=teller;
+  const div=document.createElement('div');
+  div.className='doel'; div.dataset.id=n;
+  const opts=rokOptions();
+  const bschips=BS.map(b=>`<span class="bs-chip" data-bs="${b.naam}" style="--bs-c:${b.c};--bs-bg:${b.bg};--bs-dk:${b.dk};" onclick="this.classList.toggle('gekozen')">${hexSVG(b.c,14)}${b.naam}</span>`).join('');
+  const maanden=MAANDEN.map(([id,lbl])=>`<label class="maand" data-m="${lbl}"><input type="checkbox" class="maand-chk" onchange="this.closest('.maand').classList.toggle('aan',this.checked)">${lbl}</label>`).join('');
+  div.innerHTML=`
+    <div class="doel-top"><span class="nr">Doelstelling ${n}</span><button class="doel-del" onclick="this.closest('.doel').remove();renumber();">✕ verwijderen</button></div>
+
+    <div class="fase plan"><div class="fase-label">Plan</div><div class="fase-body">
+      <div class="f-row"><label>Teamdoelstelling <span class="hint">— SMART(I); doel + winst voor de belanghebbende</span></label><textarea class="f-doel" placeholder="Wat wil het team bereiken, en welke winst ervaart de cursist / belanghebbende?"></textarea></div>
+      <div class="f-row"><label>Acties <span class="hint">— SMART(I)</span></label><textarea class="f-acties" placeholder="Welke acties zet de cluster/opleiding op om dit doel te bereiken?"></textarea></div>
+      <div class="f-row"><label>ROK-verwachtingen <span class="hint">— koppel max. 3</span></label>
+        <div class="rok-row"><select class="rok-sel">${opts}</select><select class="rok-sel">${opts}</select><select class="rok-sel">${opts}</select></div>
+      </div>
+      <div class="f-row"><label>Bouwstenen <span class="hint">— klik om te koppelen, meerdere mogelijk</span></label><div class="bs-chips">${bschips}</div></div>
+    </div></div>
+
+    <div class="fase do"><div class="fase-label">Do</div><div class="fase-body">
+      <div class="f-row"><label>Subacties</label><textarea class="f-subacties" placeholder="Concrete deelstappen (indien nodig in het JAP)"></textarea></div>
+      <div class="f-row"><label>Timing — schooljaar/jaren</label><input type="text" class="f-schooljaar" placeholder="bv. 2026–2027, semester 1"></div>
+      <div class="f-row"><label>Specifieke timing — maanden</label><div class="maanden">${maanden}</div></div>
+    </div></div>
+
+    <div class="fase check"><div class="fase-label">Check</div><div class="fase-body">
+      <div class="f-row"><label>Trekker + back-up</label><input type="text" class="f-trekker" placeholder="wie trekt, wie vervangt"></div>
+      <div class="f-row"><label>Professionaliseringsnoden</label><textarea class="f-prof" placeholder="Welke ondersteuning of vorming is nodig?"></textarea></div>
+      <div class="f-row"><label>Indicator (&amp; streefwaarde)</label><textarea class="f-indicator" placeholder="Hoe weten we of dit geslaagd is? Indicator + streefwaarde."></textarea></div>
+    </div></div>
+
+    <div class="fase act"><div class="fase-label">Act</div><div class="fase-body">
+      <div class="f-row"><label>Borgen of bijsturen</label><textarea class="f-borgen" placeholder="Wat goed is vasthouden, wat tegenvalt bijsturen."></textarea></div>
+    </div></div>
+  `;
+  document.getElementById('doelen').appendChild(div);
+}
+function renumber(){
+  document.querySelectorAll('#doelen .doel').forEach((d,i)=>{ d.querySelector('.nr').textContent='Doelstelling '+(i+1); });
+}
+function updateBadge(){
+  const v=document.getElementById('ctx-schooljaar').value.trim();
+  document.getElementById('badge-jaar').textContent=v||'—';
+}
+
+function leesDoelen(){
+  const out=[];
+  document.querySelectorAll('#doelen .doel').forEach(d=>{
+    const rok=[...d.querySelectorAll('.rok-sel')].map(s=>s.value).filter(Boolean);
+    const bs=[...d.querySelectorAll('.bs-chip.gekozen')].map(c=>c.dataset.bs);
+    const mnd=[...d.querySelectorAll('.maand-chk')].filter(c=>c.checked).map(c=>c.closest('.maand').dataset.m);
+    out.push({
+      doel:d.querySelector('.f-doel').value, acties:d.querySelector('.f-acties').value,
+      rok, bouwstenen:bs,
+      subacties:d.querySelector('.f-subacties').value, schooljaar:d.querySelector('.f-schooljaar').value, maanden:mnd,
+      trekker:d.querySelector('.f-trekker').value, professionalisering:d.querySelector('.f-prof').value,
+      indicator:d.querySelector('.f-indicator').value, borgen:d.querySelector('.f-borgen').value
+    });
+  });
+  return out;
+}
+function ctxData(){
+  return {
+    profiel:document.getElementById('ctx-profiel').value,
+    cluster:document.getElementById('ctx-cluster').value,
+    opleiding:document.getElementById('ctx-opleiding').value,
+    schooljaar:document.getElementById('ctx-schooljaar').value,
+    trekker:document.getElementById('ctx-trekker').value,
+    datum:document.getElementById('ctx-datum').value
+  };
+}
+function toast(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2200); }
+
+/* ── OPSLAAN — JSON-payload (klaar voor SharePoint via Power Automate) ── */
+function saveDoc(){
+  const payload={ instrument:'jaaractieplan', context:ctxData(), doelstellingen:leesDoelen(), opgeslagen:new Date().toISOString() };
+  console.log('JAP payload', payload);
+  navigator.clipboard?.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  toast('Opgeslagen — JSON gekopieerd naar klembord');
+}
+
+/* ── AFDRUKKEN / PDF — net document in nieuw venster → printvenster ── */
+function printDoc(){
+  const c=ctxData();
+  const doelen=leesDoelen();
+  const E='—';
+  const ctx='<div class="ctx-info">'
+    +'<span>Cursistenprofiel: <strong>'+(c.profiel||E)+'</strong></span>'
+    +'<span>Cluster: <strong>'+(c.cluster||E)+'</strong></span>'
+    +'<span>Opleiding: <strong>'+(c.opleiding||E)+'</strong></span>'
+    +'<span>Schooljaar (opmaak): <strong>'+(c.schooljaar||E)+'</strong></span>'
+    +'<span>Trekker(s): <strong>'+(c.trekker||E)+'</strong></span>'
+    +'<span>Datum opmaak: <strong>'+(c.datum||E)+'</strong></span></div>';
+
+  let body='';
+  if(!doelen.length){ body='<p style="color:#888780;font-style:italic;">Nog geen doelstellingen ingevuld.</p>'; }
+  doelen.forEach((d,i)=>{
+    const rok=d.rok.length?d.rok.map(code=>'<div class="rok-li"><strong>'+code+'</strong> — '+rokTekst(code)+'</div>').join(''):'<span class="leeg">'+E+'</span>';
+    const bs=d.bouwstenen.length?d.bouwstenen.map(n=>'<span class="bs-tag">'+n+'</span>').join(' '):'<span class="leeg">'+E+'</span>';
+    const mnd=d.maanden.length?d.maanden.join(' · '):E;
+    body+='<div class="doel-blok">'
+      +'<div class="doel-h">Doelstelling '+(i+1)+'</div>'
+      +'<div class="fase-blok"><div class="fl plan">PLAN</div><div class="fb">'
+        +'<div class="r"><span class="l">Teamdoelstelling</span><span class="v">'+(d.doel||E)+'</span></div>'
+        +'<div class="r"><span class="l">Acties</span><span class="v">'+(d.acties||E)+'</span></div>'
+        +'<div class="r"><span class="l">ROK-verwachtingen</span><span class="v">'+rok+'</span></div>'
+        +'<div class="r"><span class="l">Bouwstenen</span><span class="v">'+bs+'</span></div>'
+      +'</div></div>'
+      +'<div class="fase-blok"><div class="fl do">DO</div><div class="fb">'
+        +'<div class="r"><span class="l">Subacties</span><span class="v">'+(d.subacties||E)+'</span></div>'
+        +'<div class="r"><span class="l">Timing schooljaar</span><span class="v">'+(d.schooljaar||E)+'</span></div>'
+        +'<div class="r"><span class="l">Maanden</span><span class="v">'+mnd+'</span></div>'
+      +'</div></div>'
+      +'<div class="fase-blok"><div class="fl check">CHECK</div><div class="fb">'
+        +'<div class="r"><span class="l">Trekker + back-up</span><span class="v">'+(d.trekker||E)+'</span></div>'
+        +'<div class="r"><span class="l">Professionalisering</span><span class="v">'+(d.professionalisering||E)+'</span></div>'
+        +'<div class="r"><span class="l">Indicator + streefwaarde</span><span class="v">'+(d.indicator||E)+'</span></div>'
+      +'</div></div>'
+      +'<div class="fase-blok"><div class="fl act">ACT</div><div class="fb">'
+        +'<div class="r"><span class="l">Borgen of bijsturen</span><span class="v">'+(d.borgen||E)+'</span></div>'
+      +'</div></div>'
+    +'</div>';
+  });
+
+  const css='*{box-sizing:border-box;margin:0;padding:0;}'
+    +"body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;padding:2rem;max-width:960px;margin:0 auto;}"
+    +'.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.25rem;}'
+    +'.doc-header h1{font-size:18px;font-weight:700;}'
+    +'.doc-header .sub{font-size:11px;color:#5f5e5a;margin-top:2px;}'
+    +'.jap-jaar{display:inline-block;margin-top:.5rem;background:#1a1a18;color:#fff;border-radius:99px;padding:3px 12px;font-size:12px;font-weight:700;}'
+    +'.ctx-info{display:flex;gap:.75rem 1.25rem;flex-wrap:wrap;margin-top:.6rem;font-size:11px;}'
+    +'.kader{background:#EBF3F2;border:1px solid #cfe2de;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:10.5px;color:#3f5b56;}'
+    +'.doel-blok{border:1px solid #d3d1c7;border-radius:8px;margin-bottom:1rem;overflow:hidden;break-inside:avoid;}'
+    +'.doel-h{background:#1a1a18;color:#fff;font-size:12.5px;font-weight:700;padding:.45rem .875rem;}'
+    +'.fase-blok{display:flex;border-top:1px solid #e6e4dd;}'
+    +'.fl{flex:0 0 58px;font-size:9px;font-weight:700;letter-spacing:.06em;padding:.5rem .5rem;}'
+    +'.fl.plan{background:#EBF3F2;color:#5A8880;}.fl.do{background:#E6EFF7;color:#3D6A91;}.fl.check{background:#F5F3D8;color:#8A8330;}.fl.act{background:#F3E8E3;color:#7A4A35;}'
+    +'.fb{flex:1;padding:.4rem .75rem;}'
+    +'.r{display:flex;gap:.5rem;padding:.18rem 0;border-bottom:1px dotted #ece9e1;}'
+    +'.r:last-child{border-bottom:none;}'
+    +'.l{flex:0 0 140px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#888780;}'
+    +'.v{flex:1;font-size:11px;white-space:pre-wrap;}'
+    +'.rok-li{font-size:10.5px;margin-bottom:1px;}'
+    +'.bs-tag{display:inline-block;background:#f1efe8;border:1px solid #d3d1c7;border-radius:4px;padding:1px 7px;font-size:10px;}'
+    +'.leeg{color:#b4b2a9;}'
+    +'.doc-footer{margin-top:1.25rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}'
+    +'@media print{body{padding:1cm;}.doel-blok{break-inside:avoid;}}';
+
+  const titel='Jaaractieplan'+(c.opleiding?' — '+c.opleiding:(c.cluster?' — '+c.cluster:''));
+  const doc='<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>'+titel+'</title><style>'+css+'</style></head><body>'
+    +'<div class="doc-header"><h1>Jaaractieplan (JAP)</h1><div class="sub">Crescendo CVO · Referentiekader onderwijsbeleid (ROK) + 6 bouwstenen</div>'
+    +'<div class="jap-jaar">JAP '+(c.schooljaar||E)+'</div>'+ctx+'</div>'
+    +'<div class="kader"><strong>Leeswijzer:</strong> elke doelstelling is SMART(I) en gekoppeld aan ROK-kwaliteitsverwachtingen en bouwstenen, doorheen de cyclus PLAN — DO — CHECK — ACT.</div>'
+    +body
+    +'<div class="doc-footer"><span>Crescendo CVO · Jaaractieplan · '+(c.schooljaar||'')+'</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
+    +'</body></html>';
+
+  const w=window.open('','_blank');
+  if(!w){ alert('Sta pop-ups toe om het document te kunnen afdrukken / opslaan als PDF.'); return; }
+  w.document.write(doc);
+  w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
+}
+
+/* init */
+document.getElementById('ctx-datum').value=new Date().toISOString().split('T')[0];
+addDoel();
+</script>
+</body>
+</html>
