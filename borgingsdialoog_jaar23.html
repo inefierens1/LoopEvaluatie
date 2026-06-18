@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Borgingsdialoog — jaar 2 &amp; 3 — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root{ --bg:#F7F6F2; --surface:#fff; --border:#E2DFD7; --text:#2C2C2A; --muted:#6B6A65; --radius:8px; }
+body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.app-header{ background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1{ font-size:15px; font-weight:600; }
+.app-header p{ font-size:11px; color:var(--muted); margin-top:1px; }
+.badge{ display:inline-flex; align-items:center; gap:6px; background:#185FA5; color:#fff; border-radius:99px; padding:5px 14px; font-size:12px; font-weight:600; }
+.main{ padding:1rem 1.5rem 6rem; max-width:900px; margin:0 auto; }
+.card{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+.card h2{ font-size:14px; font-weight:600; margin-bottom:.75rem; }
+.principe{ background:#E6EFF7; border:1px solid #cfe0f0; border-radius:var(--radius); padding:.75rem 1rem; margin-bottom:1rem; font-size:11.5px; color:#34506b; line-height:1.5; }
+.principe strong{ color:#243a4f; }
+.ctx-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.75rem; }
+.ctx-field{ display:flex; flex-direction:column; gap:3px; }
+.ctx-field label{ font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field .opt{ font-weight:400; text-transform:none; letter-spacing:0; color:#a8a7a1; }
+.ctx-field input, .ctx-field select{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); }
+.bs-blok{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.bs-head{ display:flex; align-items:center; gap:10px; padding:.625rem 1rem; }
+.bs-head h3{ font-size:13px; font-weight:600; }
+.bs-body{ display:grid; grid-template-columns:1fr 1fr; gap:.75rem; padding:.75rem 1rem 1rem; border-top:1px solid var(--border); }
+.veld{ display:flex; flex-direction:column; gap:4px; }
+.veld label{ font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px; }
+.veld .tag{ font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:2px 7px; border-radius:99px; }
+.tag-borg{ background:#EAF0DE; color:#5A7238; }
+.tag-bij{ background:#F3E8E3; color:#7A4A35; }
+.veld textarea{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); resize:vertical; min-height:62px; }
+.concl .veld{ margin-bottom:.75rem; }
+.concl .veld:last-child{ margin-bottom:0; }
+.actionbar{ position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border); padding:.75rem 1.5rem; display:flex; gap:8px; justify-content:flex-end; }
+.btn{ padding:8px 18px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; border:1px solid var(--border); background:#fff; color:var(--text); }
+.btn-primary{ background:#1a1a18; color:#fff; border-color:#1a1a18; }
+.toast{ position:fixed; bottom:5rem; left:50%; transform:translateX(-50%); background:#1a1a18; color:#fff; padding:10px 20px; border-radius:8px; font-size:12px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:50; }
+.toast.show{ opacity:1; }
+@media(max-width:680px){ .ctx-grid,.bs-body{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Borgingsdialoog — jaar 2 &amp; 3</h1>
+    <p>Crescendo CVO · Lichte monitoring tussen diepgaande loopjaren · 6 bouwstenen</p>
+  </div>
+  <div class="badge">Lichte monitoring</div>
+</div>
+
+<div class="main">
+
+  <div class="principe">
+    <strong>Borgen of bijsturen.</strong> Deze korte dialoog houdt de kwaliteit warm tussen twee diepgaande loopjaren. Per bouwsteen bekijk je samen: <strong>wat houden we vast</strong> (borgen) omdat het werkt, en <strong>wat sturen we bij</strong> omdat het beter kan? Conclusies voeden het volgende jaaractieplan.
+  </div>
+
+  <div class="card">
+    <h2>Context</h2>
+    <div class="ctx-grid">
+      <div class="ctx-field"><label>Cursistenprofiel</label>
+        <select id="ctx-profiel">
+          <option value="">— kies profiel —</option>
+          <option>Persoonlijke ontwikkeling</option>
+          <option>Beroepsopleiding &amp; DSBO</option>
+          <option>NT2</option>
+          <option>Centrumbreed / meerdere profielen</option>
+        </select></div>
+      <div class="ctx-field"><label>Cluster / opleiding <span class="opt">(optioneel)</span></label><input type="text" id="ctx-opleiding" placeholder="bv. Fietshersteller"></div>
+      <div class="ctx-field"><label>Schooljaar</label><input type="text" id="ctx-schooljaar" placeholder="bv. 2027–2028"></div>
+      <div class="ctx-field"><label>Begeleider dialoog</label><input type="text" id="ctx-begeleider" placeholder="naam / team kwaliteit"></div>
+      <div class="ctx-field"><label>Aanwezigen</label><input type="text" id="ctx-aanwezigen" placeholder="bv. OC + 3 lesgevers"></div>
+      <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum"></div>
+    </div>
+  </div>
+
+  <div id="bouwstenen"></div>
+
+  <div class="card concl">
+    <h2>Conclusie — naar het jaaractieplan</h2>
+    <div class="veld"><label>Wat borgen we centraal dit jaar?</label><textarea id="c-borg" placeholder="De sterke praktijken die we expliciet vasthouden."></textarea></div>
+    <div class="veld"><label>Prioritair bijsturingspunt</label><textarea id="c-bij" placeholder="Het belangrijkste werkpunt voor de komende periode."></textarea></div>
+    <div class="veld"><label>Concrete actie in het JAP</label><textarea id="c-actie" placeholder="Welke actie nemen we op in het jaaractieplan?"></textarea></div>
+  </div>
+
+</div>
+
+<div class="actionbar">
+  <button class="btn" onclick="printDoc()">🖨️ Afdrukken / PDF</button>
+  <button class="btn btn-primary" onclick="saveDoc()">💾 Opslaan</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+function hexSVG(kleur,sz=22){
+  const c=sz/2,r=sz*.41,pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  const p=pts.join(' ');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><polygon points="${p}" fill="${kleur}" opacity=".25"/><polygon points="${p}" fill="${kleur}" transform="scale(.77) translate(${sz*.115},${sz*.115})"/></svg>`;
+}
+function render(){
+  document.getElementById('bouwstenen').innerHTML = BS.map(b=>`
+    <div class="bs-blok" data-id="${b.id}">
+      <div class="bs-head" style="background:${b.bg};">${hexSVG(b.c,26)}<h3 style="color:${b.dk}">${b.naam}</h3></div>
+      <div class="bs-body">
+        <div class="veld"><label><span class="tag tag-borg">Borgen</span> Wat houden we vast?</label><textarea class="f-borg" placeholder="Wat werkt en moet behouden blijven?"></textarea></div>
+        <div class="veld"><label><span class="tag tag-bij">Bijsturen</span> Wat sturen we bij?</label><textarea class="f-bij" placeholder="Wat kan of moet beter?"></textarea></div>
+      </div>
+    </div>`).join('');
+}
+function leesBS(){
+  return BS.map(b=>{
+    const el=document.querySelector(`.bs-blok[data-id="${b.id}"]`);
+    return { id:b.id, naam:b.naam, borgen:el.querySelector('.f-borg').value, bijsturen:el.querySelector('.f-bij').value };
+  });
+}
+function ctxData(){
+  return {
+    profiel:document.getElementById('ctx-profiel').value,
+    opleiding:document.getElementById('ctx-opleiding').value,
+    schooljaar:document.getElementById('ctx-schooljaar').value,
+    begeleider:document.getElementById('ctx-begeleider').value,
+    aanwezigen:document.getElementById('ctx-aanwezigen').value,
+    datum:document.getElementById('ctx-datum').value
+  };
+}
+function conclData(){
+  return {
+    borg:document.getElementById('c-borg').value,
+    bij:document.getElementById('c-bij').value,
+    actie:document.getElementById('c-actie').value
+  };
+}
+function toast(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2200); }
+
+function saveDoc(){
+  const payload={ instrument:'borgingsdialoog-jaar23', context:ctxData(), bouwstenen:leesBS(), conclusie:conclData(), opgeslagen:new Date().toISOString() };
+  console.log('payload', payload);
+  navigator.clipboard?.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  toast('Opgeslagen — JSON gekopieerd naar klembord');
+}
+
+function printDoc(){
+  const c=ctxData(), bs=leesBS(), cc=conclData(), E='—';
+  const ctx='<div class="ctx-info">'
+    +'<span>Cursistenprofiel: <strong>'+(c.profiel||E)+'</strong></span>'
+    +'<span>Cluster/opleiding: <strong>'+(c.opleiding||E)+'</strong></span>'
+    +'<span>Schooljaar: <strong>'+(c.schooljaar||E)+'</strong></span>'
+    +'<span>Begeleider: <strong>'+(c.begeleider||E)+'</strong></span>'
+    +'<span>Aanwezigen: <strong>'+(c.aanwezigen||E)+'</strong></span>'
+    +'<span>Datum: <strong>'+(c.datum||E)+'</strong></span></div>';
+  let body='';
+  bs.forEach(b=>{
+    const obj=BS.find(x=>x.id===b.id);
+    body+='<div class="bs-blok"><div class="bs-titel" style="background:'+obj.bg+';border-left:4px solid '+obj.c+';"><strong style="color:'+obj.dk+'">'+b.naam+'</strong></div>'
+      +'<div class="row"><span class="lbl borg">Borgen</span><span class="val">'+(b.borgen||E)+'</span></div>'
+      +'<div class="row"><span class="lbl bij">Bijsturen</span><span class="val">'+(b.bijsturen||E)+'</span></div></div>';
+  });
+  const concl='<div class="concl-blok"><strong>Conclusie — naar het jaaractieplan</strong>'
+    +'<div class="row"><span class="lbl">Centraal borgen</span><span class="val">'+(cc.borg||E)+'</span></div>'
+    +'<div class="row"><span class="lbl">Prioritair bijsturen</span><span class="val">'+(cc.bij||E)+'</span></div>'
+    +'<div class="row"><span class="lbl">Actie in JAP</span><span class="val">'+(cc.actie||E)+'</span></div></div>';
+  const css='*{box-sizing:border-box;margin:0;padding:0;}'
+    +"body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;padding:2rem;max-width:900px;margin:0 auto;}"
+    +'.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.25rem;}'
+    +'.doc-header h1{font-size:17px;font-weight:700;}.sub{font-size:11px;color:#5f5e5a;margin-top:2px;}'
+    +'.ctx-info{display:flex;gap:.75rem 1.25rem;flex-wrap:wrap;margin-top:.6rem;font-size:11px;}'
+    +'.principe{background:#E6EFF7;border:1px solid #cfe0f0;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:10.5px;color:#34506b;}'
+    +'.bs-blok{border:1px solid #d3d1c7;border-radius:7px;margin-bottom:.75rem;overflow:hidden;break-inside:avoid;}'
+    +'.bs-titel{padding:.4rem .75rem;font-size:12.5px;}'
+    +'.row{display:flex;gap:.6rem;padding:.3rem .75rem;border-top:1px solid #ece9e1;}'
+    +'.lbl{flex:0 0 110px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#888780;}'
+    +'.lbl.borg{color:#5A7238;}.lbl.bij{color:#7A4A35;}'
+    +'.val{flex:1;font-size:11px;white-space:pre-wrap;}'
+    +'.concl-blok{margin-top:1rem;padding:.75rem 1rem;background:#1a1a18;color:#fff;border-radius:7px;break-inside:avoid;}'
+    +'.concl-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}'
+    +'.concl-blok .lbl{color:#b4b2a9;}.concl-blok .row{border-top-color:#333;}'
+    +'.doc-footer{margin-top:1.25rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}'
+    +'@media print{body{padding:1cm;}.bs-blok,.concl-blok{break-inside:avoid;}}';
+  const doc='<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Borgingsdialoog jaar 2-3'+(c.opleiding?' — '+c.opleiding:'')+'</title><style>'+css+'</style></head><body>'
+    +'<div class="doc-header"><h1>Borgingsdialoog — jaar 2 &amp; 3</h1><div class="sub">Crescendo CVO · Lichte monitoring · 6 bouwstenen</div>'+ctx+'</div>'
+    +'<div class="principe"><strong>Borgen of bijsturen:</strong> per bouwsteen vasthouden wat werkt en bijsturen wat beter kan. Conclusies voeden het jaaractieplan.</div>'
+    +body+concl
+    +'<div class="doc-footer"><span>Crescendo CVO · Borgingsdialoog jaar 2-3</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
+    +'</body></html>';
+  const w=window.open('','_blank');
+  if(!w){ alert('Sta pop-ups toe om af te drukken / op te slaan als PDF.'); return; }
+  w.document.write(doc); w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
+}
+
+document.getElementById('ctx-datum').value=new Date().toISOString().split('T')[0];
+render();
+</script>
+</body>
+</html>

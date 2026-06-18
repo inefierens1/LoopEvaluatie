@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Borgingsdialoog — jaar 4 (uitgebreid) — Crescendo CVO</title>
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root{ --bg:#F7F6F2; --surface:#fff; --border:#E2DFD7; --text:#2C2C2A; --muted:#6B6A65; --radius:8px; }
+body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.app-header{ background:#fff; border-bottom:1px solid var(--border); padding:.875rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.app-header h1{ font-size:15px; font-weight:600; }
+.app-header p{ font-size:11px; color:var(--muted); margin-top:1px; }
+.badge{ display:inline-flex; align-items:center; gap:6px; background:#534AB7; color:#fff; border-radius:99px; padding:5px 14px; font-size:12px; font-weight:600; }
+.main{ padding:1rem 1.5rem 6rem; max-width:920px; margin:0 auto; }
+.card{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:1rem; }
+.card h2{ font-size:14px; font-weight:600; margin-bottom:.75rem; }
+.principe{ background:#EEEDFE; border:1px solid #ddd9f7; border-radius:var(--radius); padding:.75rem 1rem; margin-bottom:1rem; font-size:11.5px; color:#3f3a73; line-height:1.5; }
+.principe strong{ color:#2e2a57; }
+.ctx-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.75rem; }
+.ctx-field{ display:flex; flex-direction:column; gap:3px; }
+.ctx-field label{ font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.ctx-field .opt{ font-weight:400; text-transform:none; letter-spacing:0; color:#a8a7a1; }
+.ctx-field input, .ctx-field select{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); }
+.bs-blok{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); margin-bottom:1rem; overflow:hidden; }
+.bs-head{ display:flex; align-items:center; gap:10px; padding:.625rem 1rem; }
+.bs-head h3{ font-size:13px; font-weight:600; }
+.bs-body{ padding:.75rem 1rem 1rem; border-top:1px solid var(--border); }
+.veld{ display:flex; flex-direction:column; gap:4px; margin-bottom:.7rem; }
+.veld:last-child{ margin-bottom:0; }
+.veld label{ font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px; }
+.veld .tag{ font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:2px 7px; border-radius:99px; }
+.tag-geborgd{ background:#EAF0DE; color:#5A7238; }
+.tag-gegroeid{ background:#E6EFF7; color:#3D6A91; }
+.tag-werkpunt{ background:#F3E8E3; color:#7A4A35; }
+.veld textarea{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; background:var(--bg); color:var(--text); resize:vertical; min-height:54px; }
+.veld select{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:11.5px; font-family:inherit; background:var(--bg); color:var(--text); }
+.besluit .veld{ margin-bottom:.75rem; }
+.actionbar{ position:fixed; bottom:0; left:0; right:0; background:#fff; border-top:1px solid var(--border); padding:.75rem 1.5rem; display:flex; gap:8px; justify-content:flex-end; }
+.btn{ padding:8px 18px; border-radius:6px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; border:1px solid var(--border); background:#fff; color:var(--text); }
+.btn-primary{ background:#1a1a18; color:#fff; border-color:#1a1a18; }
+.toast{ position:fixed; bottom:5rem; left:50%; transform:translateX(-50%); background:#1a1a18; color:#fff; padding:10px 20px; border-radius:8px; font-size:12px; opacity:0; transition:opacity .2s; pointer-events:none; z-index:50; }
+.toast.show{ opacity:1; }
+@media(max-width:680px){ .ctx-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <h1>Borgingsdialoog — jaar 4 (uitgebreid)</h1>
+    <p>Crescendo CVO · Afsluiting van de vierjarige kwaliteitsloop · 6 bouwstenen + ROK</p>
+  </div>
+  <div class="badge">Synthese van de loop</div>
+</div>
+
+<div class="main">
+
+  <div class="principe">
+    <strong>Terugblik en borgingsbesluit.</strong> In jaar 4 sluiten we de loop af. Per bouwsteen kijken we terug over de volledige cyclus: <strong>wat is geborgd</strong>, <strong>wat is gegroeid</strong> en <strong>wat blijft werkpunt</strong>? We koppelen dit aan het ROK en formuleren een strategisch besluit dat de volgende loop en het jaaractieplan voedt.
+  </div>
+
+  <div class="card">
+    <h2>Context</h2>
+    <div class="ctx-grid">
+      <div class="ctx-field"><label>Cursistenprofiel</label>
+        <select id="ctx-profiel">
+          <option value="">— kies profiel —</option>
+          <option>Persoonlijke ontwikkeling</option>
+          <option>Beroepsopleiding &amp; DSBO</option>
+          <option>NT2</option>
+          <option>Centrumbreed / meerdere profielen</option>
+        </select></div>
+      <div class="ctx-field"><label>Cluster / opleiding <span class="opt">(optioneel)</span></label><input type="text" id="ctx-opleiding" placeholder="bv. Fietshersteller"></div>
+      <div class="ctx-field"><label>Loopperiode</label><input type="text" id="ctx-periode" placeholder="bv. 2026–2030"></div>
+      <div class="ctx-field"><label>Begeleider dialoog</label><input type="text" id="ctx-begeleider" placeholder="naam / team kwaliteit"></div>
+      <div class="ctx-field"><label>Aanwezigen</label><input type="text" id="ctx-aanwezigen" placeholder="bv. OC, team, adjunct"></div>
+      <div class="ctx-field"><label>Datum</label><input type="date" id="ctx-datum"></div>
+    </div>
+  </div>
+
+  <div id="bouwstenen"></div>
+
+  <div class="card besluit">
+    <h2>Strategisch borgingsbesluit — naar de volgende loop</h2>
+    <div class="veld"><label>Sterkste verworvenheid over de loop</label><textarea id="b-verworven" placeholder="Wat is structureel verankerd en mag niet verloren gaan?"></textarea></div>
+    <div class="veld"><label>Prioriteiten voor de volgende cyclus</label><textarea id="b-prio" placeholder="Welke werkpunten nemen we mee naar de volgende vierjarige loop?"></textarea></div>
+    <div class="veld"><label>Koppeling naar het volgende jaaractieplan</label><textarea id="b-jap" placeholder="Welke doelstellingen vertalen we naar het eerstvolgende JAP?"></textarea></div>
+  </div>
+
+</div>
+
+<div class="actionbar">
+  <button class="btn" onclick="printDoc()">🖨️ Afdrukken / PDF</button>
+  <button class="btn btn-primary" onclick="saveDoc()">💾 Opslaan</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const BS = [
+  { id:'kwal',   naam:'Kwaliteitsvol', c:'#8FB5AE', bg:'#EBF3F2', dk:'#5A8880' },
+  { id:'zorg',   naam:'Zorgzaam',      c:'#6B90B5', bg:'#E6EFF7', dk:'#3D6A91' },
+  { id:'leven',  naam:'Levensecht',    c:'#E07272', bg:'#FAEAEA', dk:'#B84A4A' },
+  { id:'betrok', naam:'Betrokken',     c:'#CFC87A', bg:'#F5F3D8', dk:'#8A8330' },
+  { id:'samen',  naam:'Samen',         c:'#8FA563', bg:'#EAF0DE', dk:'#5A7238' },
+  { id:'innov',  naam:'Innovatief',    c:'#B07560', bg:'#F3E8E3', dk:'#7A4A35' },
+];
+function hexSVG(kleur,sz=22){
+  const c=sz/2,r=sz*.41,pts=[];
+  for(let i=0;i<6;i++){const a=Math.PI/3*i-Math.PI/6;pts.push(`${c+r*Math.cos(a)},${c+r*Math.sin(a)}`);}
+  const p=pts.join(' ');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><polygon points="${p}" fill="${kleur}" opacity=".25"/><polygon points="${p}" fill="${kleur}" transform="scale(.77) translate(${sz*.115},${sz*.115})"/></svg>`;
+}
+const ROK = {
+  'Rubriek 1 — Beleid':[['ABL1','Gedragen, geïntegreerd en samenhangend beleid'],['ABL2','Organisatie vormgeven (cultuur en structuur)'],['ABL3','Participatief en responsief werken'],['ABL4','Innovatieve en lerende organisatiecultuur'],['ABL5','Samenwerkingsverbanden uitbouwen'],['ABL6','Transparant communiceren'],['OBL7','Doeltreffend beleid op leren en onderwijzen'],['PBL8','Doeltreffend personeelsbeleid'],['PBL9','Doeltreffend professionaliseringsbeleid'],['FBL10','Doeltreffend financieel en materieel beleid'],['FBL11','Kosten beheersen voor alle lerenden'],['VBL12','Beleid rond fysieke en mentale veiligheid']],
+  'Rubriek 2 — Ontwikkeling en stimuleren':[['D1','Brede, harmonische en betekenisvolle vorming'],['D2','Doelen sporen met het doelenkader, samenhang'],['D3','Uitdagende en haalbare doelen'],['D4','Doelen en beoordelingscriteria expliciteren'],['L1','Positief en stimulerend klasklimaat'],['L2','Positief omgaan met diversiteit'],['L3','Leeromgeving ondersteunt de doelen'],['L4','Passend, actief en samenhangend aanbod'],['B1','Begeleiding vanuit gedragen visie, effecten opvolgen'],['B2','Brede begeleiding (leren, loopbaan, welzijn)'],['B3','Passende begeleiding, gelijke onderwijskansen'],['B4','Begeleiding samen met lerende en partners'],['E1','Adequate feedback op de voortgang'],['E2','Breed en onderbouwd evalueren'],['E3','Onderwijsleerproces bijsturen o.b.v. data'],['E4','Onderbouwd beslissen en rapporteren']],
+  'Rubriek 3 — Kwaliteitsontwikkeling':[['K1','Kwaliteit vanuit gedragen visie, vertaald in de praktijk'],['K2','Cyclisch, systematisch en betrouwbaar evalueren'],['K3','Kwaliteit van de onderwijsleerpraktijk borgen en ontwikkelen']],
+  'Rubriek 4 — Resultaten en effecten':[['R1','Minimaal gewenste output bij grote groep'],['R2','Welbevinden, betrokkenheid en tevredenheid'],['R3','Zoveel mogelijk leerwinst'],['R4','Studievoortgang stimuleren'],['R5','Toegang tot onderwijs waarborgen'],['R6','Effecten op langere termijn']],
+};
+function rokTekst(code){ for(const r in ROK){ for(const [c,t] of ROK[r]){ if(c===code) return t; } } return ''; }
+function rokOptions(){
+  let o='<option value="">— koppel ROK-verwachting (optioneel) —</option>';
+  for(const r in ROK){ o+=`<optgroup label="${r}">`; for(const [c,t] of ROK[r]) o+=`<option value="${c}">${c} — ${t}</option>`; o+='</optgroup>'; }
+  return o;
+}
+function render(){
+  const opts=rokOptions();
+  document.getElementById('bouwstenen').innerHTML = BS.map(b=>`
+    <div class="bs-blok" data-id="${b.id}">
+      <div class="bs-head" style="background:${b.bg};">${hexSVG(b.c,26)}<h3 style="color:${b.dk}">${b.naam}</h3></div>
+      <div class="bs-body">
+        <div class="veld"><label><span class="tag tag-geborgd">Geborgd</span> Wat is structureel verankerd over de loop?</label><textarea class="f-geborgd"></textarea></div>
+        <div class="veld"><label><span class="tag tag-gegroeid">Gegroeid</span> Waarin zijn we gegroeid / verbeterd?</label><textarea class="f-gegroeid"></textarea></div>
+        <div class="veld"><label><span class="tag tag-werkpunt">Werkpunt</span> Wat blijft werkpunt?</label><textarea class="f-werkpunt"></textarea></div>
+        <div class="veld"><label>Koppeling ROK-verwachting</label><select class="f-rok">${opts}</select></div>
+      </div>
+    </div>`).join('');
+}
+function leesBS(){
+  return BS.map(b=>{
+    const el=document.querySelector(`.bs-blok[data-id="${b.id}"]`);
+    return { id:b.id, naam:b.naam, geborgd:el.querySelector('.f-geborgd').value, gegroeid:el.querySelector('.f-gegroeid').value, werkpunt:el.querySelector('.f-werkpunt').value, rok:el.querySelector('.f-rok').value };
+  });
+}
+function ctxData(){
+  return {
+    profiel:document.getElementById('ctx-profiel').value,
+    opleiding:document.getElementById('ctx-opleiding').value,
+    periode:document.getElementById('ctx-periode').value,
+    begeleider:document.getElementById('ctx-begeleider').value,
+    aanwezigen:document.getElementById('ctx-aanwezigen').value,
+    datum:document.getElementById('ctx-datum').value
+  };
+}
+function besluitData(){
+  return { verworven:document.getElementById('b-verworven').value, prio:document.getElementById('b-prio').value, jap:document.getElementById('b-jap').value };
+}
+function toast(t){ const e=document.getElementById('toast'); e.textContent=t; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),2200); }
+
+function saveDoc(){
+  const payload={ instrument:'borgingsdialoog-jaar4', context:ctxData(), bouwstenen:leesBS(), besluit:besluitData(), opgeslagen:new Date().toISOString() };
+  console.log('payload', payload);
+  navigator.clipboard?.writeText(JSON.stringify(payload,null,2)).catch(()=>{});
+  toast('Opgeslagen — JSON gekopieerd naar klembord');
+}
+
+function printDoc(){
+  const c=ctxData(), bs=leesBS(), bb=besluitData(), E='—';
+  const ctx='<div class="ctx-info">'
+    +'<span>Cursistenprofiel: <strong>'+(c.profiel||E)+'</strong></span>'
+    +'<span>Cluster/opleiding: <strong>'+(c.opleiding||E)+'</strong></span>'
+    +'<span>Loopperiode: <strong>'+(c.periode||E)+'</strong></span>'
+    +'<span>Begeleider: <strong>'+(c.begeleider||E)+'</strong></span>'
+    +'<span>Aanwezigen: <strong>'+(c.aanwezigen||E)+'</strong></span>'
+    +'<span>Datum: <strong>'+(c.datum||E)+'</strong></span></div>';
+  let body='';
+  bs.forEach(b=>{
+    const obj=BS.find(x=>x.id===b.id);
+    const rok=b.rok?('<div class="row"><span class="lbl">ROK</span><span class="val"><strong>'+b.rok+'</strong> — '+rokTekst(b.rok)+'</span></div>'):'';
+    body+='<div class="bs-blok"><div class="bs-titel" style="background:'+obj.bg+';border-left:4px solid '+obj.c+';"><strong style="color:'+obj.dk+'">'+b.naam+'</strong></div>'
+      +'<div class="row"><span class="lbl geborgd">Geborgd</span><span class="val">'+(b.geborgd||E)+'</span></div>'
+      +'<div class="row"><span class="lbl gegroeid">Gegroeid</span><span class="val">'+(b.gegroeid||E)+'</span></div>'
+      +'<div class="row"><span class="lbl werkpunt">Werkpunt</span><span class="val">'+(b.werkpunt||E)+'</span></div>'
+      +rok+'</div>';
+  });
+  const besluit='<div class="besluit-blok"><strong>Strategisch borgingsbesluit — naar de volgende loop</strong>'
+    +'<div class="row"><span class="lbl">Sterkste verworvenheid</span><span class="val">'+(bb.verworven||E)+'</span></div>'
+    +'<div class="row"><span class="lbl">Prioriteiten volgende cyclus</span><span class="val">'+(bb.prio||E)+'</span></div>'
+    +'<div class="row"><span class="lbl">Koppeling volgend JAP</span><span class="val">'+(bb.jap||E)+'</span></div></div>';
+  const css='*{box-sizing:border-box;margin:0;padding:0;}'
+    +"body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:11px;color:#1a1a18;padding:2rem;max-width:920px;margin:0 auto;}"
+    +'.doc-header{border-bottom:2px solid #1a1a18;padding-bottom:1rem;margin-bottom:1.25rem;}'
+    +'.doc-header h1{font-size:17px;font-weight:700;}.sub{font-size:11px;color:#5f5e5a;margin-top:2px;}'
+    +'.ctx-info{display:flex;gap:.75rem 1.25rem;flex-wrap:wrap;margin-top:.6rem;font-size:11px;}'
+    +'.principe{background:#EEEDFE;border:1px solid #ddd9f7;border-radius:6px;padding:.5rem .875rem;margin-bottom:1.25rem;font-size:10.5px;color:#3f3a73;}'
+    +'.bs-blok{border:1px solid #d3d1c7;border-radius:7px;margin-bottom:.75rem;overflow:hidden;break-inside:avoid;}'
+    +'.bs-titel{padding:.4rem .75rem;font-size:12.5px;}'
+    +'.row{display:flex;gap:.6rem;padding:.3rem .75rem;border-top:1px solid #ece9e1;}'
+    +'.lbl{flex:0 0 130px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#888780;}'
+    +'.lbl.geborgd{color:#5A7238;}.lbl.gegroeid{color:#3D6A91;}.lbl.werkpunt{color:#7A4A35;}'
+    +'.val{flex:1;font-size:11px;white-space:pre-wrap;}'
+    +'.besluit-blok{margin-top:1rem;padding:.75rem 1rem;background:#1a1a18;color:#fff;border-radius:7px;break-inside:avoid;}'
+    +'.besluit-blok strong{font-size:12px;display:block;margin-bottom:.4rem;}'
+    +'.besluit-blok .lbl{color:#b4b2a9;}.besluit-blok .row{border-top-color:#333;}'
+    +'.doc-footer{margin-top:1.25rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}'
+    +'@media print{body{padding:1cm;}.bs-blok,.besluit-blok{break-inside:avoid;}}';
+  const doc='<!DOCTYPE html><html lang="nl"><head><meta charset="UTF-8"><title>Borgingsdialoog jaar 4'+(c.opleiding?' — '+c.opleiding:'')+'</title><style>'+css+'</style></head><body>'
+    +'<div class="doc-header"><h1>Borgingsdialoog — jaar 4 (uitgebreid)</h1><div class="sub">Crescendo CVO · Afsluiting van de vierjarige kwaliteitsloop · 6 bouwstenen + ROK</div>'+ctx+'</div>'
+    +'<div class="principe"><strong>Terugblik en borgingsbesluit:</strong> per bouwsteen geborgd / gegroeid / werkpunt, gekoppeld aan het ROK, met een strategisch besluit voor de volgende loop.</div>'
+    +body+besluit
+    +'<div class="doc-footer"><span>Crescendo CVO · Borgingsdialoog jaar 4</span><span>'+new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'long',year:'numeric'})+'</span></div>'
+    +'</body></html>';
+  const w=window.open('','_blank');
+  if(!w){ alert('Sta pop-ups toe om af te drukken / op te slaan als PDF.'); return; }
+  w.document.write(doc); w.document.close();
+  setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 400);
+}
+
+document.getElementById('ctx-datum').value=new Date().toISOString().split('T')[0];
+render();
+</script>
+</body>
+</html>

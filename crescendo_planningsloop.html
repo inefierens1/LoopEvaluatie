@@ -160,6 +160,8 @@
     <div class="ag">
       <div class="ab c-purple" style="grid-column:2/5;grid-row:1;" onclick="showDet2('mat')">Analyse les- &amp; evaluatiemateriaal (vakgroep)</div>
       <div class="ab c-amber" style="grid-column:6/9;grid-row:1;" onclick="showDet2('bev2')">Cursistenbevraging</div>
+      <div class="ab c-green" style="grid-column:9/11;grid-row:1;" onclick="showDet2('borg23')">Borgingsdialoog</div>
+      <div class="ab c-teal" style="grid-column:1/11;grid-row:2;" onclick="showDet2('jap2')">Opmaak jaaractieplan (JAP) — start semester 1, doorlopend</div>
     </div>
   </div></div>
 
@@ -168,6 +170,27 @@
     <div class="det-title" id="det2-t"></div>
     <div class="det-meta"  id="det2-m"></div>
     <div class="det-body"  id="det2-b"></div>
+  </div>
+
+  <div style="margin-top:1.75rem;padding-top:1.25rem;border-top:2px solid #E2DFD7;font-size:13px;font-weight:700;color:#4d5554;">Jaar 4 — synthese &amp; planning</div>
+  <div style="font-size:11px;color:#888780;margin:.25rem 0 .9rem;">Afsluiting van de vierjarige loop en opmaak van het volgende jaaractieplan. Klik op een blok voor het instrument.</div>
+  <div class="tl-scroll"><div class="tl-inner">
+    <div class="month-row">
+      <div class="mh">Sep</div><div class="mh">Okt</div><div class="mh">Nov</div>
+      <div class="mh">Dec</div><div class="mh">Jan</div><div class="mh">Feb</div>
+      <div class="mh">Mrt</div><div class="mh">Apr</div><div class="mh">Mei</div><div class="mh">Jun</div>
+    </div>
+    <div class="ag">
+      <div class="ab c-teal" style="grid-column:1/11;grid-row:1;" onclick="showDet3('jap4')">Opmaak jaaractieplan (JAP) — start semester 1, doorlopend</div>
+      <div class="ab c-purple" style="grid-column:6/11;grid-row:2;" onclick="showDet3('borg4')">Borgingsdialoog (uitgebreid) — semester 2</div>
+    </div>
+  </div></div>
+
+  <div class="det" id="det3">
+    <button class="close-btn" onclick="closeDet3()">✕ sluiten</button>
+    <div class="det-title" id="det3-t"></div>
+    <div class="det-meta"  id="det3-m"></div>
+    <div class="det-body"  id="det3-b"></div>
   </div>
 </div>
 
@@ -774,6 +797,65 @@
       <div class="instr-card-arrow">Openen ↗</div>
     </a>
 
+    <a class="instr-card" href="borgingsdialoog_jaar23.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#E6EFF7;">🔄</div>
+        <div><h3>Borgingsdialoog — jaar 2 &amp; 3</h3></div>
+      </div>
+      <p>Lichte borgingsdialoog · Per bouwsteen borgen/bijsturen · Conclusie naar JAP</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-betrok">Betrokken</span><span class="itag itag-samen">Samen</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+    <a class="instr-card" href="jaaractieplan.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#F3E8E3;">🗂️</div>
+        <div><h3>Jaaractieplan (JAP) — sjabloon</h3></div>
+      </div>
+      <p>PLAN-DO-CHECK-ACT · ROK (37 verwachtingen) + 6 bouwstenen · Opmaak vanaf semester 1 · Afdrukbaar</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-samen">Samen</span>
+        <span class="itag itag-innov">Innovatief</span><span class="itag itag-betrok">Betrokken</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+  </div>
+
+  <!-- Jaar 4 -->
+  <span class="instr-section-label">Instrumenten — jaar 4 (synthese &amp; planning)</span>
+  <div class="instr-grid">
+
+    <a class="instr-card" href="borgingsdialoog_jaar4.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#EEEDFE;">🔁</div>
+        <div><h3>Borgingsdialoog — jaar 4 (uitgebreid)</h3></div>
+      </div>
+      <p>Terugblik over de loop · Geborgd / gegroeid / werkpunt · ROK-koppeling · Strategisch borgingsbesluit</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-zorg">Zorgzaam</span>
+        <span class="itag itag-leven">Levensecht</span><span class="itag itag-betrok">Betrokken</span>
+        <span class="itag itag-samen">Samen</span><span class="itag itag-innov">Innovatief</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
+    <a class="instr-card" href="jaaractieplan.html" target="_blank">
+      <div class="instr-card-top">
+        <div class="instr-card-icon" style="background:#F3E8E3;">🗂️</div>
+        <div><h3>Jaaractieplan (JAP) — sjabloon</h3></div>
+      </div>
+      <p>PLAN-DO-CHECK-ACT · ROK (37 verwachtingen) + 6 bouwstenen · Per schooljaar planbaar</p>
+      <div class="instr-card-tags">
+        <span class="itag itag-kwal">Kwaliteitsvol</span><span class="itag itag-samen">Samen</span>
+        <span class="itag itag-innov">Innovatief</span><span class="itag itag-betrok">Betrokken</span>
+      </div>
+      <div class="instr-card-arrow">Openen ↗</div>
+    </a>
+
   </div>
 </div>
 </div>
@@ -872,7 +954,13 @@ const DATA2={
   bev2:{titel:'Cursistenbevraging',wanneer:'Februari–April',wie:'Team kwaliteit / opleiding',methode:'Kwantitatief',beschrijving:'Korte signaalbevraging bij cursisten in semester 2. Lichte monitoring in jaar 2 en 3.',bstn:['Kwaliteitsvol','Zorgzaam','Betrokken'],
     instrumenten:[
       {naam:'Cursistenbevraging — Korte bevraging',bestand:'korte_cursistenbevraging.html',icon:'💬',beschikbaar:true},
-    ]}
+    ]},
+  borg23:{titel:'Borgingsdialoog jaar 2-3',wanneer:'Einde schooljaar',wie:'Team kwaliteit / opleiding',methode:'Dialoog',beschrijving:'Korte borgingsdialoog: per bouwsteen vasthouden wat werkt en bijsturen wat beter kan. Conclusies voeden het jaaractieplan.',bstn:['Kwaliteitsvol','Samen','Betrokken'],
+    instrumenten:[
+      {naam:'Borgingsdialoog jaar 2-3 — leidraad',bestand:'borgingsdialoog_jaar23.html',icon:'🔄',beschikbaar:true},
+    ]},
+  jap2:{titel:'Opmaak jaaractieplan (JAP)',wanneer:'Jaar 2 — start semester 1, doorlopend',wie:'Team / cluster / opleiding',methode:'Planning',beschrijving:'In jaar 2 maakt elk team, cluster of opleiding het jaaractieplan op. De opmaak start in semester 1 en loopt door over het hele jaar. SMART(I)-doelstellingen gekoppeld aan ROK-verwachtingen en de 6 bouwstenen, in de cyclus PLAN-DO-CHECK-ACT.',bstn:['Kwaliteitsvol','Samen','Innovatief'],
+    instrumenten:[{naam:'Jaaractieplan (JAP) — sjabloon',bestand:'jaaractieplan.html',icon:'🗂️',beschikbaar:true}]}
 };
 function showDet(k){
   const d=DATA[k];
@@ -915,6 +1003,29 @@ function showDet2(k){
   document.getElementById('det2').classList.add('show');
 }
 function closeDet2(){document.getElementById('det2').classList.remove('show');}
+const DATA3={
+  borg4:{titel:'Borgingsdialoog (uitgebreid) — jaar 4',wanneer:'Semester 2',wie:'Team kwaliteit + opleiding + adjunct',methode:'Dialoog',beschrijving:'Terugblik over de volledige vierjarige loop: per bouwsteen wat geborgd, gegroeid en werkpunt is, gekoppeld aan het ROK. Mondt uit in een strategisch borgingsbesluit.',bstn:['Kwaliteitsvol','Zorgzaam','Levensecht','Betrokken','Samen','Innovatief'],
+    instrumenten:[
+      {naam:'Borgingsdialoog jaar 4 — leidraad',bestand:'borgingsdialoog_jaar4.html',icon:'🔁',beschikbaar:true},
+    ]},
+  jap4:{titel:'Opmaak jaaractieplan (JAP)',wanneer:'Jaar 4 — start semester 1, doorlopend',wie:'Team / cluster / opleiding',methode:'Planning',beschrijving:'Ook in jaar 4 maakt elk team, cluster of opleiding het jaaractieplan op. De opmaak start in semester 1 en loopt door over het hele jaar. SMART(I)-doelstellingen gekoppeld aan ROK-verwachtingen en de 6 bouwstenen, in de cyclus PLAN-DO-CHECK-ACT.',bstn:['Kwaliteitsvol','Samen','Innovatief'],
+    instrumenten:[
+      {naam:'Jaaractieplan (JAP) — sjabloon',bestand:'jaaractieplan.html',icon:'🗂️',beschikbaar:true},
+    ]}
+};
+function showDet3(k){
+  const d=DATA3[k];
+  document.getElementById('det3-t').textContent=d.titel;
+  const b=d.bstn.map(x=>`<span class="badge b-warn">${x}</span>`).join(' ');
+  document.getElementById('det3-m').innerHTML=`<span class="badge b-info">${d.wanneer}</span><span class="badge b-neutral">${d.wie}</span><span class="badge b-success">${d.methode}</span>`;
+  let instrHTML='';
+  if(d.instrumenten && d.instrumenten.length){
+    instrHTML=`<div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid #d3d1c7;"><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888780;margin-bottom:.4rem;">Instrument openen</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${d.instrumenten.map(i=>`<a href="${BASE}${i.bestand}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#1a1a18;color:#fff;border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;">${i.icon} ${i.naam} ↗</a>`).join('')}</div></div>`;
+  }
+  document.getElementById('det3-b').innerHTML=`<p style="margin-bottom:8px;">${d.beschrijving}</p><div style="display:flex;gap:6px;flex-wrap:wrap;">${b}</div>${instrHTML}`;
+  document.getElementById('det3').classList.add('show');
+}
+function closeDet3(){document.getElementById('det3').classList.remove('show');}
 function setProfiel(btn){document.querySelectorAll('.profiel-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');closeDet();}
 </script>
 </body>
