@@ -56,6 +56,26 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 .rok-row{ display:grid; grid-template-columns:1fr; gap:.4rem; }
 .rok-row select{ border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:11.5px; font-family:inherit; background:var(--bg); color:var(--text); }
 
+.subactie-list{ display:flex; flex-direction:column; gap:6px; }
+.subactie-rij{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.subactie-rij input.f-subactie{ flex:1 1 200px; min-width:150px; border:1px solid var(--border); border-radius:5px; padding:6px 8px; font-size:12px; font-family:inherit; background:#fff; color:var(--text); }
+.sub-del{ flex:0 0 auto; background:#fff; border:1px solid var(--border); color:#b84a4a; border-radius:5px; padding:5px 9px; font-size:11px; cursor:pointer; font-family:inherit; }
+.sub-del:hover{ background:#FAEAEA; border-color:#E07272; }
+.sub-add{ margin-top:6px; align-self:flex-start; background:#fff; border:1px dashed var(--border); color:var(--muted); border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; }
+.sub-add:hover{ border-color:#8FB5AE; color:#5A8880; background:#EBF3F2; }
+
+.sj-list{ display:flex; flex-direction:column; gap:.75rem; }
+.sj-blok{ border:1px solid var(--border); border-radius:7px; padding:.6rem .7rem; background:#fbfaf7; }
+.sj-head{ display:flex; align-items:center; gap:8px; margin-bottom:.5rem; flex-wrap:wrap; }
+.sj-lbl{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+.sj-head input{ flex:1 1 160px; max-width:220px; border:1px solid var(--border); border-radius:5px; padding:5px 8px; font-size:12px; font-family:inherit; background:#fff; color:var(--text); }
+.sj-del{ flex:0 0 auto; background:#fff; border:1px solid var(--border); color:#b84a4a; border-radius:5px; padding:4px 9px; font-size:10.5px; cursor:pointer; font-family:inherit; }
+.sj-del:hover{ background:#FAEAEA; border-color:#E07272; }
+.sj-add{ margin-top:.6rem; align-self:flex-start; background:#fff; border:1px dashed var(--border); color:var(--muted); border-radius:6px; padding:5px 12px; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; }
+.sj-add:hover{ border-color:#3D6A91; color:#3D6A91; background:#E6EFF7; }
+.maanden.mini{ gap:3px; }
+.maand.mini{ padding:2px 6px; font-size:10px; }
+
 .bs-chips{ display:flex; flex-wrap:wrap; gap:6px; }
 .bs-chip{ display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:99px; border:1.5px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); cursor:pointer; background:#fff; transition:all .15s; user-select:none; }
 .bs-chip.gekozen{ border-color:var(--bs-c); background:var(--bs-bg); color:var(--bs-dk); }
@@ -92,7 +112,7 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
 <div class="main">
 
   <div class="kader">
-    <strong>Over dit sjabloon.</strong> Formuleer de doelstellingen van je cluster of opleiding SMART(I). Elke doelstelling koppel je aan één of meer <strong>ROK-kwaliteitsverwachtingen</strong> (max. 3) en aan onze <strong>6 bouwstenen</strong>. Per doelstelling doorloop je de cyclus PLAN → DO → CHECK → ACT.
+    <strong>Over dit sjabloon.</strong> Formuleer de doelstellingen van het ondersteunend team, je cluster of opleiding SMART(I). Elke doelstelling koppel je aan één of meer <strong>ROK-kwaliteitsverwachtingen</strong> (max. 3) en aan onze <strong>6 bouwstenen</strong>. Per doelstelling doorloop je de cyclus PLAN → DO → CHECK → ACT.
   </div>
 
   <div class="card">
@@ -107,6 +127,20 @@ body{ font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backgr
           <option>NT2</option>
           <option>Centrumbreed / meerdere profielen</option>
         </select>
+      </div>
+      <div class="ctx-field">
+        <label>Ondersteunend team <span class="opt">(optioneel)</span></label>
+        <select id="ctx-team" onchange="toggleTeamAnders()">
+          <option value="">— kies team —</option>
+          <option>Team Planning</option>
+          <option>Team Communicatie</option>
+          <option>Team Kwaliteitsontwikkeling</option>
+          <option>Team Onderwijsbeleid</option>
+          <option>Team Aanvangsbegeleiding</option>
+          <option>Team ICT</option>
+          <option value="andere">Andere…</option>
+        </select>
+        <input type="text" id="ctx-team-anders" placeholder="vul ondersteunend team in" style="display:none; margin-top:5px;">
       </div>
       <div class="ctx-field">
         <label>Cluster <span class="opt">(optioneel)</span></label>
@@ -232,7 +266,6 @@ function addDoel(){
   div.className='doel'; div.dataset.id=n;
   const opts=rokOptions();
   const bschips=BS.map(b=>`<span class="bs-chip" data-bs="${b.naam}" style="--bs-c:${b.c};--bs-bg:${b.bg};--bs-dk:${b.dk};" onclick="this.classList.toggle('gekozen')">${hexSVG(b.c,14)}${b.naam}</span>`).join('');
-  const maanden=MAANDEN.map(([id,lbl])=>`<label class="maand" data-m="${lbl}"><input type="checkbox" class="maand-chk" onchange="this.closest('.maand').classList.toggle('aan',this.checked)">${lbl}</label>`).join('');
   div.innerHTML=`
     <div class="doel-top"><span class="nr">Doelstelling ${n}</span><button class="doel-del" onclick="this.closest('.doel').remove();renumber();">✕ verwijderen</button></div>
 
@@ -245,16 +278,15 @@ function addDoel(){
       <div class="f-row"><label>Bouwstenen <span class="hint">— klik om te koppelen, meerdere mogelijk</span></label><div class="bs-chips">${bschips}</div></div>
     </div></div>
 
-    <div class="fase do"><div class="fase-label">Do</div><div class="fase-body">
-      <div class="f-row"><label>Subacties</label><textarea class="f-subacties" placeholder="Concrete deelstappen (indien nodig in het JAP)"></textarea></div>
-      <div class="f-row"><label>Timing — schooljaar/jaren</label><input type="text" class="f-schooljaar" placeholder="bv. 2026–2027, semester 1"></div>
-      <div class="f-row"><label>Specifieke timing — maanden</label><div class="maanden">${maanden}</div></div>
+    <div class="fase do"><div class="fase-label">Do — planning per schooljaar</div><div class="fase-body">
+      <div class="sj-list">${schooljaarBlokHTML()}</div>
+      <button type="button" class="sj-add" onclick="addSchooljaar(this)">+ schooljaar toevoegen</button>
     </div></div>
 
     <div class="fase check"><div class="fase-label">Check</div><div class="fase-body">
       <div class="f-row"><label>Trekker + back-up</label><input type="text" class="f-trekker" placeholder="wie trekt, wie vervangt"></div>
       <div class="f-row"><label>Professionaliseringsnoden</label><textarea class="f-prof" placeholder="Welke ondersteuning of vorming is nodig?"></textarea></div>
-      <div class="f-row"><label>Indicator (&amp; streefwaarde)</label><textarea class="f-indicator" placeholder="Hoe weten we of dit geslaagd is? Indicator + streefwaarde."></textarea></div>
+      <div class="f-row"><label>Indicator (&amp; streefwaarde) <span class="hint">— een indicator geeft aan hoe het team weet of een doelstelling al dan niet geslaagd is; dat kan een thema in een bevraging zijn of het resultaat van een actie. De streefwaarde geeft aan hoe we de indicator moeten lezen.</span></label><textarea class="f-indicator" placeholder="bv. Cursistentevredenheid feedback ≥ 80% akkoord; of: 3 vakgroepen hebben de kijkwijzer ingevuld"></textarea></div>
     </div></div>
 
     <div class="fase act"><div class="fase-label">Act</div><div class="fase-body">
@@ -266,9 +298,40 @@ function addDoel(){
 function renumber(){
   document.querySelectorAll('#doelen .doel').forEach((d,i)=>{ d.querySelector('.nr').textContent='Doelstelling '+(i+1); });
 }
+function addSubactie(btn){
+  const list=btn.closest('.sj-blok').querySelector('.subactie-list');
+  const tmp=document.createElement('div'); tmp.innerHTML=subactieRijHTML();
+  list.appendChild(tmp.firstElementChild);
+}
+function addSchooljaar(btn){
+  const list=btn.closest('.fase-body').querySelector('.sj-list');
+  const tmp=document.createElement('div'); tmp.innerHTML=schooljaarBlokHTML();
+  list.appendChild(tmp.firstElementChild);
+}
+function maandChips(){
+  return MAANDEN.map(([id,lbl])=>`<label class="maand mini" data-m="${lbl}"><input type="checkbox" class="maand-chk" onchange="this.closest('.maand').classList.toggle('aan',this.checked)">${lbl}</label>`).join('');
+}
+function subactieRijHTML(){
+  return '<div class="subactie-rij">'
+    +'<input type="text" class="f-subactie" placeholder="Subactie / deelstap">'
+    +'<div class="maanden mini">'+maandChips()+'</div>'
+    +'<button type="button" class="sub-del" onclick="this.closest(\'.subactie-rij\').remove()">\u2715</button>'
+    +'</div>';
+}
+function schooljaarBlokHTML(){
+  return '<div class="sj-blok">'
+    +'<div class="sj-head"><span class="sj-lbl">Schooljaar</span><input type="text" class="f-schooljaar" placeholder="bv. 2026\u20132027"><button type="button" class="sj-del" onclick="this.closest(\'.sj-blok\').remove()">\u2715 schooljaar</button></div>'
+    +'<div class="subactie-list">'+subactieRijHTML()+'</div>'
+    +'<button type="button" class="sub-add" onclick="addSubactie(this)">+ subactie</button>'
+    +'</div>';
+}
 function updateBadge(){
   const v=document.getElementById('ctx-schooljaar').value.trim();
   document.getElementById('badge-jaar').textContent=v||'—';
+}
+function toggleTeamAnders(){
+  const anders=document.getElementById('ctx-team').value==='andere';
+  document.getElementById('ctx-team-anders').style.display=anders?'':'none';
 }
 
 function leesDoelen(){
@@ -276,11 +339,17 @@ function leesDoelen(){
   document.querySelectorAll('#doelen .doel').forEach(d=>{
     const rok=[...d.querySelectorAll('.rok-sel')].map(s=>s.value).filter(Boolean);
     const bs=[...d.querySelectorAll('.bs-chip.gekozen')].map(c=>c.dataset.bs);
-    const mnd=[...d.querySelectorAll('.maand-chk')].filter(c=>c.checked).map(c=>c.closest('.maand').dataset.m);
+    const schooljaren=[...d.querySelectorAll('.sj-blok')].map(sj=>({
+      schooljaar: sj.querySelector('.f-schooljaar').value,
+      subacties: [...sj.querySelectorAll('.subactie-rij')].map(r=>({
+        tekst: r.querySelector('.f-subactie').value.trim(),
+        maanden: [...r.querySelectorAll('.maand-chk')].filter(c=>c.checked).map(c=>c.closest('.maand').dataset.m)
+      })).filter(s=>s.tekst || s.maanden.length)
+    })).filter(sj=>sj.schooljaar.trim() || sj.subacties.length);
     out.push({
       doel:d.querySelector('.f-doel').value, acties:d.querySelector('.f-acties').value,
       rok, bouwstenen:bs,
-      subacties:d.querySelector('.f-subacties').value, schooljaar:d.querySelector('.f-schooljaar').value, maanden:mnd,
+      schooljaren,
       trekker:d.querySelector('.f-trekker').value, professionalisering:d.querySelector('.f-prof').value,
       indicator:d.querySelector('.f-indicator').value, borgen:d.querySelector('.f-borgen').value
     });
@@ -290,6 +359,7 @@ function leesDoelen(){
 function ctxData(){
   return {
     profiel:document.getElementById('ctx-profiel').value,
+    team:(document.getElementById('ctx-team').value==='andere'?document.getElementById('ctx-team-anders').value:document.getElementById('ctx-team').value),
     cluster:document.getElementById('ctx-cluster').value,
     opleiding:document.getElementById('ctx-opleiding').value,
     schooljaar:document.getElementById('ctx-schooljaar').value,
@@ -314,6 +384,7 @@ function printDoc(){
   const E='—';
   const ctx='<div class="ctx-info">'
     +'<span>Cursistenprofiel: <strong>'+(c.profiel||E)+'</strong></span>'
+    +'<span>Ondersteunend team: <strong>'+(c.team||E)+'</strong></span>'
     +'<span>Cluster: <strong>'+(c.cluster||E)+'</strong></span>'
     +'<span>Opleiding: <strong>'+(c.opleiding||E)+'</strong></span>'
     +'<span>Schooljaar (opmaak): <strong>'+(c.schooljaar||E)+'</strong></span>'
@@ -325,7 +396,16 @@ function printDoc(){
   doelen.forEach((d,i)=>{
     const rok=d.rok.length?d.rok.map(code=>'<div class="rok-li"><strong>'+code+'</strong> — '+rokTekst(code)+'</div>').join(''):'<span class="leeg">'+E+'</span>';
     const bs=d.bouwstenen.length?d.bouwstenen.map(n=>'<span class="bs-tag">'+n+'</span>').join(' '):'<span class="leeg">'+E+'</span>';
-    const mnd=d.maanden.length?d.maanden.join(' · '):E;
+    let doBody='';
+    if(d.schooljaren && d.schooljaren.length){
+      d.schooljaren.forEach(sj=>{
+        doBody+='<div class="sj-print"><div class="sj-print-h">'+(sj.schooljaar||E)+'</div>';
+        if(sj.subacties.length){
+          sj.subacties.forEach(s=>{ const m=s.maanden.length?s.maanden.join(' · '):'—'; doBody+='<div class="sub-print"><span class="sub-t">\u2022 '+(s.tekst||'\u2014')+'</span><span class="sub-m">'+m+'</span></div>'; });
+        } else { doBody+='<div class="sub-print"><span class="leeg">geen subacties</span></div>'; }
+        doBody+='</div>';
+      });
+    } else { doBody='<span class="leeg">'+E+'</span>'; }
     body+='<div class="doel-blok">'
       +'<div class="doel-h">Doelstelling '+(i+1)+'</div>'
       +'<div class="fase-blok"><div class="fl plan">PLAN</div><div class="fb">'
@@ -335,9 +415,7 @@ function printDoc(){
         +'<div class="r"><span class="l">Bouwstenen</span><span class="v">'+bs+'</span></div>'
       +'</div></div>'
       +'<div class="fase-blok"><div class="fl do">DO</div><div class="fb">'
-        +'<div class="r"><span class="l">Subacties</span><span class="v">'+(d.subacties||E)+'</span></div>'
-        +'<div class="r"><span class="l">Timing schooljaar</span><span class="v">'+(d.schooljaar||E)+'</span></div>'
-        +'<div class="r"><span class="l">Maanden</span><span class="v">'+mnd+'</span></div>'
+        +doBody
       +'</div></div>'
       +'<div class="fase-blok"><div class="fl check">CHECK</div><div class="fb">'
         +'<div class="r"><span class="l">Trekker + back-up</span><span class="v">'+(d.trekker||E)+'</span></div>'
@@ -369,6 +447,13 @@ function printDoc(){
     +'.l{flex:0 0 140px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#888780;}'
     +'.v{flex:1;font-size:11px;white-space:pre-wrap;}'
     +'.rok-li{font-size:10.5px;margin-bottom:1px;}'
+    +'.sj-print{margin-bottom:.45rem;}'
+    +'.sj-print:last-child{margin-bottom:0;}'
+    +'.sj-print-h{font-size:11px;font-weight:700;color:#3D6A91;margin-bottom:2px;}'
+    +'.sub-print{display:flex;justify-content:space-between;gap:1rem;font-size:11px;padding:1px 0 1px .5rem;border-bottom:1px dotted #ece9e1;}'
+    +'.sub-print:last-child{border-bottom:none;}'
+    +'.sub-t{flex:1;white-space:pre-wrap;}'
+    +'.sub-m{flex:0 0 auto;color:#888780;font-size:10px;white-space:nowrap;}'
     +'.bs-tag{display:inline-block;background:#f1efe8;border:1px solid #d3d1c7;border-radius:4px;padding:1px 7px;font-size:10px;}'
     +'.leeg{color:#b4b2a9;}'
     +'.doc-footer{margin-top:1.25rem;padding-top:.6rem;border-top:1px solid #E2DFD7;font-size:9.5px;color:#b4b2a9;display:flex;justify-content:space-between;}'
