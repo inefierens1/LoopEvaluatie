@@ -130,6 +130,31 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
   .ctx-bar { border:none; padding:.25rem 0; }
   .ctx-bar input, .ctx-bar select { border:none; background:transparent; padding:0; font-weight:600; }
 }
+
+/* ── OVERZICHTSPANEEL (resultaat per bouwsteen) ── */
+.result-panel { display:none; background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin-bottom:10px; }
+.result-panel.show { display:block; }
+.result-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:.875rem; }
+.ri-card { border-radius:8px; border:1px solid var(--border); padding:.875rem 1rem; display:flex; flex-direction:column; gap:5px; }
+.ri-top { display:flex; align-items:center; gap:7px; }
+.ri-naam { font-size:13px; font-weight:600; }
+.ri-signal { font-size:10px; font-weight:600; padding:2px 8px; border-radius:99px; margin-left:auto; white-space:nowrap; }
+.sig-sterk    { background:#EAF3DE; color:#3B6D11; }
+.sig-ontwikk  { background:#FEF3CD; color:#856404; }
+.sig-aandacht { background:#FAEAEA; color:#B84A4A; }
+.sig-leeg     { background:#f1efe8; color:#888780; }
+.ri-balk-wrap { display:flex; gap:2px; height:8px; }
+.ri-balk-seg  { flex:1; border-radius:3px; }
+.seg-4 { background:#4A8A70; }
+.seg-3 { background:#8FB5AE; }
+.seg-2 { background:#E8B84B; }
+.seg-1 { background:#E07272; }
+.seg-0 { background:#E2DFD7; }
+.ri-tels { display:flex; gap:8px; flex-wrap:wrap; }
+.ri-tel { display:flex; align-items:center; gap:3px; font-size:10px; color:var(--muted); }
+.ri-tel-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.ri-progress { font-size:10px; color:var(--muted); }
+@media(max-width:440px){ .result-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -191,11 +216,21 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; backg
 <!-- MAIN CONTENT -->
 <div class="main" id="main-content"></div>
 
+<!-- OVERZICHT -->
+<div class="main" style="padding-top:0">
+  <div class="result-panel" id="result-panel">
+    <h3 style="font-size:14px;font-weight:600;margin-bottom:.25rem" id="result-title">Overzicht lesobservatie</h3>
+    <p style="font-size:12px;color:var(--muted)">De balk toont de verdeling van scores per criterium (van Sterk tot Start). Het signaallabel geeft aan waar sterktes en aandachtspunten zitten.</p>
+    <div class="result-grid" id="result-grid"></div>
+  </div>
+</div>
+
 <!-- ACTIONS -->
 <div class="actions-bar">
   <span class="save-status" id="save-status">Nog niet opgeslagen</span>
   <div style="display:flex;gap:6px;flex-wrap:wrap;">
     <button class="btn btn-secondary" onclick="kopieerLinkLesgever()" id="btn-link">🔗 Link voor lesgever</button>
+    <button class="btn btn-secondary" onclick="showResult()">Toon overzicht</button>
     <button class="btn btn-secondary" onclick="printObsDoc()">🖨️ Download als PDF</button>
     <button class="btn btn-primary" id="save-btn" onclick="saveDoc()">Opslaan</button>
   </div>
@@ -729,6 +764,7 @@ function setSem(sem, btn){
   btn.classList.add('active');
   renderContent();
   updateProg();
+  if(document.getElementById('result-panel').classList.contains('show')) showResult();
 }
 
 /* ══════════════════════════════════════════════════
@@ -1008,6 +1044,51 @@ function saveDoc(){
 }
 
 init();
+
+/* ══════ OVERZICHT PER BOUWSTEEN (huidig semester) ══════ */
+function showResult(){
+  const data = DATA[huidigSem];
+  document.getElementById('result-title').textContent = 'Overzicht lesobservatie — ' + data.titel;
+  const LBLS=['','Start','Beginner','Gevorderd','Sterk'];
+  const DOTS=['','#E07272','#E8B84B','#8FB5AE','#4A8A70'];
+  document.getElementById('result-grid').innerHTML = BS.map(b=>{
+    const sectie = data.bouwstenen.find(s=>s.bs===b.id);
+    if(!sectie || !sectie.criteria.length) return '';
+    const crit = sectie.criteria;
+    const total = crit.length;
+    const ingevuld = crit.filter(c=>scores[c.id]).length;
+    const tel = {4:0,3:0,2:0,1:0};
+    crit.forEach(c=>{ if(scores[c.id]) tel[scores[c.id]]++; });
+    let signal='leeg', signalLabel='Niet ingevuld';
+    if(ingevuld>0){
+      const hoog=(tel[4]+tel[3])/ingevuld, laag=tel[1]/ingevuld;
+      if(hoog>=0.6)      { signal='sterk';    signalLabel='Sterk'; }
+      else if(laag>=0.3) { signal='aandacht'; signalLabel='Aandachtspunt'; }
+      else               { signal='ontwikk';  signalLabel='In ontwikkeling'; }
+    }
+    const segmenten = crit.map(c=>{
+      const s=scores[c.id]||0;
+      return `<div class="ri-balk-seg seg-${s}" title="${c.vraag}: ${s?LBLS[s]:'—'}"></div>`;
+    }).join('');
+    const tels=[4,3,2,1].map(n=>
+      tel[n]>0?`<div class="ri-tel"><div class="ri-tel-dot" style="background:${DOTS[n]}"></div>${tel[n]}× ${LBLS[n]}</div>`:''
+    ).join('');
+    return `
+      <div class="ri-card" style="border-color:${b.c}40;background:${b.bg}">
+        <div class="ri-top">
+          ${hexSVG(b.c,20)}
+          <span class="ri-naam" style="color:${b.dk}">${b.naam}</span>
+          <span class="ri-signal sig-${signal}">${signalLabel}</span>
+        </div>
+        <div class="ri-balk-wrap">${segmenten}</div>
+        <div class="ri-tels">${tels||'<span class="ri-progress">Nog geen scores</span>'}</div>
+        <div class="ri-progress">${ingevuld} van ${total} criteria ingevuld</div>
+      </div>`;
+  }).join('');
+  document.getElementById('result-panel').classList.add('show');
+  document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
 </script>
 </body>
 </html>
